@@ -5,72 +5,78 @@ interface AIResponse {
   type: "grammar" | "style" | "content" | "structure"
 }
 
-async function callOpenAI(messages: any[], maxTokens = 150): Promise<string> {
-  // Use server-only environment variable (without NEXT_PUBLIC_ prefix)
-  const apiKey = process.env.OPENAI_API_KEY
+// Cambia esta función para usar la API de Gemini en vez de OpenAI
+async function callGemini(messages: any[], maxTokens = 150): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY
 
   if (!apiKey) {
-    throw new Error("OpenAI API key not configured")
+    throw new Error("Gemini API key no configurada")
   }
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    // Gemini espera un solo prompt, así que concatenamos los mensajes
+    const prompt = messages.map((m: any) => m.content).join("\n")
+
+    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + apiKey, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages,
-        max_tokens: maxTokens,
-        temperature: 0.7,
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          maxOutputTokens: maxTokens,
+          temperature: 0.7
+        }
       }),
     })
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`)
+      throw new Error(`Gemini API error: ${response.status}`)
     }
 
     const data = await response.json()
-    return data.choices[0]?.message?.content || "No response generated"
+    // Gemini responde en data.candidates[0].content.parts[0].text
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "No se generó respuesta"
   } catch (error) {
-    console.error("OpenAI API call failed:", error)
+    console.error("Gemini API call failed:", error)
     throw error
   }
 }
+
+// Todas las funciones siguientes usan callGemini en vez de callOpenAI
 
 export async function getSuggestion(text: string, context = "general"): Promise<AIResponse> {
   try {
     const messages = [
       {
         role: "system",
-        content: `You are a professional writing assistant. Analyze the given text and provide ONE specific, actionable suggestion to improve it. Focus on one of these areas: grammar, style, content, or structure. Be concise and helpful.`,
+        content: `Eres un asistente profesional de escritura. Analiza el texto dado y proporciona UNA sugerencia específica y accionable para mejorarlo. Concéntrate en una de estas áreas: gramática, estilo, contenido o estructura. Sé conciso y útil.`,
       },
       {
         role: "user",
-        content: `Please analyze this text and provide a specific improvement suggestion: "${text}"`,
+        content: `Por favor analiza este texto y proporciona una sugerencia de mejora específica: "${text}"`,
       },
     ]
 
-    const suggestion = await callOpenAI(messages, 100)
+    const suggestion = await callGemini(messages, 100)
 
-    // Determine the type based on keywords in the suggestion
+    // Determinar el tipo basado en palabras clave en la sugerencia
     let type: "grammar" | "style" | "content" | "structure" = "content"
     const lowerSuggestion = suggestion.toLowerCase()
 
-    if (lowerSuggestion.includes("grammar") || lowerSuggestion.includes("tense") || lowerSuggestion.includes("verb")) {
+    if (lowerSuggestion.includes("gramática") || lowerSuggestion.includes("tiempo verbal") || lowerSuggestion.includes("verbo")) {
       type = "grammar"
     } else if (
-      lowerSuggestion.includes("style") ||
-      lowerSuggestion.includes("tone") ||
-      lowerSuggestion.includes("voice")
+      lowerSuggestion.includes("estilo") ||
+      lowerSuggestion.includes("tono") ||
+      lowerSuggestion.includes("voz")
     ) {
       type = "style"
     } else if (
-      lowerSuggestion.includes("structure") ||
-      lowerSuggestion.includes("paragraph") ||
-      lowerSuggestion.includes("organize")
+      lowerSuggestion.includes("estructura") ||
+      lowerSuggestion.includes("párrafo") ||
+      lowerSuggestion.includes("organiza")
     ) {
       type = "structure"
     }
@@ -78,7 +84,7 @@ export async function getSuggestion(text: string, context = "general"): Promise<
     return { suggestion, type }
   } catch (error) {
     return {
-      suggestion: "Sorry, AI assistance is temporarily unavailable. Please try again later.",
+      suggestion: "Lo siento, la asistencia de IA no está disponible temporalmente. Por favor, inténtalo más tarde.",
       type: "content",
     }
   }
@@ -89,17 +95,17 @@ export async function improveText(text: string): Promise<string> {
     const messages = [
       {
         role: "system",
-        content: `You are a professional editor. Improve the given text by making it clearer, more concise, and better written while preserving the original meaning and tone. Return only the improved text without explanations.`,
+        content: `Eres un editor profesional. Mejora el texto dado haciéndolo más claro, conciso y mejor redactado, preservando el significado y tono original. Devuelve solo el texto mejorado sin explicaciones.`,
       },
       {
         role: "user",
-        content: `Please improve this text: "${text}"`,
+        content: `Por favor mejora este texto: "${text}"`,
       },
     ]
 
-    return await callOpenAI(messages, 200)
+    return await callGemini(messages, 200)
   } catch (error) {
-    throw new Error("Failed to improve text")
+    throw new Error("No se pudo mejorar el texto")
   }
 }
 
@@ -111,18 +117,18 @@ export async function generateContent(prompt: string, type: "continue" | "expand
     switch (type) {
       case "continue":
         systemPrompt =
-          "You are a creative writing assistant. Continue the given text in a natural, coherent way that matches the style and tone. Write 2-3 sentences that flow naturally from the existing content."
-        userPrompt = `Please continue this text: "${prompt}"`
+          "Eres un asistente creativo de escritura. Continúa el texto dado de forma natural y coherente que coincida con el estilo y tono. Escribe 2-3 frases que fluyan naturalmente del contenido existente."
+        userPrompt = `Por favor continúa este texto: "${prompt}"`
         break
       case "expand":
         systemPrompt =
-          "You are a writing assistant. Expand on the given text by adding more details, examples, or explanations while maintaining the original meaning and style."
-        userPrompt = `Please expand on this text with more details: "${prompt}"`
+          "Eres un asistente de escritura. Expande el texto dado agregando más detalles, ejemplos o explicaciones, manteniendo el significado y estilo original."
+        userPrompt = `Por favor expande este texto con más detalles: "${prompt}"`
         break
       case "summarize":
         systemPrompt =
-          "You are a summarization expert. Create a concise summary that captures the key points of the given text."
-        userPrompt = `Please summarize this text: "${prompt}"`
+          "Eres un experto en resúmenes. Crea un resumen conciso que capture los puntos clave del texto dado."
+        userPrompt = `Por favor resume este texto: "${prompt}"`
         break
     }
 
@@ -131,9 +137,9 @@ export async function generateContent(prompt: string, type: "continue" | "expand
       { role: "user", content: userPrompt },
     ]
 
-    return await callOpenAI(messages, 300)
+    return await callGemini(messages, 300)
   } catch (error) {
-    throw new Error(`Failed to ${type} content`)
+    throw new Error(`No se pudo ${type} el contenido`)
   }
 }
 
@@ -143,17 +149,17 @@ export async function generateTitle(content: string): Promise<string> {
       {
         role: "system",
         content:
-          "You are a title generator. Create a concise, descriptive title for the given content. Return only the title, no quotes or explanations.",
+          "Eres un generador de títulos. Crea un título conciso y descriptivo para el contenido dado. Devuelve solo el título, sin comillas ni explicaciones.",
       },
       {
         role: "user",
-        content: `Generate a title for this content: "${content.substring(0, 500)}..."`,
+        content: `Genera un título para este contenido: "${content.substring(0, 500)}..."`,
       },
     ]
 
-    return await callOpenAI(messages, 50)
+    return await callGemini(messages, 50)
   } catch (error) {
-    return "Untitled Document"
+    return "Documento sin título"
   }
 }
 
@@ -164,15 +170,15 @@ export async function checkGrammar(
     const messages = [
       {
         role: "system",
-        content: `You are a grammar checker. Identify grammar errors in the text and provide corrections. Format your response as JSON with an array of errors, each containing: text (the error), suggestion (the correction), and position (approximate character position). If no errors, return {"errors": []}.`,
+        content: `Eres un corrector gramatical. Identifica errores de gramática en el texto y proporciona correcciones. Formatea tu respuesta como JSON con un array de errores, cada uno con: text (el error), suggestion (la corrección) y position (posición aproximada del carácter). Si no hay errores, devuelve {"errors": []}.`,
       },
       {
         role: "user",
-        content: `Check grammar in this text: "${text}"`,
+        content: `Revisa la gramática de este texto: "${text}"`,
       },
     ]
 
-    const response = await callOpenAI(messages, 200)
+    const response = await callGemini(messages, 200)
 
     try {
       return JSON.parse(response)
@@ -190,23 +196,23 @@ export async function generateOutline(topic: string): Promise<string[]> {
       {
         role: "system",
         content:
-          "You are an outline generator. Create a logical outline for the given topic. Return only the outline points as a JSON array of strings.",
+          "Eres un generador de esquemas. Crea un esquema lógico para el tema dado. Devuelve solo los puntos del esquema como un array JSON de cadenas.",
       },
       {
         role: "user",
-        content: `Create an outline for: "${topic}"`,
+        content: `Crea un esquema para: "${topic}"`,
       },
     ]
 
-    const response = await callOpenAI(messages, 150)
+    const response = await callGemini(messages, 150)
 
     try {
       return JSON.parse(response)
     } catch {
-      return ["Introduction", "Main Points", "Conclusion"]
+      return ["Introducción", "Puntos principales", "Conclusión"]
     }
   } catch (error) {
-    return ["Introduction", "Main Points", "Conclusion"]
+    return ["Introducción", "Puntos principales", "Conclusión"]
   }
 }
 
@@ -216,29 +222,29 @@ export async function generateProductivityInsight(userStats: any): Promise<strin
       {
         role: "system",
         content:
-          "You are a productivity coach. Generate a brief, motivational insight based on user statistics. Be encouraging and provide actionable advice.",
+          "Eres un coach de productividad. Genera una breve reflexión motivacional basada en las estadísticas del usuario. Sé alentador y proporciona un consejo accionable.",
       },
       {
         role: "user",
-        content: `User completed ${userStats.tasksCompleted} tasks, wrote ${userStats.wordsWritten} words, and spent ${userStats.focusTime} hours focusing today. Generate a motivational productivity insight.`,
+        content: `El usuario completó ${userStats.tasksCompleted} tareas, escribió ${userStats.wordsWritten} palabras y pasó ${userStats.focusTime} horas concentrado hoy. Genera una reflexión motivacional de productividad.`,
       },
     ]
 
-    return await callOpenAI(messages, 100)
+    return await callGemini(messages, 100)
   } catch (error) {
-    return "Keep up the great work! Every step forward is progress toward your goals."
+    return "¡Sigue así! Cada paso adelante es progreso hacia tus metas."
   }
 }
 
 export async function generateWeeklySummary(weeklyStats: any): Promise<string> {
   try {
-    const summaryPrompt = `Generate a brief weekly productivity summary for a user who: completed ${weeklyStats.tasksCompleted} tasks, wrote ${weeklyStats.totalWords} words, spent ${weeklyStats.focusHours} hours focusing, and worked on ${weeklyStats.projectsWorked} projects. Include encouragement and a suggestion for next week.`
+    const summaryPrompt = `Genera un breve resumen semanal de productividad para un usuario que: completó ${weeklyStats.tasksCompleted} tareas, escribió ${weeklyStats.totalWords} palabras, pasó ${weeklyStats.focusHours} horas concentrado y trabajó en ${weeklyStats.projectsWorked} proyectos. Incluye ánimo y una sugerencia para la próxima semana.`
 
     const messages = [
       {
         role: "system",
         content:
-          "You are a productivity coach. Create an encouraging weekly summary with insights and suggestions for improvement.",
+          "Eres un coach de productividad. Crea un resumen semanal alentador con ideas y sugerencias de mejora.",
       },
       {
         role: "user",
@@ -246,8 +252,8 @@ export async function generateWeeklySummary(weeklyStats: any): Promise<string> {
       },
     ]
 
-    return await callOpenAI(messages, 200)
+    return await callGemini(messages, 200)
   } catch (error) {
-    return `This week you completed ${weeklyStats.tasksCompleted} tasks and wrote ${weeklyStats.totalWords} words. Great work!`
+    return `Esta semana completaste ${weeklyStats.tasksCompleted} tareas y escribiste ${weeklyStats.totalWords} palabras. ¡Buen trabajo!`
   }
 }

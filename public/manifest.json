@@ -20,26 +20,26 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["productivity", "business", "education"],
+  "categories": ["productividad", "negocios", "educación"],
   "shortcuts": [
     {
-      "name": "New Document",
-      "short_name": "New Doc",
-      "description": "Create a new document",
+      "name": "Nuevo Documento",
+      "short_name": "Nuevo Doc",
+      "description": "Crear un nuevo documento",
       "url": "/dashboard/editor",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Tasks",
-      "short_name": "Tasks",
-      "description": "Manage your tasks",
+      "name": "Tareas",
+      "short_name": "Tareas",
+      "description": "Gestiona tus tareas",
       "url": "/dashboard/tasks",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Pomodoro",
-      "short_name": "Focus",
-      "description": "Start a focus session",
+      "short_name": "Enfoque",
+      "description": "Iniciar una sesión de enfoque",
       "url": "/dashboard/pomodoro",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
