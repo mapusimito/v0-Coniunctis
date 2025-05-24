@@ -1,7 +1,6 @@
 {
-  "name": "Coniunctis - AI-Powered Productivity",
-  "short_name": "Coniunctis",
-  "description": "Write smarter, work better with AI-powered writing assistance and intelligent task management",
+  "name": "Coniunctis - Productividad impulsada por IA",
+  "description": "Escribe mejor, trabaja mejor con asistencia de escritura inteligente y gestión de tareas inteligentes",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
