@@ -1,25 +1,14 @@
 import {
-  getSuggestion as getSuggestionAction,
-  improveText as improveTextAction,
-  generateContent as generateContentAction,
+  useAssistant,
   generateTitle as generateTitleAction,
-  checkGrammar as checkGrammarAction,
-  generateOutline as generateOutlineAction,
-  generateProductivityInsight as generateProductivityInsightAction,
-  generateWeeklySummary as generateWeeklySummaryAction,
+  useProducer,
+  testGeminiConnection,
 } from "@/app/actions/ai-actions"
-
-interface AIResponse {
-  suggestion: string
-  type: "grammar" | "style" | "content" | "structure"
-}
 
 export class AIService {
   private static instance: AIService
 
-  private constructor() {
-    // No API key needed on client side anymore
-  }
+  private constructor() {}
 
   static getInstance(): AIService {
     if (!AIService.instance) {
@@ -28,70 +17,82 @@ export class AIService {
     return AIService.instance
   }
 
-  async getSuggestion(text: string, context = "general"): Promise<AIResponse> {
+  // Assistant functions
+  async checkGrammar(text: string): Promise<string> {
+    const assistant = useAssistant // Ensure hook is called at the top level
     try {
-      return await getSuggestionAction(text, context)
+      return await assistant(text, "grammar")
     } catch (error) {
-      return {
-        suggestion: "Sorry, AI assistance is temporarily unavailable. Please try again later.",
-        type: "content",
-      }
+      throw new Error("Error al revisar gramática")
     }
   }
 
-  async improveText(text: string): Promise<string> {
+  async explainText(text: string): Promise<string> {
+    const assistant = useAssistant // Ensure hook is called at the top level
     try {
-      return await improveTextAction(text)
+      return await assistant(text, "explain")
     } catch (error) {
-      throw new Error("Failed to improve text")
+      throw new Error("Error al explicar texto")
     }
   }
 
-  async generateContent(prompt: string, type: "continue" | "expand" | "summarize"): Promise<string> {
+  async simplifyText(text: string): Promise<string> {
+    const assistant = useAssistant // Ensure hook is called at the top level
     try {
-      return await generateContentAction(prompt, type)
+      return await assistant(text, "simple")
     } catch (error) {
-      throw new Error(`Failed to ${type} content`)
+      throw new Error("Error al simplificar texto")
     }
   }
 
+  async complexifyText(text: string): Promise<string> {
+    const assistant = useAssistant // Ensure hook is called at the top level
+    try {
+      return await assistant(text, "complex")
+    } catch (error) {
+      throw new Error("Error al hacer más complejo el texto")
+    }
+  }
+
+  // Title generator
   async generateTitle(content: string): Promise<string> {
     try {
       return await generateTitleAction(content)
     } catch (error) {
-      return "Untitled Document"
+      return "Documento sin título"
     }
   }
 
-  async checkGrammar(text: string): Promise<{ errors: Array<{ text: string; suggestion: string; position: number }> }> {
+  // Producer functions
+  async expandText(text: string): Promise<string> {
+    const producer = useProducer // Ensure hook is called at the top level
     try {
-      return await checkGrammarAction(text)
+      return await producer(text, "expand")
     } catch (error) {
-      return { errors: [] }
+      throw new Error("Error al expandir texto")
     }
   }
 
-  async generateOutline(topic: string): Promise<string[]> {
+  async generateContent(text: string): Promise<string> {
+    const producer = useProducer // Ensure hook is called at the top level
     try {
-      return await generateOutlineAction(topic)
+      return await producer(text, "generate")
     } catch (error) {
-      return ["Introduction", "Main Points", "Conclusion"]
+      throw new Error("Error al generar contenido")
     }
   }
 
-  async generateProductivityInsight(userStats: any): Promise<string> {
+  async createScheme(topic: string): Promise<string> {
+    const producer = useProducer // Ensure hook is called at the top level
     try {
-      return await generateProductivityInsightAction(userStats)
+      return await producer(topic, "scheme")
     } catch (error) {
-      return "Keep up the great work! Every step forward is progress toward your goals."
+      throw new Error("Error al crear esquema")
     }
   }
 
-  async generateWeeklySummary(weeklyStats: any): Promise<string> {
-    try {
-      return await generateWeeklySummaryAction(weeklyStats)
-    } catch (error) {
-      return `This week you completed ${weeklyStats.tasksCompleted} tasks and wrote ${weeklyStats.totalWords} words. Great work!`
-    }
+  // Test connection
+  async testConnection(): Promise<{ success: boolean; message: string }> {
+    return await testGeminiConnection()
   }
 }

@@ -1,165 +1,57 @@
 "use client"
 
-import type React from "react"
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
-import {
-  FileText,
-  CheckSquare,
-  Clock,
-  Sparkles,
-  Search,
-  Plus,
-  Settings,
-  LogOut,
-  Home,
-  FolderOpen,
-  BarChart3,
-} from "lucide-react"
-import { useAuth } from "@/lib/auth-context"
-import { ProtectedRoute } from "@/lib/protected-route"
-import { Suspense } from "react"
+import React from "react"
+
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
+import { AppSidebar } from "@/components/app-sidebar"
 import { NotificationCenter } from "@/components/notification-center"
+import { ProtectedRoute } from "@/lib/protected-route"
+import { Separator } from "@/components/ui/separator"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { usePathname } from "next/navigation"
 
-const navigation = [
-  {
-    title: "Overview",
-    items: [
-      { title: "Dashboard", url: "/dashboard", icon: Home },
-      { title: "Analytics", url: "/dashboard/analytics", icon: BarChart3 },
-      { title: "Documents", url: "/dashboard/documents", icon: FolderOpen },
-    ],
-  },
-  {
-    title: "Productivity",
-    items: [
-      { title: "Text Editor", url: "/dashboard/editor", icon: FileText },
-      { title: "Tasks", url: "/dashboard/tasks", icon: CheckSquare },
-      { title: "Pomodoro", url: "/dashboard/pomodoro", icon: Clock },
-    ],
-  },
-]
+const getBreadcrumbs = (pathname: string) => {
+  const segments = pathname.split("/").filter(Boolean)
+  const breadcrumbs = []
 
-function AppSidebar() {
-  const pathname = usePathname()
-  const { user, profile, signOut } = useAuth()
-  const router = useRouter()
-
-  const handleSignOut = async () => {
-    await signOut()
-    router.push("/")
+  if (segments[1] === "dashboard" || segments.length === 1) {
+    breadcrumbs.push({ label: "Inicio", href: "/dashboard" })
   }
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2)
+  if (segments[1] === "documents") {
+    breadcrumbs.push({ label: "Inicio", href: "/dashboard" })
+    breadcrumbs.push({ label: "Documentos", href: "/dashboard/documents" })
   }
 
-  const displayName = profile?.full_name || user?.email?.split("@")[0] || "User"
-  const initials = getInitials(displayName)
+  if (segments[1] === "editor") {
+    breadcrumbs.push({ label: "Inicio", href: "/dashboard" })
+    breadcrumbs.push({ label: "Documentos", href: "/dashboard/documents" })
+    breadcrumbs.push({ label: "Editor", href: "/dashboard/editor" })
+  }
 
-  return (
-    <Sidebar>
-      <SidebarHeader>
-        <div className="flex items-center space-x-2 px-2 py-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Coniunctis
-          </span>
-        </div>
-        <div className="px-2 py-2">
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-            <Input placeholder="Search..." className="pl-8 h-9" />
-          </div>
-        </div>
-      </SidebarHeader>
+  if (segments[1] === "tasks") {
+    breadcrumbs.push({ label: "Inicio", href: "/dashboard" })
+    breadcrumbs.push({ label: "Tareas", href: "/dashboard/tasks" })
+  }
 
-      <SidebarContent>
-        {navigation.map((group) => (
-          <SidebarGroup key={group.title}>
-            <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={pathname === item.url}>
-                      <Link href={item.url}>
-                        <item.icon className="w-4 h-4" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
-      </SidebarContent>
+  if (segments[1] === "pomodoro") {
+    breadcrumbs.push({ label: "Inicio", href: "/dashboard" })
+    breadcrumbs.push({ label: "Pomodoro", href: "/dashboard/pomodoro" })
+  }
 
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
-                  <Avatar className="w-6 h-6">
-                    <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} />
-                    <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-                  </Avatar>
-                  <span className="truncate">{displayName}</span>
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Settings className="w-4 h-4 mr-2" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
-    </Sidebar>
-  )
+  if (segments[1] === "analytics") {
+    breadcrumbs.push({ label: "Inicio", href: "/dashboard" })
+    breadcrumbs.push({ label: "Analytics", href: "/dashboard/analytics" })
+  }
+
+  return breadcrumbs
 }
 
 export default function DashboardLayout({
@@ -167,25 +59,38 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
+  const pathname = usePathname()
+  const breadcrumbs = getBreadcrumbs(pathname)
+
   return (
     <ProtectedRoute>
       <SidebarProvider>
-        <Suspense fallback={null}>
-          <AppSidebar />
-        </Suspense>
+        <AppSidebar />
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
             <SidebarTrigger className="-ml-1" />
-            <div className="flex-1" />
-            <NotificationCenter />
-            <Link href="/dashboard/editor">
-              <Button size="sm" className="bg-primary hover:bg-primary/90">
-                <Plus className="w-4 h-4 mr-2" />
-                New Document
-              </Button>
-            </Link>
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                {breadcrumbs.map((breadcrumb, index) => (
+                  <React.Fragment key={breadcrumb.href}>
+                    <BreadcrumbItem className={index === 0 ? "hidden md:block" : ""}>
+                      {index === breadcrumbs.length - 1 ? (
+                        <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
+                      ) : (
+                        <BreadcrumbLink href={breadcrumb.href}>{breadcrumb.label}</BreadcrumbLink>
+                      )}
+                    </BreadcrumbItem>
+                    {index < breadcrumbs.length - 1 && <BreadcrumbSeparator className="hidden md:block" />}
+                  </React.Fragment>
+                ))}
+              </BreadcrumbList>
+            </Breadcrumb>
+            <div className="ml-auto">
+              <NotificationCenter />
+            </div>
           </header>
-          <main className="flex-1 overflow-auto">{children}</main>
+          <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
         </SidebarInset>
       </SidebarProvider>
     </ProtectedRoute>
