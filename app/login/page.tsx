@@ -64,7 +64,7 @@ export default function LoginPage() {
     if (error) {
       setError(error.message)
     } else {
-      setSuccess("Account created successfully! Please check your email to verify your account.")
+      setSuccess("¡Cuenta creada exitosamente! Por favor revisa tu correo electrónico para verificar tu cuenta.")
     }
 
     setIsLoading(false)
@@ -86,7 +86,7 @@ export default function LoginPage() {
         <Card className="border-0 shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Welcome back</CardTitle>
-            <CardDescription>Sign in to your account to continue writing</CardDescription>
+            <CardDescription>Inicia sesión para seguir construyendo tus proyectos.</CardDescription>
           </CardHeader>
           <CardContent>
             {error && (
@@ -103,8 +103,8 @@ export default function LoginPage() {
 
             <Tabs defaultValue="signin" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger value="signin">Iniciar sesión</TabsTrigger>
+                <TabsTrigger value="signup">Crear cuenta</TabsTrigger>
               </TabsList>
 
               <TabsContent value="signin">
@@ -115,30 +115,41 @@ export default function LoginPage() {
                       id="email"
                       name="email"
                       type="email"
-                      placeholder="Enter your email"
+                      placeholder="Ingresa tu email"
                       required
                       disabled={isLoading}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">Contraseña</Label>
                     <Input
                       id="password"
                       name="password"
                       type="password"
-                      placeholder="Enter your password"
+                      placeholder="Ingresa tu contraseña"
                       required
                       disabled={isLoading}
                     />
                   </div>
+
+                  {/* ⬇️ Aquí agregamos el botón de "¿Olvidaste tu contraseña?" */}
+                  <div className="text-right">
+                    <Link
+                      href="/dashboard/resetear-contraseña"
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </Link>
+                  </div>
+
                   <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Signing in...
+                        Iniciando sesión...
                       </>
                     ) : (
-                      "Sign In"
+                      "Iniciar sesión"
                     )}
                   </Button>
                 </form>
@@ -147,12 +158,12 @@ export default function LoginPage() {
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="name">Nombre completo</Label>
                     <Input
                       id="name"
                       name="name"
                       type="text"
-                      placeholder="Enter your full name"
+                      placeholder="Ingresa tu nombre completo"
                       required
                       disabled={isLoading}
                     />
@@ -163,18 +174,18 @@ export default function LoginPage() {
                       id="email-signup"
                       name="email-signup"
                       type="email"
-                      placeholder="Enter your email"
+                      placeholder="Ingresa tu email"
                       required
                       disabled={isLoading}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password-signup">Password</Label>
+                    <Label htmlFor="password-signup">Contraseña</Label>
                     <Input
                       id="password-signup"
                       name="password-signup"
                       type="password"
-                      placeholder="Create a password"
+                      placeholder="Crea una contraseña (6 caracteres mínimo)"
                       required
                       disabled={isLoading}
                       minLength={6}
@@ -183,11 +194,11 @@ export default function LoginPage() {
                   <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
                     {isLoading ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Creating account...
+                        Creando cuenta...
+                        <Loader2 className="w-4 h-4 ml-2 animate-spin" />
                       </>
                     ) : (
-                      "Create Account"
+                      "Crear cuenta"
                     )}
                   </Button>
                 </form>
@@ -196,7 +207,7 @@ export default function LoginPage() {
 
             <div className="mt-6 text-center">
               <Link href="/" className="text-sm text-gray-600 hover:text-primary transition-colors">
-                ← Back to home
+                ← 
               </Link>
             </div>
           </CardContent>
