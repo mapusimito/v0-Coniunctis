@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
   const resetPassword = async (email: string) => {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: "https://coniunctis.vercel.app/passwordsauth/actualizar-contraseña", 
+    redirectTo: "https://coniunctis.vercel.app/passwordsauth/updatepwd", 
   })
 
   return { error }
