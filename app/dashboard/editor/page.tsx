@@ -43,6 +43,7 @@ export default function EditorPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [showAI, setShowAI] = useState(false)
+  const [showToolbar, setShowToolbar] = useState(false)
   const [aiResult, setAiResult] = useState("")
   const [isAILoading, setIsAILoading] = useState(false)
   const [selectedText, setSelectedText] = useState("")

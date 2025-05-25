@@ -104,17 +104,17 @@ export async function useAssistant(
         userPrompt = `Corrige este texto: "${text}"`
         break
       case "explain":
-          "Eres un profesor que explica conceptos de manera clara y sencilla en español. Explica el contenido del texto de forma didáctica. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma."
+          "Eres un profesor que explica conceptos de manera clara y sencilla en español. Explica el contenido del texto de forma didáctica. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Recuerda que estas trabajando en un entorno de escritura, asi que no dejes comentarios innecesarios, solo ejecuta la tarea."
         userPrompt = `Explica este texto: "${text}"`
         break
       case "simple":
         systemPrompt =
-          "Eres un editor que simplifica textos en español. Reescribe el texto de manera más simple y fácil de entender, manteniendo el significado. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma."
+          "Eres un editor que simplifica textos en español. Reescribe el texto de manera más simple y fácil de entender, manteniendo el significado. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Recuerda que estas trabajando en un entorno de escritura, asi que no dejes comentarios innecesarios, solo ejecuta la tarea."
         userPrompt = `Simplifica este texto: "${text}"`
         break
       case "complex":
         systemPrompt =
-          "Eres un editor que enriquece textos en español. Reescribe el texto de manera más elaborada y sofisticada, manteniendo el significado. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma."
+          "Eres un editor que enriquece textos en español. Reescribe el texto de manera más elaborada y sofisticada, manteniendo el significado. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Recuerda que estas trabajando en un entorno de escritura, asi que no dejes comentarios innecesarios, solo ejecuta la tarea."
         userPrompt = `Haz más complejo este texto: "${text}"`
         break
     }
@@ -163,16 +163,15 @@ export async function useProducer(prompt: string, action: "expand" | "generate" 
     switch (action) {
       case "expand":
         systemPrompt =
-          "Eres un escritor creativo en español. Expande el texto agregando más detalles, ejemplos y explicaciones manteniendo el estilo original. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Si detectas que el texto está en formato de esquema, expande el esquema para que sea más completo."
+          "Eres un escritor creativo en español. Expande el texto agregando más detalles, ejemplos y explicaciones manteniendo el estilo original. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Si detectas que el texto está en formato de esquema, expande el esquema para que sea más completo. Recuerda que estas trabajando en un entorno de escritura, asi que no dejes comentarios innecesarios, solo ejecuta la tarea."
         userPrompt = `Expande este texto: "${prompt}"`
         break
       case "generate":
-        systemPrompt =
-          "Eres un escritor creativo en español. Continúa el texto de forma natural y coherente, manteniendo el estilo y tono. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Si detectas que el texto está en formato de esquema, genera un texto narrativo basado en el esquema."
+          "Eres un escritor creativo en español. Continúa el texto de forma natural y coherente, manteniendo el estilo y tono. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Si detectas que el texto está en formato de esquema, genera un texto narrativo basado en el esquema. Recuerda que estas trabajando en un entorno de escritura, asi que no dejes comentarios innecesarios, solo ejecuta la tarea."
         userPrompt = `Continúa este texto: "${prompt}"`
         break
       case "scheme":
-          "Eres un organizador de contenido en español. Crea un esquema estructurado para el tema. Usa formato de lista con viñetas (-). Si ves que el texto está escrito en otro idioma, adaptate a ese idioma."
+          "Eres un organizador de contenido en español. Crea un esquema estructurado para el tema. Usa formato de lista con viñetas (-). Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Recuerda que estas trabajando en un entorno de escritura, asi que no dejes comentarios innecesarios, solo ejecuta la tarea."
         userPrompt = `Crea un esquema para: "${prompt}"`
         break
     }
