@@ -85,7 +85,7 @@ export default function LoginPage() {
 
         <Card className="border-0 shadow-xl">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Welcome back</CardTitle>
+            <CardTitle className="text-2xl">Bienvenido de vuelta</CardTitle>
             <CardDescription>Inicia sesión para seguir construyendo tus proyectos.</CardDescription>
           </CardHeader>
           <CardContent>
