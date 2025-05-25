@@ -5,7 +5,7 @@ import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 // Update the import to use your existing supabaseClient.ts file
-import { supabase } from "./supabaseClient"
+import { supabase } from "./supabaseClient.ts"
 
 interface AuthContextType {
   user: User | null
@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
   const resetPassword = async (email: string) => {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: "https://coniunctis.vercel.app/actualizar-contraseña", 
+    redirectTo: "https://coniunctis.vercel.app/passwordsauth/actualizar-contraseña", 
   })
 
   return { error }
