@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -49,6 +49,8 @@ export default function DashboardPage() {
     weekProgress: 0,
   })
   const [loading, setLoading] = useState(true)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
 
   const displayName = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Usuario"
 

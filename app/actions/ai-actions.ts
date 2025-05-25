@@ -5,7 +5,7 @@ interface AIResponse {
   type: "grammar" | "style" | "content" | "structure"
 }
 
-async function callGemini(messages: any[], maxTokens = 300): Promise<string> {
+async function callGemini(messages: any[], maxTokens = 4000): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY
 
   if (!apiKey) {
@@ -124,7 +124,7 @@ export async function useAssistant(
       { role: "user", content: userPrompt },
     ]
 
-    return await callGemini(messages, 400)
+    return await callGemini(messages, 2048)
   } catch (error) {
     console.error(`Error in useAssistant (${action}):`, error)
     return "Error al procesar el texto. Por favor, inténtalo más tarde."
