@@ -38,7 +38,7 @@ export default function EditorPage() {
     content: "",
     project_tag: "General",
     progress_percentage: 0,
-    status: "draft" as const,
+    status: "Borrador" as const,
   })
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -62,7 +62,7 @@ export default function EditorPage() {
         content: "",
         project_tag: "General",
         progress_percentage: 0,
-        status: "draft",
+        status: "Borrador",
       })
     }
   }, [documentId, user])
