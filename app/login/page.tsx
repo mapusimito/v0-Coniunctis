@@ -134,10 +134,7 @@ export default function LoginPage() {
 
                   {/* ⬇️ Aquí agregamos el botón de "¿Olvidaste tu contraseña?" */}
                   <div className="text-right">
-                    <Link
-                      href="/passwordsauth/changepwd"
-                      className="text-sm text-blue-600 hover:underline"
-                    >
+                    <Link href="/passwordsauth/changepwd" className="text-sm text-blue-600 hover:underline">
                       ¿Olvidaste tu contraseña?
                     </Link>
                   </div>
@@ -207,7 +204,7 @@ export default function LoginPage() {
 
             <div className="mt-6 text-center">
               <Link href="/" className="text-sm text-gray-600 hover:text-primary transition-colors">
-                ← 
+                ←
               </Link>
             </div>
           </CardContent>

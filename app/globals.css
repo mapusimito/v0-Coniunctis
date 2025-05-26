@@ -8,8 +8,6 @@
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
     --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
     --secondary: 24.6 95% 53.1%;
@@ -41,7 +39,7 @@
 
   .dark {
     --background: 222.2 84% 4.9%;
-    --foreground: 215 28% 85%;
+    --foreground: 210 40% 98%;
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
@@ -101,46 +99,6 @@
 
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-muted-foreground/50;
-  }
-
-  /* Notion-like styling */
-  .notion-page {
-    @apply max-w-4xl mx-auto px-6 py-8;
-  }
-
-  .notion-title {
-    @apply text-4xl font-bold mb-2;
-    outline: none;
-    border: none;
-  }
-
-  .notion-content {
-    @apply text-base leading-relaxed;
-  }
-
-  .notion-block {
-    @apply mb-2;
-    min-height: 1.5rem;
-    outline: none;
-  }
-
-  .notion-block:empty::before {
-    content: "Escribe algo...";
-    @apply text-muted-foreground;
-  }
-
-  /* AI Panel styling */
-  .ai-panel {
-    @apply fixed right-4 top-20 w-80 bg-card border rounded-lg shadow-lg z-50;
-    @apply transform transition-all duration-200 ease-out;
-  }
-
-  .ai-panel.hidden {
-    @apply translate-x-full opacity-0 pointer-events-none;
-  }
-
-  .ai-panel.visible {
-    @apply translate-x-0 opacity-100;
   }
 }
 

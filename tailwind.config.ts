@@ -1,16 +1,12 @@
-import type { Config } from "tailwindcss"
+/** @type {import('tailwindcss').Config} */
+import { fontFamily } from "tailwindcss/defaultTheme"
+import defaultConfig from "shadcn/ui/tailwind.config"
 
-const config = {
-  darkMode: ["class"],
-  content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
-    "*.{js,ts,jsx,tsx,mdx}",
-  ],
-  prefix: "",
+module.exports = {
+  ...defaultConfig,
+  content: [...defaultConfig.content, "*.{js,ts,jsx,tsx,mdx}"],
   theme: {
+    ...defaultConfig.theme,
     container: {
       center: true,
       padding: "2rem",
@@ -19,49 +15,50 @@ const config = {
       },
     },
     extend: {
+      ...defaultConfig.theme.extend,
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        ...defaultConfig.theme.extend.colors,
+        card: "rgb(255, 255, 255)",
+        "card-foreground": "rgb(38, 36, 31)",
         primary: {
-          DEFAULT: "#3B82F6", // Light blue
-          foreground: "#FFFFFF",
+          DEFAULT: "rgb(221, 133, 85)",
+          foreground: "rgb(210, 102, 255)",
         },
         secondary: {
-          DEFAULT: "#F97316", // Orange
-          foreground: "#FFFFFF",
+          DEFAULT: "rgb(24, 242, 85)",
+          foreground: "rgb(210, 102, 255)",
         },
-        accent: {
-          DEFAULT: "#EFF6FF", // Very light blue
-          foreground: "#1E40AF",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
+        muted: "rgb(210, 204, 240)",
+        "muted-foreground": "rgb(118, 117, 119)",
+        accent: "rgb(210, 204, 240)",
+        "accent-foreground": "rgb(38, 36, 31)",
+        destructive: "rgb(154, 21, 0)",
+        "destructive-foreground": "rgb(210, 102, 255)",
+        "sidebar-background": "rgb(250, 250, 250)",
+        "sidebar-foreground": "rgb(70, 68, 64)",
+        "sidebar-primary": "rgb(70, 70, 70)",
+        "sidebar-primary-foreground": "rgb(255, 255, 255)",
+        "sidebar-accent": "rgb(244, 244, 244)",
+        "sidebar-accent-foreground": "rgb(70, 70, 70)",
+        "sidebar-border": "rgb(220, 217, 232)",
+        "sidebar-ring": "rgb(221, 133, 85)",
+        "chart-1": "rgb(12, 194, 157)",
+        "chart-2": "rgb(173, 148, 99)",
+        "chart-3": "rgb(197, 99, 60)",
+        "chart-4": "rgb(43, 189, 166)",
+        "chart-5": "rgb(27, 221, 167)",
+      },
+      fontFamily: {
+        sans: ["var(--font-sans)", ...fontFamily.sans],
       },
       keyframes: {
         "accordion-down": {
-          from: { height: "0" },
+          from: { height: 0 },
           to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+          to: { height: 0 },
         },
       },
       animation: {
@@ -70,7 +67,5 @@ const config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-} satisfies Config
-
-export default config
+  plugins: [...defaultConfig.plugins, require("tailwindcss-animate")],
+}
