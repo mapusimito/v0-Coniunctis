@@ -49,6 +49,8 @@ export default function EditorPage() {
   const [selectedText, setSelectedText] = useState("")
   const [wordCount, setWordCount] = useState(0)
   const [charCount, setCharCount] = useState(0)
+  const [lastSavedContent, setLastSavedContent] = useState("")
+  const autoSaveIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const editorRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
@@ -115,6 +117,7 @@ export default function EditorPage() {
         setDocument((prev) => ({ ...prev, id: data.id }))
         router.replace(`/dashboard/editor?id=${data.id}`)
       }
+      setLastSavedContent(content) // Actualiza el contenido guardado
     } catch (error) {
       console.error("Error saving document:", error)
     } finally {
@@ -125,10 +128,6 @@ export default function EditorPage() {
   const handleContentChange = (value: string) => {
     setDocument((prev) => ({ ...prev, content: value }))
     updateWordCount(value)
-
-    // Auto-save after 3 seconds of inactivity
-    clearTimeout(window.autoSaveTimeout)
-    window.autoSaveTimeout = setTimeout(() => saveDocument(), 3000)
   }
 
   const getSelectedText = () => {
@@ -255,6 +254,23 @@ export default function EditorPage() {
     }
     setShowAI(false)
   }
+
+  // Nuevo useEffect para autoguardado cada 15 segundos si hubo cambios
+  useEffect(() => {
+    if (!user) return
+
+    autoSaveIntervalRef.current = setInterval(() => {
+      if (document.content !== lastSavedContent) {
+        saveDocument()
+        setLastSavedContent(document.content)
+      }
+    }, 15000) // 15 segundos
+
+    return () => {
+      if (autoSaveIntervalRef.current) clearInterval(autoSaveIntervalRef.current)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [document.content, user])
 
   if (isLoading) {
     return (
