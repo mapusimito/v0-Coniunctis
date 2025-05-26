@@ -18,17 +18,11 @@ export default function LandingPage() {
             </span>
           </div>
           <nav className="hidden md:flex items-center space-x-6">
-            <Link href="#features" className="text-gray-600 hover:text-primary transition-colors">
-              Features
-            </Link>
-            <Link href="#pricing" className="text-gray-600 hover:text-primary transition-colors">
-              Pricing
-            </Link>
             <Link href="/login" className="text-gray-600 hover:text-primary transition-colors">
-              Sign In
+              Iniciar sesión
             </Link>
             <Button asChild>
-              <Link href="/login">Get Started</Link>
+              <Link href="/register">Crear cuenta</Link>
             </Button>
           </nav>
         </div>
@@ -40,35 +34,37 @@ export default function LandingPage() {
           Escribe de manera inteligente, <br />
           <br />
           Trabaja de manera inteligente
+          <br />
+          <br />
         </h1>
         <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-          Coniunctis combines AI-powered writing assistance with intelligent task management to boost your productivity
-          like never before.
+          Coniunctis combina asistencia de escritura impulsada por IA
+          con gestión inteligente de tareas para aumentar tu productividad como nunca antes.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button size="lg" asChild className="bg-primary hover:bg-primary/90">
-            <Link href="/login">Start Writing for Free</Link>
+            <Link href="/login">Empieza a escribir ahora.</Link>
           </Button>
           <Button size="lg" variant="outline">
-            Watch Demo
+            Ver demo
           </Button>
         </div>
       </section>
 
       {/* Features Section */}
       <section id="features" className="container mx-auto px-4 py-20">
-        <h2 className="text-3xl font-bold text-center mb-12">Everything you need to be productive</h2>
+        <h2 className="text-3xl font-bold text-center mb-12">Todo lo que necesitas para ser productivo</h2>
         <div className="grid md:grid-cols-3 gap-8">
           <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardContent className="p-6 text-center">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <FileText className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">AI-Powered Editor</h3>
-              <p className="text-gray-600">
-                Write with confidence using our intelligent assistant that helps with grammar, style, and content
-                suggestions in real-time.
-              </p>
+              <h3 className="text-xl font-semibold mb-2">Editor propulsado por IA</h3>
+                <p className="text-gray-600">
+                Escribe con confianza usando nuestro asistente inteligente que te ayuda con la gramática,
+                ortografía y estilo de escritura. Sin olvidar a nuestro productor, que te ayuda a redactar de manera eficiente.
+                </p>
             </CardContent>
           </Card>
 
@@ -77,9 +73,9 @@ export default function LandingPage() {
               <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <CheckSquare className="w-6 h-6 text-secondary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Smart Task Manager</h3>
+              <h3 className="text-xl font-semibold mb-2">Administrador de Tareas Intuitivo</h3>
               <p className="text-gray-600">
-                Organize your work with intelligent task prioritization and seamless integration with your documents.
+                Organiza tu trabajo con prioridades inteligentes de tareas e integración perfecta con el manejo del tiempo.
               </p>
             </CardContent>
           </Card>
@@ -88,11 +84,15 @@ export default function LandingPage() {
             <CardContent className="p-6 text-center">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Clock className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Pomodoro Integration</h3>
+              <h3 className="text-xl font-semibold mb-2">Integración con Pomodoro</h3>
               <p className="text-gray-600">
-                Stay focused with built-in time management tools that adapt to your workflow and boost concentration.
+                Mantén la atención con herramientas de gestión de tiempo integradas que adaptan tu flujo de trabajo y fortalecen la concentración.
               </p>
+            </CardContent>
+          </Card>
+                <p className="text-gray-600">
+                Mantente enfocado con herramientas integradas de gestión del tiempo que se adaptan a tu flujo de trabajo y potencian tu concentración.
+                </p>
             </CardContent>
           </Card>
         </div>
@@ -103,7 +103,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">Ready to transform your productivity?</h2>
           <p className="text-xl text-blue-100 mb-8">
-            Join thousands of writers and professionals who trust Coniunctis.
+            Únete al equipo de academicos que confiamos en Coniunctis.
           </p>
           <Button size="lg" variant="secondary" asChild>
             <Link href="/login">Get Started Today</Link>
@@ -121,7 +121,7 @@ export default function LandingPage() {
             <span className="text-2xl font-bold">Coniunctis</span>
           </div>
           <div className="text-center text-gray-400">
-            <p>&copy; 2024 Coniunctis. All rights reserved.</p>
+            <p>&copy; 2025 Coniunctis. Hecho por y para estudiantes.</p>
           </div>
         </div>
       </footer>
