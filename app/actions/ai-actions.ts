@@ -75,13 +75,21 @@ async function callGemini(messages: any[], maxTokens = 4000): Promise<string> {
       !data.candidates[0].content.parts[0] ||
       !data.candidates[0].content.parts[0].text
     ) {
+      console.error("Invalid Gemini API response structure:", JSON.stringify(data, null, 2))
       if (data.candidates && data.candidates[0] && data.candidates[0].finishReason === "SAFETY") {
         throw new Error("Contenido bloqueado por filtros de seguridad")
+      }
+      if (data.candidates && data.candidates[0] && data.candidates[0].finishReason) {
+        throw new Error(`Respuesta terminada por: ${data.candidates[0].finishReason}`)
       }
       throw new Error("Respuesta inválida de Gemini API")
     }
 
-    return data.candidates[0].content.parts[0].text.trim()
+    const responseText = data.candidates[0].content.parts[0].text.trim()
+    if (!responseText) {
+      throw new Error("Respuesta vacía de Gemini API")
+    }
+    return responseText
   } catch (error) {
     console.error("Gemini API call failed:", error)
     throw error
@@ -104,6 +112,7 @@ export async function useAssistant(
         userPrompt = `Corrige este texto: "${text}"`
         break
       case "explain":
+        systemPrompt =
           "Eres un profesor que explica conceptos de manera clara y sencilla en español. Explica el contenido del texto de forma didáctica. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Recuerda que estas trabajando en un entorno de escritura, asi que no dejes comentarios innecesarios, solo ejecuta la tarea."
         userPrompt = `Explica este texto: "${text}"`
         break
@@ -167,10 +176,12 @@ export async function useProducer(prompt: string, action: "expand" | "generate" 
         userPrompt = `Expande este texto: "${prompt}"`
         break
       case "generate":
+        systemPrompt =
           "Eres un escritor creativo en español. Continúa el texto de forma natural y coherente, manteniendo el estilo y tono. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Si detectas que el texto está en formato de esquema, genera un texto narrativo basado en el esquema. Recuerda que estas trabajando en un entorno de escritura, asi que no dejes comentarios innecesarios, solo ejecuta la tarea."
         userPrompt = `Continúa este texto: "${prompt}"`
         break
       case "scheme":
+        systemPrompt =
           "Eres un organizador de contenido en español. Crea un esquema estructurado para el tema. Usa formato de lista con viñetas (-). Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Recuerda que estas trabajando en un entorno de escritura, asi que no dejes comentarios innecesarios, solo ejecuta la tarea."
         userPrompt = `Crea un esquema para: "${prompt}"`
         break

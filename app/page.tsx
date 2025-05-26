@@ -19,16 +19,16 @@ export default function LandingPage() {
           </div>
           <nav className="hidden md:flex items-center space-x-6">
             <Link href="#features" className="text-gray-600 hover:text-primary transition-colors">
-              Características
+              Features
             </Link>
             <Link href="#pricing" className="text-gray-600 hover:text-primary transition-colors">
-              Precios
+              Pricing
             </Link>
             <Link href="/login" className="text-gray-600 hover:text-primary transition-colors">
-              Iniciar Sesión
+              Sign In
             </Link>
             <Button asChild>
-              <Link href="/login">Comenzar</Link>
+              <Link href="/login">Get Started</Link>
             </Button>
           </nav>
         </div>
@@ -42,32 +42,32 @@ export default function LandingPage() {
           Trabaja de manera inteligente
         </h1>
         <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-          Coniunctis combina asistencia de escritura impulsada por IA con gestión inteligente de tareas para aumentar tu
-          productividad como nunca antes.
+          Coniunctis combines AI-powered writing assistance with intelligent task management to boost your productivity
+          like never before.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button size="lg" asChild className="bg-primary hover:bg-primary/90">
-            <Link href="/login">Empieza a Escribir Gratis</Link>
+            <Link href="/login">Start Writing for Free</Link>
           </Button>
           <Button size="lg" variant="outline">
-            Ver Demo
+            Watch Demo
           </Button>
         </div>
       </section>
 
       {/* Features Section */}
       <section id="features" className="container mx-auto px-4 py-20">
-        <h2 className="text-3xl font-bold text-center mb-12">Todo lo que necesitas para ser productivo</h2>
+        <h2 className="text-3xl font-bold text-center mb-12">Everything you need to be productive</h2>
         <div className="grid md:grid-cols-3 gap-8">
           <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardContent className="p-6 text-center">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <FileText className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Editor Impulsado por IA</h3>
+              <h3 className="text-xl font-semibold mb-2">AI-Powered Editor</h3>
               <p className="text-gray-600">
-                Escribe con confianza usando nuestras herramientas inteligente que te ayuda con gramática, ortografía y
-                redacción de contenido.
+                Write with confidence using our intelligent assistant that helps with grammar, style, and content
+                suggestions in real-time.
               </p>
             </CardContent>
           </Card>
@@ -77,9 +77,9 @@ export default function LandingPage() {
               <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <CheckSquare className="w-6 h-6 text-secondary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Gestor de Tareas Inteligente</h3>
+              <h3 className="text-xl font-semibold mb-2">Smart Task Manager</h3>
               <p className="text-gray-600">
-                Organiza tu trabajo con priorización inteligente de tareas e integración perfecta con nuestro sistema de Pomodoro.
+                Organize your work with intelligent task prioritization and seamless integration with your documents.
               </p>
             </CardContent>
           </Card>
@@ -89,10 +89,9 @@ export default function LandingPage() {
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Clock className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Integración Pomodoro</h3>
+              <h3 className="text-xl font-semibold mb-2">Pomodoro Integration</h3>
               <p className="text-gray-600">
-                Mantente enfocado con herramientas integradas de gestión del tiempo que se adaptan a tu flujo de trabajo
-                y potencian la concentración.
+                Stay focused with built-in time management tools that adapt to your workflow and boost concentration.
               </p>
             </CardContent>
           </Card>
@@ -102,12 +101,12 @@ export default function LandingPage() {
       {/* CTA Section */}
       <section className="bg-gradient-to-r from-primary to-secondary py-20">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">¿Listo para transformar tu productividad?</h2>
+          <h2 className="text-3xl font-bold text-white mb-4">Ready to transform your productivity?</h2>
           <p className="text-xl text-blue-100 mb-8">
-            Únete a nuestro equipo de academicos que confían en Coniunctis.
+            Join thousands of writers and professionals who trust Coniunctis.
           </p>
           <Button size="lg" variant="secondary" asChild>
-            <Link href="/login">Comienza Hoy</Link>
+            <Link href="/login">Get Started Today</Link>
           </Button>
         </div>
       </section>
@@ -122,7 +121,7 @@ export default function LandingPage() {
             <span className="text-2xl font-bold">Coniunctis</span>
           </div>
           <div className="text-center text-gray-400">
-            <p>&copy; 2025 Coniunctis. Hecho por y para estudiantes.</p>
+            <p>&copy; 2024 Coniunctis. All rights reserved.</p>
           </div>
         </div>
       </footer>

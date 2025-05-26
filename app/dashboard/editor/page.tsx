@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
 import {
   Sparkles,
   Save,
@@ -24,6 +23,7 @@ import {
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
 import { AIService } from "@/lib/ai-service"
+import { LexicalEditor } from "@/components/lexical-editor"
 
 export default function EditorPage() {
   const { user } = useAuth()
@@ -51,7 +51,6 @@ export default function EditorPage() {
   const [charCount, setCharCount] = useState(0)
   const [lastSavedContent, setLastSavedContent] = useState("")
   const autoSaveIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const editorRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     if (documentId && user) {
@@ -117,7 +116,7 @@ export default function EditorPage() {
         setDocument((prev) => ({ ...prev, id: data.id }))
         router.replace(`/dashboard/editor?id=${data.id}`)
       }
-      setLastSavedContent(content) // Actualiza el contenido guardado
+      setLastSavedContent(content)
     } catch (error) {
       console.error("Error saving document:", error)
     } finally {
@@ -130,46 +129,19 @@ export default function EditorPage() {
     updateWordCount(value)
   }
 
-  const getSelectedText = () => {
-    if (editorRef.current) {
-      const start = editorRef.current.selectionStart
-      const end = editorRef.current.selectionEnd
-      return editorRef.current.value.substring(start, end)
-    }
-    return ""
-  }
-
-  const replaceSelectedText = (newText: string) => {
-    if (editorRef.current) {
-      const start = editorRef.current.selectionStart
-      const end = editorRef.current.selectionEnd
-      const content = document.content
-      const newContent = content.substring(0, start) + newText + content.substring(end)
-      setDocument((prev) => ({ ...prev, content: newContent }))
-      updateWordCount(newContent)
-    }
-  }
-
-  const insertTextAtCursor = (text: string) => {
-    if (editorRef.current) {
-      const start = editorRef.current.selectionStart
-      const content = document.content
-      const newContent = content.substring(0, start) + text + content.substring(start)
-      setDocument((prev) => ({ ...prev, content: newContent }))
-      updateWordCount(newContent)
-    }
+  const handleSelectionChange = (selectedText: string) => {
+    setSelectedText(selectedText)
   }
 
   // AI Functions
   const handleAssistant = async (action: "grammar" | "explain" | "simple" | "complex") => {
-    const text = getSelectedText() || document.content
+    const text = selectedText || document.content
     if (!text.trim()) {
       setAiResult("Por favor selecciona texto o escribe algo primero.")
       setShowAI(true)
       return
     }
 
-    setSelectedText(text)
     setIsAILoading(true)
     setShowAI(true)
 
@@ -199,14 +171,13 @@ export default function EditorPage() {
   }
 
   const handleProducer = async (action: "expand" | "generate" | "scheme") => {
-    const text = action === "scheme" ? document.title : getSelectedText() || document.content
+    const text = action === "scheme" ? document.title : selectedText || document.content
     if (!text.trim()) {
       setAiResult("Por favor proporciona texto o un tema.")
       setShowAI(true)
       return
     }
 
-    setSelectedText(text)
     setIsAILoading(true)
     setShowAI(true)
 
@@ -247,15 +218,21 @@ export default function EditorPage() {
   }
 
   const applyAIResult = () => {
-    if (selectedText && getSelectedText()) {
-      replaceSelectedText(aiResult)
+    if (selectedText) {
+      // Si hay texto seleccionado, reemplazarlo
+      const newContent = document.content.replace(selectedText, aiResult)
+      setDocument((prev) => ({ ...prev, content: newContent }))
+      updateWordCount(newContent)
     } else {
-      insertTextAtCursor(aiResult)
+      // Si no hay selección, agregar al final
+      const newContent = document.content + "\n\n" + aiResult
+      setDocument((prev) => ({ ...prev, content: newContent }))
+      updateWordCount(newContent)
     }
     setShowAI(false)
   }
 
-  // Nuevo useEffect para autoguardado cada 15 segundos si hubo cambios
+  // Autoguardado cada 15 segundos si hubo cambios
   useEffect(() => {
     if (!user) return
 
@@ -392,15 +369,12 @@ export default function EditorPage() {
       </div>
 
       {/* Editor */}
-      <div className="flex-1 p-6 relative">
-        <div className="max-w-4xl mx-auto">
-          <Textarea
-            ref={editorRef}
-            value={document.content}
-            onChange={(e) => handleContentChange(e.target.value)}
-            className="min-h-[600px] text-lg leading-relaxed resize-none"
-            style={{ fontFamily: "Georgia, serif" }}
-            placeholder="Comienza a escribir tu documento aquí. Selecciona texto y usa las herramientas de IA para mejorar tu escritura..."
+      <div className="flex-1 relative">
+        <div className="h-full">
+          <LexicalEditor
+            content={document.content}
+            onChange={handleContentChange}
+            onSelectionChange={handleSelectionChange}
           />
 
           {/* AI Result Panel */}
