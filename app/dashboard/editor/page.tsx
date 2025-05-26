@@ -289,104 +289,104 @@ export default function EditorPage() {
       <div className="border-b p-4 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex-1 max-w-md">
-        <div className="flex items-center space-x-2">
-          <Input
-            value={document.title}
-            onChange={(e) => setDocument((prev) => ({ ...prev, title: e.target.value }))}
-            className="text-2xl font-bold border-none p-0 h-auto focus-visible:ring-0"
-            placeholder="Título del documento..."
-          />
-          <Button variant="ghost" size="sm" onClick={generateTitle} disabled={isAILoading}>
-            <Zap className="w-4 h-4" />
-          </Button>
-        </div>
-        <div className="flex items-center space-x-4 mt-2">
+            <div className="flex items-center space-x-2">
+              <Input
+                value={document.title}
+                onChange={(e) => setDocument((prev) => ({ ...prev, title: e.target.value }))}
+                className="text-2xl font-bold border-none p-0 h-auto focus-visible:ring-0"
+                placeholder="Título del documento..."
+              />
+              <Button variant="ghost" size="sm" onClick={generateTitle} disabled={isAILoading}>
+                <Zap className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="flex items-center space-x-4 mt-2">
+              <div className="flex items-center space-x-2">
+                <Label className="text-sm">Proyecto:</Label>
+                <Select
+                  value={document.project_tag}
+                  onValueChange={(value) => setDocument((prev) => ({ ...prev, project_tag: value }))}
+                >
+                  <SelectTrigger className="w-32 h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="General">General</SelectItem>
+                    <SelectItem value="Trabajo">Trabajo</SelectItem>
+                    <SelectItem value="Personal">Personal</SelectItem>
+                    <SelectItem value="Investigación">Investigación</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center space-x-4 text-sm text-gray-600">
+                <span>{wordCount} palabras</span>
+                <span>{charCount} caracteres</span>
+              </div>
+            </div>
+          </div>
           <div className="flex items-center space-x-2">
-            <Label className="text-sm">Proyecto:</Label>
-            <Select
-          value={document.project_tag}
-          onValueChange={(value) => setDocument((prev) => ({ ...prev, project_tag: value }))}
-            >
-          <SelectTrigger className="w-32 h-8">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="General">General</SelectItem>
-            <SelectItem value="Trabajo">Trabajo</SelectItem>
-            <SelectItem value="Personal">Personal</SelectItem>
-            <SelectItem value="Investigación">Investigación</SelectItem>
-          </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center space-x-4 text-sm text-gray-600">
-            <span>{wordCount} palabras</span>
-            <span>{charCount} caracteres</span>
-          </div>
-        </div>
-          </div>
-          <div className="flex items-center space-x-2">
-        <Badge variant="secondary">{document.status}</Badge>
-        <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={saveDocument} disabled={isSaving}>
-          {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-          Guardar
-        </Button>
+            <Badge variant="secondary">{document.status}</Badge>
+            <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={saveDocument} disabled={isSaving}>
+              {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              Guardar
+            </Button>
           </div>
         </div>
 
         {/* AI Toolbar Toggle */}
         <div>
           <Button
-        variant="outline"
-        size="sm"
-        className="mt-2"
-        onClick={() => setShowToolbar((prev) => !prev)}
-        aria-expanded={showToolbar}
-        aria-controls="ai-toolbar-panel"
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={() => setShowToolbar((prev) => !prev)}
+            aria-expanded={showToolbar}
+            aria-controls="ai-toolbar-panel"
           >
-        <Sparkles className="w-4 h-4 mr-2" />
-        Herramientas de IA
+            <Sparkles className="w-4 h-4 mr-2" />
+            Herramientas de IA
           </Button>
           {showToolbar && (
-        <div
-          id="ai-toolbar-panel"
-          className="flex items-center space-x-2 p-2 border rounded-lg bg-gray-50 mt-3 animate-fade-in"
-        >
-          <div className="flex items-center space-x-1">
-            <span className="text-sm font-medium text-gray-700">Asistente:</span>
-            <Button variant="ghost" size="sm" onClick={() => handleAssistant("grammar")}>
-          <CheckCircle className="w-4 h-4 mr-1" />
-          Gramática
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => handleAssistant("explain")}>
-          <MessageSquare className="w-4 h-4 mr-1" />
-          Explicar
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => handleAssistant("simple")}>
-          <Wand2 className="w-4 h-4 mr-1" />
-          Simplificar
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => handleAssistant("complex")}>
-          <Sparkles className="w-4 h-4 mr-1" />
-          Complejizar
-            </Button>
-          </div>
-          <div className="w-px h-6 bg-gray-300" />
-          <div className="flex items-center space-x-1">
-            <span className="text-sm font-medium text-gray-700">Productor:</span>
-            <Button variant="ghost" size="sm" onClick={() => handleProducer("expand")}>
-          <PlusCircle className="w-4 h-4 mr-1" />
-          Expandir
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => handleProducer("generate")}>
-          <FileText className="w-4 h-4 mr-1" />
-          Generar
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => handleProducer("scheme")}>
-          <BookOpen className="w-4 h-4 mr-1" />
-          Esquema
-            </Button>
-          </div>
-        </div>
+            <div
+              id="ai-toolbar-panel"
+              className="flex items-center space-x-2 p-2 border rounded-lg bg-gray-50 mt-3 animate-fade-in"
+            >
+              <div className="flex items-center space-x-1">
+                <span className="text-sm font-medium text-gray-700">Asistente:</span>
+                <Button variant="ghost" size="sm" onClick={() => handleAssistant("grammar")}>
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  Gramática
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleAssistant("explain")}>
+                  <MessageSquare className="w-4 h-4 mr-1" />
+                  Explicar
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleAssistant("simple")}>
+                  <Wand2 className="w-4 h-4 mr-1" />
+                  Simplificar
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleAssistant("complex")}>
+                  <Sparkles className="w-4 h-4 mr-1" />
+                  Complejizar
+                </Button>
+              </div>
+              <div className="w-px h-6 bg-gray-300" />
+              <div className="flex items-center space-x-1">
+                <span className="text-sm font-medium text-gray-700">Productor:</span>
+                <Button variant="ghost" size="sm" onClick={() => handleProducer("expand")}>
+                  <PlusCircle className="w-4 h-4 mr-1" />
+                  Expandir
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleProducer("generate")}>
+                  <FileText className="w-4 h-4 mr-1" />
+                  Generar
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleProducer("scheme")}>
+                  <BookOpen className="w-4 h-4 mr-1" />
+                  Esquema
+                </Button>
+              </div>
+            </div>
           )}
         </div>
       </div>
