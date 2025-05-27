@@ -15,6 +15,7 @@ import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin
 import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin"
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin"
 import { TRANSFORMERS } from "@lexical/markdown"
+import { $convertFromMarkdownString, $convertToMarkdownString } from "@lexical/markdown"
 
 import { HeadingNode, QuoteNode } from "@lexical/rich-text"
 import { ListItemNode, ListNode } from "@lexical/list"
@@ -104,36 +105,50 @@ function EditorContent({ content, onChange, onSelectionChange }: LexicalEditorPr
   const [editor] = useLexicalComposerContext()
   const isFirstRender = useRef(true)
 
-  // Inicializar contenido
+  // Inicializar contenido desde markdown
   useEffect(() => {
-    if (isFirstRender.current && content) {
+    if (isFirstRender.current) {
       editor.update(() => {
         const root = $getRoot()
         root.clear()
 
-        if (content.trim()) {
-          // Dividir el contenido en párrafos
-          const paragraphs = content.split("\n\n")
-          paragraphs.forEach((paragraph, index) => {
-            if (paragraph.trim()) {
-              const paragraphNode = $createParagraphNode()
-              const textNode = $createTextNode(paragraph.trim())
-              paragraphNode.append(textNode)
-              root.append(paragraphNode)
-            }
-          })
+        if (content && content.trim()) {
+          try {
+            // Convertir markdown a nodos de Lexical
+            $convertFromMarkdownString(content, TRANSFORMERS)
+          } catch (error) {
+            console.error("Error parsing markdown:", error)
+            // Fallback a texto plano si falla el parsing de markdown
+            const paragraphs = content.split("\n\n")
+            paragraphs.forEach((paragraph) => {
+              if (paragraph.trim()) {
+                const paragraphNode = $createParagraphNode()
+                const textNode = $createTextNode(paragraph.trim())
+                paragraphNode.append(textNode)
+                root.append(paragraphNode)
+              }
+            })
+          }
         }
       })
       isFirstRender.current = false
     }
   }, [editor, content])
 
-  // Manejar cambios de contenido
+  // Manejar cambios de contenido y convertir a markdown
   const handleEditorChange = (editorState: EditorState) => {
     editorState.read(() => {
-      const root = $getRoot()
-      const textContent = root.getTextContent()
-      onChange(textContent)
+      try {
+        // Convertir el estado del editor a markdown
+        const markdownContent = $convertToMarkdownString(TRANSFORMERS)
+        onChange(markdownContent)
+      } catch (error) {
+        console.error("Error converting to markdown:", error)
+        // Fallback a texto plano si falla la conversión
+        const root = $getRoot()
+        const textContent = root.getTextContent()
+        onChange(textContent)
+      }
 
       // Manejar selección de texto
       if (onSelectionChange) {
@@ -146,6 +161,28 @@ function EditorContent({ content, onChange, onSelectionChange }: LexicalEditorPr
     })
   }
 
+  const insertAIContent = (content: string) => {
+    editor.update(() => {
+      const selection = $getSelection()
+      if (selection) {
+        selection.insertText(content)
+      } else {
+        const root = $getRoot()
+        const paragraph = $createParagraphNode()
+        const textNode = $createTextNode(content)
+        paragraph.append(textNode)
+        root.append(paragraph)
+      }
+    })
+  }
+
+  useEffect(() => {
+    if (onSelectionChange) {
+      // Exponer la función insertAIContent al componente padre
+      ;(window as any).insertAIContent = insertAIContent
+    }
+  }, [editor])
+
   return (
     <>
       <EditorToolbar />
@@ -153,7 +190,7 @@ function EditorContent({ content, onChange, onSelectionChange }: LexicalEditorPr
         <RichTextPlugin
           contentEditable={
             <ContentEditable
-              className="min-h-[600px] p-6 text-lg leading-relaxed resize-none outline-none"
+              className="min-h-[600px] p-6 text-lg leading-relaxed resize-none outline-none bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               style={{ fontFamily: "Georgia, serif" }}
             />
           }

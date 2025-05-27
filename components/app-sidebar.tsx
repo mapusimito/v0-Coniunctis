@@ -1,4 +1,4 @@
-import { LayoutDashboard, Settings, Users, ShoppingCart, ClipboardList } from "lucide-react"
+import { LayoutDashboard, Settings, FileText, CheckSquare, Clock } from "lucide-react"
 
 import type { NavItem } from "@/types"
 
@@ -14,22 +14,27 @@ const AppSidebar = ({ isCollapsed }: AppSidebarProps) => {
       icon: LayoutDashboard,
     },
     {
-      title: "Products",
-      url: "/dashboard/products",
-      icon: ShoppingCart,
+      title: "Editor",
+      url: "/dashboard/editor",
+      icon: FileText,
     },
     {
-      title: "Orders",
-      url: "/dashboard/orders",
-      icon: ClipboardList,
+      title: "Documentos",
+      url: "/dashboard/documents",
+      icon: FileText,
     },
     {
-      title: "Customers",
-      url: "/dashboard/customers",
-      icon: Users,
+      title: "Tareas",
+      url: "/dashboard/tasks",
+      icon: CheckSquare,
     },
     {
-      title: "Settings",
+      title: "Pomodoro",
+      url: "/dashboard/pomodoro",
+      icon: Clock,
+    },
+    {
+      title: "Configuración",
       url: "/dashboard/settings",
       icon: Settings,
     },

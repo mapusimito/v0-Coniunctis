@@ -57,7 +57,7 @@ export default function DocumentsPage() {
   }
 
   const deleteDocument = async (id: string) => {
-    if (!confirm("Estas seguro que quieres eliminar este documento?")) return
+    if (!confirm("Are you sure you want to delete this document?")) return
 
     try {
       const { error } = await supabase.from("documents").delete().eq("id", id)
@@ -122,15 +122,15 @@ export default function DocumentsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Completado":
+      case "complete":
         return "bg-green-100 text-green-800"
-      case "En_progreso":
+      case "in_progress":
         return "bg-blue-100 text-blue-800"
-      case "Borrador":
+      case "draft":
         return "bg-yellow-100 text-yellow-800"
-      case "Revisar":
+      case "review":
         return "bg-purple-100 text-purple-800"
-      case "Publicado":
+      case "published":
         return "bg-emerald-100 text-emerald-800"
       default:
         return "bg-gray-100 text-gray-800"

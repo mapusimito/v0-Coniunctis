@@ -38,7 +38,7 @@ export default function EditorPage() {
     content: "",
     project_tag: "General",
     progress_percentage: 0,
-    status: "Borrador" as const,
+    status: "draft" as const,
   })
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -62,7 +62,7 @@ export default function EditorPage() {
         content: "",
         project_tag: "General",
         progress_percentage: 0,
-        status: "Borrador",
+        status: "draft",
       })
     }
   }, [documentId, user])
@@ -94,11 +94,12 @@ export default function EditorPage() {
 
     setIsSaving(true)
     try {
+      // Get the actual HTML content from the Lexical editor instead of plain text
       const content = document.content
 
       const documentData = {
         title: document.title,
-        content,
+        content, // This will now preserve HTML/Markdown formatting
         word_count: wordCount,
         project_tag: document.project_tag,
         progress_percentage: document.progress_percentage,
@@ -218,16 +219,27 @@ export default function EditorPage() {
   }
 
   const applyAIResult = () => {
-    if (selectedText) {
-      // Si hay texto seleccionado, reemplazarlo
-      const newContent = document.content.replace(selectedText, aiResult)
-      setDocument((prev) => ({ ...prev, content: newContent }))
-      updateWordCount(newContent)
+    // Use the exposed insertAIContent function from Lexical editor
+    if ((window as any).insertAIContent) {
+      if (selectedText) {
+        // If there's selected text, we need to replace it
+        // For now, we'll insert the AI result at the cursor position
+        ;(window as any).insertAIContent(aiResult)
+      } else {
+        // Insert at current cursor position or end of document
+        ;(window as any).insertAIContent("\n\n" + aiResult)
+      }
     } else {
-      // Si no hay selección, agregar al final
-      const newContent = document.content + "\n\n" + aiResult
-      setDocument((prev) => ({ ...prev, content: newContent }))
-      updateWordCount(newContent)
+      // Fallback to the old method
+      if (selectedText) {
+        const newContent = document.content.replace(selectedText, aiResult)
+        setDocument((prev) => ({ ...prev, content: newContent }))
+        updateWordCount(newContent)
+      } else {
+        const newContent = document.content + "\n\n" + aiResult
+        setDocument((prev) => ({ ...prev, content: newContent }))
+        updateWordCount(newContent)
+      }
     }
     setShowAI(false)
   }
@@ -326,10 +338,10 @@ export default function EditorPage() {
           {showToolbar && (
             <div
               id="ai-toolbar-panel"
-              className="flex items-center space-x-2 p-2 border rounded-lg bg-gray-50 mt-3 animate-fade-in"
+              className="flex items-center space-x-2 p-2 border rounded-lg bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 mt-3 animate-fade-in"
             >
               <div className="flex items-center space-x-1">
-                <span className="text-sm font-medium text-gray-700">Asistente:</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Asistente:</span>
                 <Button variant="ghost" size="sm" onClick={() => handleAssistant("grammar")}>
                   <CheckCircle className="w-4 h-4 mr-1" />
                   Gramática
@@ -349,7 +361,7 @@ export default function EditorPage() {
               </div>
               <div className="w-px h-6 bg-gray-300" />
               <div className="flex items-center space-x-1">
-                <span className="text-sm font-medium text-gray-700">Productor:</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Productor:</span>
                 <Button variant="ghost" size="sm" onClick={() => handleProducer("expand")}>
                   <PlusCircle className="w-4 h-4 mr-1" />
                   Expandir
