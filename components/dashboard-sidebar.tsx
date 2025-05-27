@@ -25,6 +25,7 @@ import {
   User,
   Settings,
   LogOut,
+  BarChart3,
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
@@ -37,6 +38,7 @@ const navigation = [
   { name: "Documentos", href: "/dashboard/documents", icon: FileText },
   { name: "Tareas", href: "/dashboard/tasks", icon: CheckSquare },
   { name: "Pomodoro", href: "/dashboard/pomodoro", icon: Clock },
+  { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
   { name: "Test AI", href: "/dashboard/test-ai", icon: TestTube },
 ]
 
@@ -66,13 +68,9 @@ export function DashboardSidebar() {
   }
 
   return (
-    <div
-      className={`bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300 ${
-        isCollapsed ? "w-16" : "w-64"
-      }`}
-    >
+    <div className={`modern-sidebar flex flex-col transition-all duration-300 ${isCollapsed ? "w-16" : "w-64"}`}>
       {/* Header with Logo */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-6 border-b border-border">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
             <div className="flex items-center space-x-3">
@@ -85,7 +83,7 @@ export function DashboardSidebar() {
                   className="object-contain"
                 />
               </div>
-              <span className="font-bold text-xl text-gray-900 dark:text-white">CONIUNCTIS</span>
+              <span className="font-bold text-xl text-foreground">CONIUNCTIS</span>
             </div>
           )}
           {isCollapsed && (
@@ -103,12 +101,12 @@ export function DashboardSidebar() {
             variant="ghost"
             size="sm"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="ml-auto p-1 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="ml-auto p-2 hover:bg-muted rounded-lg"
           >
             {isCollapsed ? (
-              <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
             ) : (
-              <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+              <ChevronLeft className="w-4 h-4 text-muted-foreground" />
             )}
           </Button>
         </div>
@@ -116,28 +114,20 @@ export function DashboardSidebar() {
 
       {/* Breadcrumbs */}
       {!isCollapsed && (
-        <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{getBreadcrumbs()}</p>
+        <div className="px-6 py-3 border-b border-border/50">
+          <p className="text-xs text-muted-foreground truncate">{getBreadcrumbs()}</p>
         </div>
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-1">
         {navigation.map((item) => {
           const isActive = pathname === item.href
           return (
             <Link key={item.name} href={item.href}>
-              <div
-                className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
-                }`}
-              >
-                <item.icon
-                  className={`w-5 h-5 flex-shrink-0 ${isActive ? "text-blue-700 dark:text-blue-300" : "text-gray-500 dark:text-gray-400"}`}
-                />
-                {!isCollapsed && <span>{item.name}</span>}
+              <div className={`modern-nav-item ${isActive ? "modern-nav-item-active" : ""}`}>
+                <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+                {!isCollapsed && <span className={isActive ? "text-primary" : "text-foreground"}>{item.name}</span>}
               </div>
             </Link>
           )
@@ -145,30 +135,30 @@ export function DashboardSidebar() {
       </nav>
 
       {/* User Menu */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="p-4 border-t border-border">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className={`w-full hover:bg-gray-50 dark:hover:bg-gray-800 ${isCollapsed ? "px-2" : "justify-start"}`}
+              className={`w-full hover:bg-muted rounded-lg p-3 ${isCollapsed ? "px-2" : "justify-start"}`}
             >
               <div className="flex items-center space-x-3">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} alt={profile?.full_name || ""} />
-                  <AvatarFallback>{profile?.full_name?.charAt(0) || user?.email?.charAt(0) || "U"}</AvatarFallback>
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || "U"}
+                  </AvatarFallback>
                 </Avatar>
                 {!isCollapsed && (
                   <div className="flex flex-col items-start">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {profile?.full_name || "Usuario"}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[120px]">{user?.email}</p>
+                    <p className="text-sm font-medium text-foreground">{profile?.full_name || "Usuario"}</p>
+                    <p className="text-xs text-muted-foreground truncate max-w-[120px]">{user?.email}</p>
                   </div>
                 )}
               </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" forceMount>
+          <DropdownMenuContent className="w-56 modern-card" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">{profile?.full_name || "Usuario"}</p>
@@ -176,7 +166,7 @@ export function DashboardSidebar() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+            <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="cursor-pointer">
               {theme === "dark" ? (
                 <>
                   <Sun className="mr-2 h-4 w-4" />
@@ -190,16 +180,16 @@ export function DashboardSidebar() {
               )}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
               <User className="mr-2 h-4 w-4" />
               <span>Perfil</span>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
               <Settings className="mr-2 h-4 w-4" />
               <span>Configuración</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut}>
+            <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
               <span>Cerrar Sesión</span>
             </DropdownMenuItem>

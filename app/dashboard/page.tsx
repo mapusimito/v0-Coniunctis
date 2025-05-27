@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Checkbox } from "@/components/ui/checkbox"
-import { FileText, CheckSquare, Clock, Plus, ArrowRight, TrendingUp, Target, Zap } from "lucide-react"
+import { FileText, CheckSquare, Clock, Plus, ArrowRight, TrendingUp, Target, Zap, Sparkles } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
 import Link from "next/link"
@@ -49,8 +49,6 @@ export default function DashboardPage() {
     weekProgress: 0,
   })
   const [loading, setLoading] = useState(true)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-
 
   const displayName = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Usuario"
 
@@ -158,83 +156,98 @@ export default function DashboardPage() {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+        return "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800"
       case "medium":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+        return "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800"
       case "low":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+        return "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800"
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+        return "bg-muted text-muted-foreground border-border"
     }
   }
 
   if (loading) {
     return (
-      <div className="space-y-8">
+      <div className="space-y-8 animate-fade-in">
         <div className="animate-pulse">
-          <div className="h-8 bg-muted rounded w-1/3 mb-4"></div>
-          <div className="h-4 bg-muted rounded w-1/2"></div>
+          <div className="h-8 bg-muted rounded-lg w-1/3 mb-4"></div>
+          <div className="h-4 bg-muted rounded-lg w-1/2"></div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-8 max-w-7xl mx-auto animate-fade-in">
       {/* Welcome Section */}
-      <div className="space-y-3">
-        <h1 className="text-4xl font-bold">¡Hola, {displayName}! 👋</h1>
-        <p className="text-lg text-muted-foreground">¿Listo para ser productivo hoy?</p>
+      <div className="space-y-4">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 bg-gradient-to-r from-primary to-secondary rounded-xl flex items-center justify-center">
+            <Sparkles className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-4xl font-bold text-foreground">¡Hola, {displayName}! 👋</h1>
+            <p className="text-lg text-muted-foreground">¿Listo para ser productivo hoy?</p>
+          </div>
+        </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-l-4 border-l-primary">
+        <Card className="modern-card modern-card-hover border-l-4 border-l-primary">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Documentos</p>
-                <p className="text-3xl font-bold">{stats.totalDocuments}</p>
+                <p className="text-3xl font-bold text-foreground">{stats.totalDocuments}</p>
               </div>
-              <FileText className="w-8 h-8 text-primary" />
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                <FileText className="w-6 h-6 text-primary" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-secondary">
+        <Card className="modern-card modern-card-hover border-l-4 border-l-secondary">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Tareas Completadas</p>
-                <p className="text-3xl font-bold">
+                <p className="text-3xl font-bold text-foreground">
                   {stats.completedTasks}/{stats.totalTasks}
                 </p>
               </div>
-              <CheckSquare className="w-8 h-8 text-secondary" />
+              <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center">
+                <CheckSquare className="w-6 h-6 text-secondary" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-green-500">
+        <Card className="modern-card modern-card-hover border-l-4 border-l-green-500">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Palabras Hoy</p>
-                <p className="text-3xl font-bold">{stats.todayWords}</p>
+                <p className="text-3xl font-bold text-foreground">{stats.todayWords}</p>
               </div>
-              <TrendingUp className="w-8 h-8 text-green-500" />
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-green-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-purple-500">
+        <Card className="modern-card modern-card-hover border-l-4 border-l-purple-500">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Progreso Semanal</p>
-                <p className="text-3xl font-bold">{Math.round(stats.weekProgress)}%</p>
+                <p className="text-3xl font-bold text-foreground">{Math.round(stats.weekProgress)}%</p>
               </div>
-              <Target className="w-8 h-8 text-purple-500" />
+              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-xl flex items-center justify-center">
+                <Target className="w-6 h-6 text-purple-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -243,36 +256,36 @@ export default function DashboardPage() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Link href="/dashboard/editor">
-          <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-2 hover:border-primary/20">
+          <Card className="modern-card modern-card-hover cursor-pointer group">
             <CardContent className="p-8 text-center">
               <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
                 <FileText className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Crear Documento</h3>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">Crear Documento</h3>
               <p className="text-muted-foreground">Comienza a escribir con asistencia de IA</p>
             </CardContent>
           </Card>
         </Link>
 
         <Link href="/dashboard/tasks">
-          <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-2 hover:border-secondary/20">
+          <Card className="modern-card modern-card-hover cursor-pointer group">
             <CardContent className="p-8 text-center">
               <div className="w-16 h-16 bg-secondary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-secondary/20 transition-colors">
                 <CheckSquare className="w-8 h-8 text-secondary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Gestionar Tareas</h3>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">Gestionar Tareas</h3>
               <p className="text-muted-foreground">Organiza y rastrea tu progreso</p>
             </CardContent>
           </Card>
         </Link>
 
         <Link href="/dashboard/pomodoro">
-          <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-2 hover:border-green-500/20">
+          <Card className="modern-card modern-card-hover cursor-pointer group">
             <CardContent className="p-8 text-center">
-              <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 dark:group-hover:bg-green-800 transition-colors">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 dark:group-hover:bg-green-800/30 transition-colors">
                 <Clock className="w-8 h-8 text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Tiempo de Enfoque</h3>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">Tiempo de Enfoque</h3>
               <p className="text-muted-foreground">Inicia una sesión Pomodoro</p>
             </CardContent>
           </Card>
@@ -282,15 +295,15 @@ export default function DashboardPage() {
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Documents */}
-        <Card>
+        <Card className="modern-card">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-xl">Documentos Recientes</CardTitle>
+                <CardTitle className="text-xl text-foreground">Documentos Recientes</CardTitle>
                 <CardDescription>Continúa donde lo dejaste</CardDescription>
               </div>
               <Link href="/dashboard/documents">
-                <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">
+                <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 hover:bg-primary/10">
                   Ver Todos <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
               </Link>
@@ -300,13 +313,13 @@ export default function DashboardPage() {
             {recentDocuments.length > 0 ? (
               recentDocuments.map((doc) => (
                 <Link key={doc.id} href={`/dashboard/editor?id=${doc.id}`}>
-                  <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
+                  <div className="flex items-center justify-between p-4 border border-border rounded-xl hover:bg-muted/50 cursor-pointer transition-colors">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                         <FileText className="w-5 h-5 text-primary" />
                       </div>
                       <div>
-                        <p className="font-medium">{doc.title}</p>
+                        <p className="font-medium text-foreground">{doc.title}</p>
                         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                           <Badge variant="outline" className="text-xs">
                             {doc.project_tag}
@@ -330,7 +343,7 @@ export default function DashboardPage() {
                 <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
                 <p className="mb-4">No hay documentos aún</p>
                 <Link href="/dashboard/editor">
-                  <Button size="sm">
+                  <Button size="sm" className="modern-button-primary">
                     <Plus className="w-4 h-4 mr-2" />
                     Crear Primer Documento
                   </Button>
@@ -341,15 +354,15 @@ export default function DashboardPage() {
         </Card>
 
         {/* Recent Tasks */}
-        <Card>
+        <Card className="modern-card">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-xl">Tareas Recientes</CardTitle>
+                <CardTitle className="text-xl text-foreground">Tareas Recientes</CardTitle>
                 <CardDescription>Mantente al día con tus prioridades</CardDescription>
               </div>
               <Link href="/dashboard/tasks">
-                <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">
+                <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 hover:bg-primary/10">
                   Ver Todas <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
               </Link>
@@ -358,18 +371,23 @@ export default function DashboardPage() {
           <CardContent className="space-y-3">
             {recentTasks.length > 0 ? (
               recentTasks.map((task) => (
-                <div key={task.id} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/50">
+                <div
+                  key={task.id}
+                  className="flex items-center space-x-3 p-3 rounded-xl hover:bg-muted/50 transition-colors"
+                >
                   <Checkbox
                     checked={task.completed}
                     onCheckedChange={() => toggleTask(task.id, task.completed)}
                     className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
                   />
                   <div className="flex-1">
-                    <p className={`font-medium ${task.completed ? "line-through text-muted-foreground" : ""}`}>
+                    <p
+                      className={`font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}
+                    >
                       {task.title}
                     </p>
                     <div className="flex items-center space-x-2 mt-1">
-                      <Badge className={`text-xs ${getPriorityColor(task.priority)}`}>{task.priority}</Badge>
+                      <Badge className={`text-xs border ${getPriorityColor(task.priority)}`}>{task.priority}</Badge>
                       <span className="text-xs text-muted-foreground">{task.category}</span>
                     </div>
                   </div>
@@ -380,7 +398,7 @@ export default function DashboardPage() {
                 <CheckSquare className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
                 <p className="mb-4">No hay tareas aún</p>
                 <Link href="/dashboard/tasks">
-                  <Button size="sm">
+                  <Button size="sm" className="modern-button-primary">
                     <Plus className="w-4 h-4 mr-2" />
                     Crear Primera Tarea
                   </Button>
@@ -392,14 +410,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Productivity Tip */}
-      <Card className="bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
+      <Card className="modern-card bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
         <CardContent className="p-6">
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-r from-primary to-secondary rounded-xl flex items-center justify-center">
               <Zap className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold">Consejo de Productividad</h3>
+              <h3 className="text-lg font-semibold text-foreground">Consejo de Productividad</h3>
               <p className="text-muted-foreground">
                 Usa la técnica Pomodoro para mantener el enfoque. 25 minutos de trabajo concentrado seguidos de 5
                 minutos de descanso pueden aumentar significativamente tu productividad.

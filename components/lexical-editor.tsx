@@ -15,7 +15,6 @@ import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin
 import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin"
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin"
 import { TRANSFORMERS } from "@lexical/markdown"
-import { $convertFromMarkdownString, $convertToMarkdownString } from "@lexical/markdown"
 
 import { HeadingNode, QuoteNode } from "@lexical/rich-text"
 import { ListItemNode, ListNode } from "@lexical/list"
@@ -28,23 +27,23 @@ import { EditorToolbar } from "./editor-toolbar"
 const theme = {
   ltr: "ltr",
   rtl: "rtl",
-  placeholder: "text-gray-400",
-  paragraph: "mb-1",
-  quote: "border-l-4 border-gray-300 pl-4 italic text-gray-600",
+  placeholder: "text-muted-foreground",
+  paragraph: "mb-2",
+  quote: "border-l-4 border-primary/30 pl-4 italic text-muted-foreground bg-muted/30 py-2 rounded-r-lg",
   heading: {
-    h1: "text-3xl font-bold mb-4",
-    h2: "text-2xl font-bold mb-3",
-    h3: "text-xl font-bold mb-2",
-    h4: "text-lg font-bold mb-2",
-    h5: "text-base font-bold mb-1",
-    h6: "text-sm font-bold mb-1",
+    h1: "text-3xl font-bold mb-4 text-foreground",
+    h2: "text-2xl font-bold mb-3 text-foreground",
+    h3: "text-xl font-bold mb-2 text-foreground",
+    h4: "text-lg font-bold mb-2 text-foreground",
+    h5: "text-base font-bold mb-1 text-foreground",
+    h6: "text-sm font-bold mb-1 text-foreground",
   },
   list: {
     nested: {
       listitem: "list-none",
     },
-    ol: "list-decimal list-inside",
-    ul: "list-disc list-inside",
+    ol: "list-decimal list-inside space-y-1",
+    ul: "list-disc list-inside space-y-1",
     listitem: "mb-1",
   },
   text: {
@@ -53,40 +52,40 @@ const theme = {
     underline: "underline",
     strikethrough: "line-through",
     underlineStrikethrough: "underline line-through",
-    code: "bg-gray-100 px-1 py-0.5 rounded text-sm font-mono",
+    code: "bg-muted px-2 py-1 rounded text-sm font-mono text-foreground",
   },
-  code: "bg-gray-100 p-4 rounded-lg font-mono text-sm",
+  code: "bg-muted p-4 rounded-xl font-mono text-sm text-foreground border border-border",
   codeHighlight: {
-    atrule: "text-purple-600",
-    attr: "text-blue-600",
-    boolean: "text-orange-600",
-    builtin: "text-purple-600",
-    cdata: "text-gray-600",
-    char: "text-green-600",
-    class: "text-blue-600",
-    "class-name": "text-blue-600",
-    comment: "text-gray-500",
-    constant: "text-orange-600",
-    deleted: "text-red-600",
-    doctype: "text-gray-600",
-    entity: "text-orange-600",
-    function: "text-purple-600",
-    important: "text-red-600",
-    inserted: "text-green-600",
-    keyword: "text-purple-600",
-    namespace: "text-blue-600",
-    number: "text-orange-600",
-    operator: "text-gray-700",
-    prolog: "text-gray-600",
-    property: "text-blue-600",
-    punctuation: "text-gray-700",
-    regex: "text-green-600",
-    selector: "text-green-600",
-    string: "text-green-600",
-    symbol: "text-orange-600",
-    tag: "text-red-600",
-    url: "text-blue-600",
-    variable: "text-orange-600",
+    atrule: "text-purple-600 dark:text-purple-400",
+    attr: "text-blue-600 dark:text-blue-400",
+    boolean: "text-orange-600 dark:text-orange-400",
+    builtin: "text-purple-600 dark:text-purple-400",
+    cdata: "text-muted-foreground",
+    char: "text-green-600 dark:text-green-400",
+    class: "text-blue-600 dark:text-blue-400",
+    "class-name": "text-blue-600 dark:text-blue-400",
+    comment: "text-muted-foreground",
+    constant: "text-orange-600 dark:text-orange-400",
+    deleted: "text-red-600 dark:text-red-400",
+    doctype: "text-muted-foreground",
+    entity: "text-orange-600 dark:text-orange-400",
+    function: "text-purple-600 dark:text-purple-400",
+    important: "text-red-600 dark:text-red-400",
+    inserted: "text-green-600 dark:text-green-400",
+    keyword: "text-purple-600 dark:text-purple-400",
+    namespace: "text-blue-600 dark:text-blue-400",
+    number: "text-orange-600 dark:text-orange-400",
+    operator: "text-foreground",
+    prolog: "text-muted-foreground",
+    property: "text-blue-600 dark:text-blue-400",
+    punctuation: "text-foreground",
+    regex: "text-green-600 dark:text-green-400",
+    selector: "text-green-600 dark:text-green-400",
+    string: "text-green-600 dark:text-green-400",
+    symbol: "text-orange-600 dark:text-orange-400",
+    tag: "text-red-600 dark:text-red-400",
+    url: "text-blue-600 dark:text-blue-400",
+    variable: "text-orange-600 dark:text-orange-400",
   },
 }
 
@@ -96,29 +95,43 @@ function onError(error: Error) {
 
 interface LexicalEditorProps {
   content: string
-  onChange: (content: string) => void
+  editorState?: string
+  onChange: (content: string, editorState: string) => void
   placeholder?: string
   onSelectionChange?: (selectedText: string) => void
 }
 
-function EditorContent({ content, onChange, onSelectionChange }: LexicalEditorProps) {
+function EditorContent({ content, editorState, onChange, onSelectionChange }: LexicalEditorProps) {
   const [editor] = useLexicalComposerContext()
   const isFirstRender = useRef(true)
 
-  // Inicializar contenido desde markdown
   useEffect(() => {
-    if (isFirstRender.current) {
+    if (isFirstRender.current && (editorState || content)) {
       editor.update(() => {
         const root = $getRoot()
         root.clear()
 
-        if (content && content.trim()) {
-          try {
-            // Convertir markdown a nodos de Lexical
-            $convertFromMarkdownString(content, TRANSFORMERS)
-          } catch (error) {
-            console.error("Error parsing markdown:", error)
-            // Fallback a texto plano si falla el parsing de markdown
+        try {
+          if (editorState && editorState.trim()) {
+            const parsedState = editor.parseEditorState(editorState)
+            editor.setEditorState(parsedState)
+            return
+          }
+
+          if (content && content.trim()) {
+            const paragraphs = content.split("\n\n")
+            paragraphs.forEach((paragraph) => {
+              if (paragraph.trim()) {
+                const paragraphNode = $createParagraphNode()
+                const textNode = $createTextNode(paragraph.trim())
+                paragraphNode.append(textNode)
+                root.append(paragraphNode)
+              }
+            })
+          }
+        } catch (error) {
+          console.error("Error loading editor state:", error)
+          if (content && content.trim()) {
             const paragraphs = content.split("\n\n")
             paragraphs.forEach((paragraph) => {
               if (paragraph.trim()) {
@@ -133,30 +146,28 @@ function EditorContent({ content, onChange, onSelectionChange }: LexicalEditorPr
       })
       isFirstRender.current = false
     }
-  }, [editor, content])
+  }, [editor, content, editorState])
 
-  // Manejar cambios de contenido y convertir a markdown
   const handleEditorChange = (editorState: EditorState) => {
     editorState.read(() => {
       try {
-        // Convertir el estado del editor a markdown
-        const markdownContent = $convertToMarkdownString(TRANSFORMERS)
-        onChange(markdownContent)
-      } catch (error) {
-        console.error("Error converting to markdown:", error)
-        // Fallback a texto plano si falla la conversión
         const root = $getRoot()
         const textContent = root.getTextContent()
-        onChange(textContent)
-      }
+        const serializedState = JSON.stringify(editorState.toJSON())
+        onChange(textContent, serializedState)
 
-      // Manejar selección de texto
-      if (onSelectionChange) {
-        const selection = $getSelection()
-        if (selection) {
-          const selectedText = selection.getTextContent()
-          onSelectionChange(selectedText)
+        if (onSelectionChange) {
+          const selection = $getSelection()
+          if (selection) {
+            const selectedText = selection.getTextContent()
+            onSelectionChange(selectedText)
+          }
         }
+      } catch (error) {
+        console.error("Error serializing editor state:", error)
+        const root = $getRoot()
+        const textContent = root.getTextContent()
+        onChange(textContent, "")
       }
     })
   }
@@ -177,10 +188,7 @@ function EditorContent({ content, onChange, onSelectionChange }: LexicalEditorPr
   }
 
   useEffect(() => {
-    if (onSelectionChange) {
-      // Exponer la función insertAIContent al componente padre
-      ;(window as any).insertAIContent = insertAIContent
-    }
+    ;(window as any).insertAIContent = insertAIContent
   }, [editor])
 
   return (
@@ -190,14 +198,14 @@ function EditorContent({ content, onChange, onSelectionChange }: LexicalEditorPr
         <RichTextPlugin
           contentEditable={
             <ContentEditable
-              className="min-h-[600px] p-6 text-lg leading-relaxed resize-none outline-none bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-              style={{ fontFamily: "Georgia, serif" }}
+              className="min-h-[600px] p-8 text-lg leading-relaxed resize-none outline-none bg-background text-foreground focus-modern"
+              style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif" }}
             />
           }
           placeholder={
             <div
-              className="absolute top-6 left-6 text-gray-400 pointer-events-none text-lg"
-              style={{ fontFamily: "Georgia, serif" }}
+              className="absolute top-8 left-8 text-muted-foreground pointer-events-none text-lg"
+              style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif" }}
             >
               Comienza a escribir tu documento aquí. Selecciona texto y usa las herramientas de IA para mejorar tu
               escritura...
@@ -217,7 +225,7 @@ function EditorContent({ content, onChange, onSelectionChange }: LexicalEditorPr
   )
 }
 
-export function LexicalEditor({ content, onChange, placeholder, onSelectionChange }: LexicalEditorProps) {
+export function LexicalEditor({ content, editorState, onChange, placeholder, onSelectionChange }: LexicalEditorProps) {
   const initialConfig = {
     namespace: "ConiunctisEditor",
     theme,
@@ -227,9 +235,10 @@ export function LexicalEditor({ content, onChange, placeholder, onSelectionChang
 
   return (
     <LexicalComposer initialConfig={initialConfig}>
-      <div className="flex flex-col h-full border rounded-lg">
+      <div className="flex flex-col h-full modern-card">
         <EditorContent
           content={content}
+          editorState={editorState}
           onChange={onChange}
           placeholder={placeholder}
           onSelectionChange={onSelectionChange}

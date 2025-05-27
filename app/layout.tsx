@@ -8,10 +8,11 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Coniunctis - IA para Productividad",
-  description: "Plataforma de productividad potenciada por IA",
+  title: "Coniunctis - Escribe mejor, trabaja mejor",
+  description:
+    "Plataforma de productividad que combina escritura inteligente con IA, gestión de tareas y técnicas de enfoque para estudiantes y profesionales.",
   manifest: "/manifest.json",
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default function RootLayout({

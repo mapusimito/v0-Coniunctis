@@ -26,13 +26,11 @@ export function EditorToolbar() {
   const updateToolbar = useCallback(() => {
     const selection = $getSelection()
     if ($isRangeSelection(selection)) {
-      // Actualizar estados de formato
       setIsBold(selection.hasFormat("bold"))
       setIsItalic(selection.hasFormat("italic"))
       setIsUnderline(selection.hasFormat("underline"))
       setIsStrikethrough(selection.hasFormat("strikethrough"))
 
-      // Actualizar tipo de bloque
       const anchorNode = selection.anchor.getNode()
       const element = anchorNode.getKey() === "root" ? anchorNode : anchorNode.getTopLevelElementOrThrow()
 
@@ -112,7 +110,7 @@ export function EditorToolbar() {
   }
 
   return (
-    <div className="flex items-center gap-2 p-3 border-b bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+    <div className="flex items-center gap-3 p-4 border-b border-border bg-card">
       {/* Deshacer/Rehacer */}
       <div className="flex items-center gap-1">
         <Button
@@ -120,7 +118,7 @@ export function EditorToolbar() {
           size="sm"
           onClick={undo}
           disabled={!canUndo}
-          className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="h-9 w-9 p-0 hover:bg-muted rounded-lg"
         >
           <Undo className="h-4 w-4" />
         </Button>
@@ -129,20 +127,20 @@ export function EditorToolbar() {
           size="sm"
           onClick={redo}
           disabled={!canRedo}
-          className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="h-9 w-9 p-0 hover:bg-muted rounded-lg"
         >
           <Redo className="h-4 w-4" />
         </Button>
       </div>
 
-      <Separator orientation="vertical" className="h-6 bg-gray-300 dark:bg-gray-600" />
+      <Separator orientation="vertical" className="h-6 bg-border" />
 
       {/* Selector de encabezados */}
       <Select value={blockType} onValueChange={formatHeading}>
-        <SelectTrigger className="w-32 h-8 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600">
+        <SelectTrigger className="w-36 h-9 bg-background border-border rounded-lg">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent className="bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600">
+        <SelectContent className="bg-card border-border rounded-lg">
           <SelectItem value="paragraph">Párrafo</SelectItem>
           <SelectItem value="h1">Título 1</SelectItem>
           <SelectItem value="h2">Título 2</SelectItem>
@@ -153,7 +151,7 @@ export function EditorToolbar() {
         </SelectContent>
       </Select>
 
-      <Separator orientation="vertical" className="h-6 bg-gray-300 dark:bg-gray-600" />
+      <Separator orientation="vertical" className="h-6 bg-border" />
 
       {/* Formato de texto */}
       <div className="flex items-center gap-1">
@@ -161,7 +159,7 @@ export function EditorToolbar() {
           variant={isBold ? "default" : "ghost"}
           size="sm"
           onClick={() => formatText("bold")}
-          className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="h-9 w-9 p-0 hover:bg-muted rounded-lg"
         >
           <Bold className="h-4 w-4" />
         </Button>
@@ -169,7 +167,7 @@ export function EditorToolbar() {
           variant={isItalic ? "default" : "ghost"}
           size="sm"
           onClick={() => formatText("italic")}
-          className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="h-9 w-9 p-0 hover:bg-muted rounded-lg"
         >
           <Italic className="h-4 w-4" />
         </Button>
@@ -177,7 +175,7 @@ export function EditorToolbar() {
           variant={isUnderline ? "default" : "ghost"}
           size="sm"
           onClick={() => formatText("underline")}
-          className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="h-9 w-9 p-0 hover:bg-muted rounded-lg"
         >
           <Underline className="h-4 w-4" />
         </Button>
@@ -185,20 +183,20 @@ export function EditorToolbar() {
           variant={isStrikethrough ? "default" : "ghost"}
           size="sm"
           onClick={() => formatText("strikethrough")}
-          className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="h-9 w-9 p-0 hover:bg-muted rounded-lg"
         >
           <Strikethrough className="h-4 w-4" />
         </Button>
       </div>
 
-      <Separator orientation="vertical" className="h-6 bg-gray-300 dark:bg-gray-600" />
+      <Separator orientation="vertical" className="h-6 bg-border" />
 
       {/* Limpiar todo */}
       <Button
         variant="ghost"
         size="sm"
         onClick={clearEditor}
-        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 dark:text-red-400 dark:hover:text-red-300"
+        className="h-9 w-9 p-0 text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded-lg"
       >
         <Trash2 className="h-4 w-4" />
       </Button>

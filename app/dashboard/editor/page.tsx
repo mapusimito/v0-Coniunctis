@@ -36,6 +36,7 @@ export default function EditorPage() {
     id: "",
     title: "Documento sin título",
     content: "",
+    plain_text: "",
     project_tag: "General",
     progress_percentage: 0,
     status: "draft" as const,
@@ -60,6 +61,7 @@ export default function EditorPage() {
         id: "",
         title: "Documento sin título",
         content: "",
+        plain_text: "",
         project_tag: "General",
         progress_percentage: 0,
         status: "draft",
@@ -74,12 +76,52 @@ export default function EditorPage() {
 
       if (error) throw error
 
-      setDocument(data)
-      updateWordCount(data.content || "")
+      let editorState = ""
+      let plainText = ""
+
+      try {
+        const parsed = JSON.parse(data.content || "{}")
+        if (parsed.root && parsed.root.children) {
+          editorState = data.content
+          plainText = extractPlainTextFromState(parsed)
+        } else {
+          throw new Error("Not a valid editor state")
+        }
+      } catch {
+        plainText = data.content || ""
+        editorState = ""
+      }
+
+      setDocument({
+        ...data,
+        content: editorState,
+        plain_text: plainText,
+      })
+      updateWordCount(plainText)
     } catch (error) {
       console.error("Error loading document:", error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const extractPlainTextFromState = (state: any): string => {
+    try {
+      if (!state.root || !state.root.children) return ""
+
+      const extractTextFromNode = (node: any): string => {
+        if (node.type === "text") {
+          return node.text || ""
+        }
+        if (node.children && Array.isArray(node.children)) {
+          return node.children.map(extractTextFromNode).join("")
+        }
+        return ""
+      }
+
+      return state.root.children.map(extractTextFromNode).join("\n").trim()
+    } catch {
+      return ""
     }
   }
 
@@ -94,12 +136,9 @@ export default function EditorPage() {
 
     setIsSaving(true)
     try {
-      // Get the actual HTML content from the Lexical editor instead of plain text
-      const content = document.content
-
       const documentData = {
         title: document.title,
-        content, // This will now preserve HTML/Markdown formatting
+        content: document.content || document.plain_text,
         word_count: wordCount,
         project_tag: document.project_tag,
         progress_percentage: document.progress_percentage,
@@ -117,7 +156,8 @@ export default function EditorPage() {
         setDocument((prev) => ({ ...prev, id: data.id }))
         router.replace(`/dashboard/editor?id=${data.id}`)
       }
-      setLastSavedContent(content)
+
+      setLastSavedContent(document.content)
     } catch (error) {
       console.error("Error saving document:", error)
     } finally {
@@ -125,18 +165,21 @@ export default function EditorPage() {
     }
   }
 
-  const handleContentChange = (value: string) => {
-    setDocument((prev) => ({ ...prev, content: value }))
-    updateWordCount(value)
+  const handleContentChange = (plainText: string, editorState: string) => {
+    setDocument((prev) => ({
+      ...prev,
+      content: editorState,
+      plain_text: plainText,
+    }))
+    updateWordCount(plainText)
   }
 
   const handleSelectionChange = (selectedText: string) => {
     setSelectedText(selectedText)
   }
 
-  // AI Functions
   const handleAssistant = async (action: "grammar" | "explain" | "simple" | "complex") => {
-    const text = selectedText || document.content
+    const text = selectedText || document.plain_text
     if (!text.trim()) {
       setAiResult("Por favor selecciona texto o escribe algo primero.")
       setShowAI(true)
@@ -172,7 +215,7 @@ export default function EditorPage() {
   }
 
   const handleProducer = async (action: "expand" | "generate" | "scheme") => {
-    const text = action === "scheme" ? document.title : selectedText || document.content
+    const text = action === "scheme" ? document.title : selectedText || document.plain_text
     if (!text.trim()) {
       setAiResult("Por favor proporciona texto o un tema.")
       setShowAI(true)
@@ -205,11 +248,11 @@ export default function EditorPage() {
   }
 
   const generateTitle = async () => {
-    if (!document.content.trim()) return
+    if (!document.plain_text.trim()) return
 
     setIsAILoading(true)
     try {
-      const title = await aiService.generateTitle(document.content)
+      const title = await aiService.generateTitle(document.plain_text)
       setDocument((prev) => ({ ...prev, title }))
     } catch (error) {
       console.error("Error generating title:", error)
@@ -219,84 +262,76 @@ export default function EditorPage() {
   }
 
   const applyAIResult = () => {
-    // Use the exposed insertAIContent function from Lexical editor
     if ((window as any).insertAIContent) {
       if (selectedText) {
-        // If there's selected text, we need to replace it
-        // For now, we'll insert the AI result at the cursor position
         ;(window as any).insertAIContent(aiResult)
       } else {
-        // Insert at current cursor position or end of document
         ;(window as any).insertAIContent("\n\n" + aiResult)
       }
     } else {
-      // Fallback to the old method
       if (selectedText) {
-        const newContent = document.content.replace(selectedText, aiResult)
-        setDocument((prev) => ({ ...prev, content: newContent }))
+        const newContent = document.plain_text.replace(selectedText, aiResult)
+        setDocument((prev) => ({ ...prev, plain_text: newContent }))
         updateWordCount(newContent)
       } else {
-        const newContent = document.content + "\n\n" + aiResult
-        setDocument((prev) => ({ ...prev, content: newContent }))
+        const newContent = document.plain_text + "\n\n" + aiResult
+        setDocument((prev) => ({ ...prev, plain_text: newContent }))
         updateWordCount(newContent)
       }
     }
     setShowAI(false)
   }
 
-  // Autoguardado cada 15 segundos si hubo cambios
   useEffect(() => {
     if (!user) return
 
     autoSaveIntervalRef.current = setInterval(() => {
       if (document.content !== lastSavedContent) {
         saveDocument()
-        setLastSavedContent(document.content)
       }
-    }, 15000) // 15 segundos
+    }, 15000)
 
     return () => {
       if (autoSaveIntervalRef.current) clearInterval(autoSaveIntervalRef.current)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [document.content, user])
 
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center animate-fade-in">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-gray-600">Cargando documento...</p>
+          <p className="text-muted-foreground">Cargando documento...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col animate-fade-in">
       {/* Header */}
-      <div className="border-b p-4 space-y-4">
+      <div className="modern-header border-b p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex-1 max-w-md">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <Input
                 value={document.title}
                 onChange={(e) => setDocument((prev) => ({ ...prev, title: e.target.value }))}
-                className="text-2xl font-bold border-none p-0 h-auto focus-visible:ring-0"
+                className="text-2xl font-bold border-none p-0 h-auto focus-visible:ring-0 bg-transparent"
                 placeholder="Título del documento..."
               />
-              <Button variant="ghost" size="sm" onClick={generateTitle} disabled={isAILoading}>
+              <Button variant="ghost" size="sm" onClick={generateTitle} disabled={isAILoading} className="rounded-lg">
                 <Zap className="w-4 h-4" />
               </Button>
             </div>
-            <div className="flex items-center space-x-4 mt-2">
+            <div className="flex items-center space-x-6 mt-3">
               <div className="flex items-center space-x-2">
-                <Label className="text-sm">Proyecto:</Label>
+                <Label className="text-sm font-medium text-muted-foreground">Proyecto:</Label>
                 <Select
                   value={document.project_tag}
                   onValueChange={(value) => setDocument((prev) => ({ ...prev, project_tag: value }))}
                 >
-                  <SelectTrigger className="w-32 h-8">
+                  <SelectTrigger className="w-32 h-8 rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -307,15 +342,17 @@ export default function EditorPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center space-x-4 text-sm text-gray-600">
+              <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                 <span>{wordCount} palabras</span>
                 <span>{charCount} caracteres</span>
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <Badge variant="secondary">{document.status}</Badge>
-            <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={saveDocument} disabled={isSaving}>
+          <div className="flex items-center space-x-3">
+            <Badge variant="secondary" className="rounded-lg">
+              {document.status}
+            </Badge>
+            <Button size="sm" className="modern-button-primary" onClick={saveDocument} disabled={isSaving}>
               {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               Guardar
             </Button>
@@ -327,7 +364,7 @@ export default function EditorPage() {
           <Button
             variant="outline"
             size="sm"
-            className="mt-2"
+            className="rounded-lg"
             onClick={() => setShowToolbar((prev) => !prev)}
             aria-expanded={showToolbar}
             aria-controls="ai-toolbar-panel"
@@ -338,39 +375,39 @@ export default function EditorPage() {
           {showToolbar && (
             <div
               id="ai-toolbar-panel"
-              className="flex items-center space-x-2 p-2 border rounded-lg bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 mt-3 animate-fade-in"
+              className="flex items-center space-x-2 p-4 border border-border rounded-xl bg-card mt-4 animate-fade-in"
             >
-              <div className="flex items-center space-x-1">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Asistente:</span>
-                <Button variant="ghost" size="sm" onClick={() => handleAssistant("grammar")}>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium text-foreground">Asistente:</span>
+                <Button variant="ghost" size="sm" onClick={() => handleAssistant("grammar")} className="rounded-lg">
                   <CheckCircle className="w-4 h-4 mr-1" />
                   Gramática
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleAssistant("explain")}>
+                <Button variant="ghost" size="sm" onClick={() => handleAssistant("explain")} className="rounded-lg">
                   <MessageSquare className="w-4 h-4 mr-1" />
                   Explicar
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleAssistant("simple")}>
+                <Button variant="ghost" size="sm" onClick={() => handleAssistant("simple")} className="rounded-lg">
                   <Wand2 className="w-4 h-4 mr-1" />
                   Simplificar
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleAssistant("complex")}>
+                <Button variant="ghost" size="sm" onClick={() => handleAssistant("complex")} className="rounded-lg">
                   <Sparkles className="w-4 h-4 mr-1" />
                   Complejizar
                 </Button>
               </div>
-              <div className="w-px h-6 bg-gray-300" />
-              <div className="flex items-center space-x-1">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Productor:</span>
-                <Button variant="ghost" size="sm" onClick={() => handleProducer("expand")}>
+              <div className="w-px h-6 bg-border" />
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium text-foreground">Productor:</span>
+                <Button variant="ghost" size="sm" onClick={() => handleProducer("expand")} className="rounded-lg">
                   <PlusCircle className="w-4 h-4 mr-1" />
                   Expandir
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleProducer("generate")}>
+                <Button variant="ghost" size="sm" onClick={() => handleProducer("generate")} className="rounded-lg">
                   <FileText className="w-4 h-4 mr-1" />
                   Generar
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleProducer("scheme")}>
+                <Button variant="ghost" size="sm" onClick={() => handleProducer("scheme")} className="rounded-lg">
                   <BookOpen className="w-4 h-4 mr-1" />
                   Esquema
                 </Button>
@@ -384,38 +421,39 @@ export default function EditorPage() {
       <div className="flex-1 relative">
         <div className="h-full">
           <LexicalEditor
-            content={document.content}
+            content={document.plain_text}
+            editorState={document.content}
             onChange={handleContentChange}
             onSelectionChange={handleSelectionChange}
           />
 
           {/* AI Result Panel */}
           {showAI && (
-            <Card className="absolute top-4 right-4 w-96 shadow-lg border-primary/20 max-h-96 overflow-y-auto">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2 mb-3">
-                  <div className="w-6 h-6 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center">
+            <Card className="absolute top-4 right-4 w-96 shadow-modern-lg border-primary/20 max-h-96 overflow-y-auto modern-card animate-scale-in">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-xl flex items-center justify-center">
                     <Sparkles className="w-4 h-4 text-white" />
                   </div>
-                  <span className="font-semibold text-primary">Resultado IA</span>
+                  <span className="font-semibold text-foreground">Resultado de ConiunctisIA</span>
                 </div>
 
                 {isAILoading ? (
-                  <div className="flex items-center space-x-2 py-4">
-                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                    <span className="text-sm text-gray-600">Procesando...</span>
+                  <div className="flex items-center space-x-2 py-8">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    <span className="text-sm text-muted-foreground">Procesando...</span>
                   </div>
                 ) : (
                   <>
-                    <div className="text-sm text-gray-700 mb-4 max-h-48 overflow-y-auto">
+                    <div className="text-sm text-foreground mb-4 max-h-48 overflow-y-auto">
                       <pre className="whitespace-pre-wrap font-sans">{aiResult}</pre>
                     </div>
 
                     <div className="flex space-x-2">
-                      <Button size="sm" onClick={applyAIResult} className="flex-1">
+                      <Button size="sm" onClick={applyAIResult} className="flex-1 modern-button-primary">
                         Aplicar
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => setShowAI(false)}>
+                      <Button size="sm" variant="outline" onClick={() => setShowAI(false)} className="rounded-lg">
                         Cerrar
                       </Button>
                     </div>

@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Sparkles, Loader2 } from "lucide-react"
+import { Sparkles, Loader2, ArrowLeft } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 
 export default function LoginPage() {
@@ -71,46 +71,52 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md animate-fade-in">
         {/* Logo */}
-        <div className="flex items-center justify-center space-x-2 mb-8">
-          <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
+        <div className="flex items-center justify-center space-x-3 mb-8">
+          <div className="w-12 h-12 bg-gradient-to-r from-primary to-secondary rounded-xl flex items-center justify-center">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
-          <span className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Coniunctis
-          </span>
+          <span className="text-3xl font-bold text-gradient">Coniunctis</span>
         </div>
 
-        <Card className="border-0 shadow-xl">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Bienvenido de vuelta</CardTitle>
-            <CardDescription>Inicia sesión para seguir construyendo tus proyectos.</CardDescription>
+        <Card className="modern-card shadow-modern-lg">
+          <CardHeader className="text-center space-y-2">
+            <CardTitle className="text-2xl font-bold text-foreground">Bienvenido de vuelta</CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Inicia sesión para seguir construyendo tus proyectos.
+            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
             {error && (
-              <Alert className="mb-4 border-red-200 bg-red-50">
-                <AlertDescription className="text-red-800">{error}</AlertDescription>
+              <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20 animate-scale-in">
+                <AlertDescription className="text-red-800 dark:text-red-300">{error}</AlertDescription>
               </Alert>
             )}
 
             {success && (
-              <Alert className="mb-4 border-green-200 bg-green-50">
-                <AlertDescription className="text-green-800">{success}</AlertDescription>
+              <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20 animate-scale-in">
+                <AlertDescription className="text-green-800 dark:text-green-300">{success}</AlertDescription>
               </Alert>
             )}
 
             <Tabs defaultValue="signin" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Iniciar sesión</TabsTrigger>
-                <TabsTrigger value="signup">Crear cuenta</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 bg-muted rounded-lg">
+                <TabsTrigger value="signin" className="rounded-lg">
+                  Iniciar sesión
+                </TabsTrigger>
+                <TabsTrigger value="signup" className="rounded-lg">
+                  Crear cuenta
+                </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="signin">
+              <TabsContent value="signin" className="space-y-4 mt-6">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email" className="text-sm font-medium text-foreground">
+                      Email
+                    </Label>
                     <Input
                       id="email"
                       name="email"
@@ -118,10 +124,13 @@ export default function LoginPage() {
                       placeholder="Ingresa tu email"
                       required
                       disabled={isLoading}
+                      className="modern-input"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">Contraseña</Label>
+                    <Label htmlFor="password" className="text-sm font-medium text-foreground">
+                      Contraseña
+                    </Label>
                     <Input
                       id="password"
                       name="password"
@@ -129,17 +138,20 @@ export default function LoginPage() {
                       placeholder="Ingresa tu contraseña"
                       required
                       disabled={isLoading}
+                      className="modern-input"
                     />
                   </div>
 
-                  {/* ⬇️ Aquí agregamos el botón de "¿Olvidaste tu contraseña?" */}
                   <div className="text-right">
-                    <Link href="/passwordsauth/changepwd" className="text-sm text-blue-600 hover:underline">
+                    <Link
+                      href="/passwordsauth/changepwd"
+                      className="text-sm text-primary hover:text-primary/80 transition-colors"
+                    >
                       ¿Olvidaste tu contraseña?
                     </Link>
                   </div>
 
-                  <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
+                  <Button type="submit" className="w-full modern-button-primary" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -152,10 +164,12 @@ export default function LoginPage() {
                 </form>
               </TabsContent>
 
-              <TabsContent value="signup">
+              <TabsContent value="signup" className="space-y-4 mt-6">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Nombre completo</Label>
+                    <Label htmlFor="name" className="text-sm font-medium text-foreground">
+                      Nombre completo
+                    </Label>
                     <Input
                       id="name"
                       name="name"
@@ -163,10 +177,13 @@ export default function LoginPage() {
                       placeholder="Ingresa tu nombre completo"
                       required
                       disabled={isLoading}
+                      className="modern-input"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email-signup">Email</Label>
+                    <Label htmlFor="email-signup" className="text-sm font-medium text-foreground">
+                      Email
+                    </Label>
                     <Input
                       id="email-signup"
                       name="email-signup"
@@ -174,10 +191,13 @@ export default function LoginPage() {
                       placeholder="Ingresa tu email"
                       required
                       disabled={isLoading}
+                      className="modern-input"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password-signup">Contraseña</Label>
+                    <Label htmlFor="password-signup" className="text-sm font-medium text-foreground">
+                      Contraseña
+                    </Label>
                     <Input
                       id="password-signup"
                       name="password-signup"
@@ -186,9 +206,10 @@ export default function LoginPage() {
                       required
                       disabled={isLoading}
                       minLength={6}
+                      className="modern-input"
                     />
                   </div>
-                  <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
+                  <Button type="submit" className="w-full modern-button-primary" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         Creando cuenta...
@@ -202,9 +223,13 @@ export default function LoginPage() {
               </TabsContent>
             </Tabs>
 
-            <div className="mt-6 text-center">
-              <Link href="/" className="text-sm text-gray-600 hover:text-primary transition-colors">
-                ←
+            <div className="text-center">
+              <Link
+                href="/"
+                className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                Volver al inicio
               </Link>
             </div>
           </CardContent>
