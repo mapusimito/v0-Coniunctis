@@ -1,8 +1,14 @@
+"use client"
+
 import type React from "react"
 import { ProtectedRoute } from "@/lib/protected-route"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <ProtectedRoute>
       <div className="flex h-screen bg-background">
