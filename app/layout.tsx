@@ -2,17 +2,22 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { AuthProvider } from "@/lib/auth-context"
 import { ThemeProvider } from "@/components/theme-provider"
+import { AuthProvider } from "@/lib/auth-context"
+import { NotificationCenter } from "@/components/notification-center"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Coniunctis - Escribe mejor, trabaja mejor",
+  title: "CONIUNCTIS - AI-Powered Productivity Platform",
   description:
-    "Plataforma de productividad que combina escritura inteligente con IA, gestión de tareas y técnicas de enfoque para estudiantes y profesionales.",
+    "Transform your productivity with AI-powered writing assistance, smart task management, and focus techniques.",
   manifest: "/manifest.json",
-  generator: "v0.dev",
+  icons: {
+    icon: "/images/coniunctis-logo.png",
+    apple: "/images/coniunctis-logo.png",
+  },
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -21,10 +26,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            <NotificationCenter />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

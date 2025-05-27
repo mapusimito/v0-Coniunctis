@@ -38,7 +38,7 @@ export function NotificationCenter() {
     notificationService.scheduleProductivityReminders()
 
     return unsubscribe
-  }, [])
+  }, [notificationService])
 
   const unreadCount = notificationService.getUnreadCount()
 
@@ -80,22 +80,26 @@ export function NotificationCenter() {
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="relative">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="relative hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        >
           <Bell className="w-5 h-5" />
           {unreadCount > 0 && (
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-orange-500 hover:bg-orange-600">
               {unreadCount > 9 ? "9+" : unreadCount}
             </Badge>
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 p-0">
+      <DropdownMenuContent align="end" className="w-80 p-0 modern-card">
         <Card className="border-0 shadow-none">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Notifications</CardTitle>
+              <CardTitle className="text-lg font-semibold">Notifications</CardTitle>
               {unreadCount > 0 && (
-                <Button variant="ghost" size="sm" onClick={markAllAsRead}>
+                <Button variant="ghost" size="sm" onClick={markAllAsRead} className="modern-button-secondary">
                   <Check className="w-4 h-4 mr-1" />
                   Mark all read
                 </Button>
@@ -109,8 +113,8 @@ export function NotificationCenter() {
                   {notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className={`p-3 border-b hover:bg-gray-50 transition-colors ${
-                        !notification.read ? "bg-blue-50 border-l-4 border-l-primary" : ""
+                      className={`p-3 border-b hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
+                        !notification.read ? "bg-blue-50 dark:bg-blue-950 border-l-4 border-l-blue-500" : ""
                       }`}
                     >
                       <div className="flex items-start justify-between">
@@ -119,12 +123,12 @@ export function NotificationCenter() {
                             <span className="text-sm">{getNotificationIcon(notification.type)}</span>
                             <h4 className="font-medium text-sm">{notification.title}</h4>
                           </div>
-                          <p className="text-sm text-gray-600 mb-2">{notification.message}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{notification.message}</p>
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-gray-500">{formatTime(notification.timestamp)}</span>
                             {notification.action && (
                               <Link href={notification.action.url} onClick={() => setIsOpen(false)}>
-                                <Button variant="ghost" size="sm" className="text-xs h-6">
+                                <Button variant="ghost" size="sm" className="text-xs h-6 modern-button-secondary">
                                   {notification.action.label}
                                   <ExternalLink className="w-3 h-3 ml-1" />
                                 </Button>
@@ -138,7 +142,7 @@ export function NotificationCenter() {
                               variant="ghost"
                               size="sm"
                               onClick={() => markAsRead(notification.id)}
-                              className="h-6 w-6 p-0"
+                              className="h-6 w-6 p-0 hover:bg-green-100 dark:hover:bg-green-900"
                             >
                               <Check className="w-3 h-3" />
                             </Button>
@@ -147,7 +151,7 @@ export function NotificationCenter() {
                             variant="ghost"
                             size="sm"
                             onClick={() => deleteNotification(notification.id)}
-                            className="h-6 w-6 p-0"
+                            className="h-6 w-6 p-0 hover:bg-red-100 dark:hover:bg-red-900"
                           >
                             <X className="w-3 h-3" />
                           </Button>
