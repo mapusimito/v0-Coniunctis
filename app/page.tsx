@@ -42,15 +42,15 @@ export default function LandingPage() {
           Trabaja de manera inteligente
         </h1>
         <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-          Coniunctis combines AI-powered writing assistance with intelligent task management to boost your productivity
-          like never before.
+        Coniunctis combina la asistencia a la escritura mediante IA con la gestión inteligente de tareas para aumentar tu productividad
+        como nunca antes.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button size="lg" asChild className="bg-primary hover:bg-primary/90">
             <Link href="/login">Start Writing for Free</Link>
           </Button>
           <Button size="lg" variant="outline">
-            Watch Demo
+            Ver Demo
           </Button>
         </div>
       </section>
@@ -66,8 +66,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-semibold mb-2">AI-Powered Editor</h3>
               <p className="text-gray-600">
-                Write with confidence using our intelligent assistant that helps with grammar, style, and content
-                suggestions in real-time.
+              Escribe con confianza utilizando nuestro asistente inteligente que te ayuda con la gramática, el estilo y el contenido con sugerencias en tiempo real
               </p>
             </CardContent>
           </Card>
@@ -79,7 +78,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Smart Task Manager</h3>
               <p className="text-gray-600">
-                Organize your work with intelligent task prioritization and seamless integration with your documents.
+              Organiza tu trabajo con una priorización inteligente de tareas y una integración perfecta con sus documentos.
               </p>
             </CardContent>
           </Card>
@@ -89,9 +88,9 @@ export default function LandingPage() {
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Clock className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Pomodoro Integration</h3>
+              <h3 className="text-xl font-semibold mb-2">Integración de Pomodoro</h3>
               <p className="text-gray-600">
-                Stay focused with built-in time management tools that adapt to your workflow and boost concentration.
+              Mantente concentrado con las herramientas integradas de gestión del tiempo que se adaptan a tu flujo de trabajo y aumentan la concentración.
               </p>
             </CardContent>
           </Card>
@@ -101,12 +100,12 @@ export default function LandingPage() {
       {/* CTA Section */}
       <section className="bg-gradient-to-r from-primary to-secondary py-20">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">Ready to transform your productivity?</h2>
+          <h2 className="text-3xl font-bold text-white mb-4">¿Listo para transformar tu productividad?</h2>
           <p className="text-xl text-blue-100 mb-8">
-            Join thousands of writers and professionals who trust Coniunctis.
+            Únete a miles de escritores y profesionales que confían en Coniunctis.
           </p>
           <Button size="lg" variant="secondary" asChild>
-            <Link href="/login">Get Started Today</Link>
+            <Link href="/login">Empieza hoy mismo</Link>
           </Button>
         </div>
       </section>
