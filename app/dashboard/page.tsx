@@ -19,6 +19,7 @@ interface Document {
   progress_percentage: number
   word_count: number
   status: string
+  user_id: string
 }
 
 interface Task {
@@ -60,13 +61,19 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch recent documents
-      const { data: documentsData } = await supabase
-        .from("documents")
-        .select("id, title, updated_at, project_tag, progress_percentage, word_count, status")
-        .eq("user_id", user?.id)
-        .order("updated_at", { ascending: false })
-        .limit(5)
+      // Fetch accessible documents using RPC function
+      const { data: documentsData, error: documentsError } = await supabase.rpc("get_accessible_documents", {
+        uid: user?.id,
+      })
+
+      if (documentsError) {
+        console.error("Error fetching documents:", documentsError)
+      }
+
+      // Get recent documents (limit to 5 most recent)
+      const recentDocs = (documentsData || [])
+        .sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+        .slice(0, 5)
 
       // Fetch recent tasks
       const { data: tasksData } = await supabase
@@ -77,10 +84,7 @@ export default function DashboardPage() {
         .limit(6)
 
       // Calculate stats
-      const { count: totalDocs } = await supabase
-        .from("documents")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user?.id)
+      const totalDocs = documentsData?.length || 0
 
       const { count: totalTasksCount } = await supabase
         .from("tasks")
@@ -93,20 +97,17 @@ export default function DashboardPage() {
         .eq("user_id", user?.id)
         .eq("completed", true)
 
-      // Calculate today's words
+      // Calculate today's words from accessible documents
       const today = new Date().toISOString().split("T")[0]
-      const { data: todayDocs } = await supabase
-        .from("documents")
-        .select("word_count")
-        .eq("user_id", user?.id)
-        .gte("updated_at", today)
+      const todayDocs = (documentsData || []).filter(
+        (doc: any) => doc.updated_at >= today && doc.user_id === user?.id, // Only count words from own documents
+      )
+      const todayWords = todayDocs.reduce((sum: number, doc: any) => sum + (doc.word_count || 0), 0)
 
-      const todayWords = todayDocs?.reduce((sum, doc) => sum + (doc.word_count || 0), 0) || 0
-
-      setRecentDocuments(documentsData || [])
+      setRecentDocuments(recentDocs || [])
       setRecentTasks(tasksData || [])
       setStats({
-        totalDocuments: totalDocs || 0,
+        totalDocuments: totalDocs,
         totalTasks: totalTasksCount || 0,
         completedTasks: completedTasksCount || 0,
         todayWords,
@@ -328,6 +329,14 @@ export default function DashboardPage() {
                           <span>{getTimeAgo(doc.updated_at)}</span>
                           <span>•</span>
                           <span>{doc.word_count} palabras</span>
+                          {doc.user_id !== user?.id && (
+                            <>
+                              <span>•</span>
+                              <Badge variant="secondary" className="text-xs">
+                                Compartido
+                              </Badge>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
