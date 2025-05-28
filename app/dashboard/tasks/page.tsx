@@ -184,45 +184,45 @@ export default function TasksPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Task Manager</h1>
+          <h1 className="text-3xl font-bold">Gestor de Tareas</h1>
           <p className="text-gray-600">
-            {completedTasks.length} of {totalTasks} tasks completed
+            {completedTasks.length} de {totalTasks} tareas completadas
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-primary hover:bg-primary/90">
               <Plus className="w-4 h-4 mr-2" />
-              Add Task
+              Añadir Tarea
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Task</DialogTitle>
-              <DialogDescription>Add a new task to your list and set its priority.</DialogDescription>
+              <DialogTitle>Crear Nueva Tarea</DialogTitle>
+              <DialogDescription>Agrega una nueva tarea a tu lista y establece su prioridad.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Task Title</Label>
+                <Label htmlFor="title">Título de la Tarea</Label>
                 <Input
                   id="title"
-                  placeholder="Task title"
+                  placeholder="Título de la tarea"
                   value={newTask.title}
                   onChange={(e) => setNewTask((prev) => ({ ...prev, title: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description">Description (Optional)</Label>
+                <Label htmlFor="description">Descripción (Opcional)</Label>
                 <Input
                   id="description"
-                  placeholder="Task description"
+                  placeholder="Descripción de la tarea"
                   value={newTask.description}
                   onChange={(e) => setNewTask((prev) => ({ ...prev, description: e.target.value }))}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Priority</Label>
+                  <Label>Prioridad</Label>
                   <Select
                     value={newTask.priority}
                     onValueChange={(value) => setNewTask((prev) => ({ ...prev, priority: value }))}
@@ -231,14 +231,14 @@ export default function TasksPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="low">Baja</SelectItem>
+                      <SelectItem value="medium">Media</SelectItem>
+                      <SelectItem value="high">Alta</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Category</Label>
+                  <Label>Categoría</Label>
                   <Select
                     value={newTask.category}
                     onValueChange={(value) => setNewTask((prev) => ({ ...prev, category: value }))}
@@ -247,7 +247,7 @@ export default function TasksPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="work">Work</SelectItem>
+                      <SelectItem value="work">Trabajo</SelectItem>
                       <SelectItem value="personal">Personal</SelectItem>
                       <SelectItem value="general">General</SelectItem>
                     </SelectContent>
@@ -255,7 +255,7 @@ export default function TasksPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Estimated Pomodoros</Label>
+                <Label>Pomodoros Estimados</Label>
                 <Select
                   value={newTask.estimated_pomodoros.toString()}
                   onValueChange={(value) => setNewTask((prev) => ({ ...prev, estimated_pomodoros: Number(value) }))}
@@ -273,7 +273,7 @@ export default function TasksPage() {
                 </Select>
               </div>
               <Button onClick={addTask} className="w-full">
-                Create Task
+                Crear Tarea
               </Button>
             </div>
           </DialogContent>
@@ -285,13 +285,13 @@ export default function TasksPage() {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <CheckSquare className="w-5 h-5 text-primary" />
-            <span>Overall Progress</span>
+            <span>Progreso General</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Completed Tasks</span>
+              <span>Tareas Completadas</span>
               <span>
                 {completedTasks.length}/{totalTasks}
               </span>
@@ -305,8 +305,8 @@ export default function TasksPage() {
         {/* Active Tasks */}
         <Card>
           <CardHeader>
-            <CardTitle>Active Tasks ({activeTasks.length})</CardTitle>
-            <CardDescription>Tasks you're currently working on</CardDescription>
+            <CardTitle>Tareas Activas ({activeTasks.length})</CardTitle>
+            <CardDescription>Tareas en las que estás trabajando actualmente</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {sortedActiveTasks.length > 0 ? (
@@ -330,9 +330,17 @@ export default function TasksPage() {
                         }
                         className="text-xs"
                       >
-                        {task.priority}
+                        {task.priority === "high"
+                          ? "Alta"
+                          : task.priority === "medium"
+                          ? "Media"
+                          : "Baja"}
                       </Badge>
-                      <span className="text-xs text-gray-500">{task.category}</span>
+                      <span className="text-xs text-gray-500">{task.category === "work"
+                        ? "Trabajo"
+                        : task.category === "personal"
+                        ? "Personal"
+                        : "General"}</span>
                       <span className="text-xs text-gray-500">
                         🍅 {task.actual_pomodoros}/{task.estimated_pomodoros}
                       </span>
@@ -375,7 +383,7 @@ export default function TasksPage() {
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => deleteTask(task.id)} className="text-red-600">
                           <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
+                          Eliminar
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -385,7 +393,7 @@ export default function TasksPage() {
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <CheckSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>No active tasks</p>
+                <p>No hay tareas activas</p>
               </div>
             )}
           </CardContent>
@@ -394,8 +402,8 @@ export default function TasksPage() {
         {/* Completed Tasks */}
         <Card>
           <CardHeader>
-            <CardTitle>Completed Tasks ({completedTasks.length})</CardTitle>
-            <CardDescription>Tasks you've finished</CardDescription>
+            <CardTitle>Tareas Completadas ({completedTasks.length})</CardTitle>
+            <CardDescription>Tareas que has finalizado</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {sortedCompletedTasks.length > 0 ? (
@@ -410,9 +418,17 @@ export default function TasksPage() {
                     {task.description && <p className="text-sm text-gray-500 line-through">{task.description}</p>}
                     <div className="flex items-center space-x-2 mt-1">
                       <Badge variant="outline" className="text-xs">
-                        {task.priority}
+                        {task.priority === "high"
+                          ? "Alta"
+                          : task.priority === "medium"
+                          ? "Media"
+                          : "Baja"}
                       </Badge>
-                      <span className="text-xs text-gray-500">{task.category}</span>
+                      <span className="text-xs text-gray-500">{task.category === "work"
+                        ? "Trabajo"
+                        : task.category === "personal"
+                        ? "Personal"
+                        : "General"}</span>
                       <span className="text-xs text-gray-500">🍅 {task.actual_pomodoros}</span>
                     </div>
                   </div>
@@ -426,7 +442,7 @@ export default function TasksPage() {
                     <DropdownMenuContent>
                       <DropdownMenuItem onClick={() => deleteTask(task.id)} className="text-red-600">
                         <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
+                        Eliminar
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -435,7 +451,7 @@ export default function TasksPage() {
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <Clock className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>No completed tasks yet</p>
+                <p>Aún no hay tareas completadas</p>
               </div>
             )}
           </CardContent>

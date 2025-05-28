@@ -20,12 +20,13 @@ import {
   CheckSquare,
   Clock,
   TestTube,
-  ChevronLeft,
-  ChevronRight,
   User,
   Settings,
   LogOut,
   BarChart3,
+  PanelLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
@@ -38,8 +39,8 @@ const navigation = [
   { name: "Documentos", href: "/dashboard/documents", icon: FileText },
   { name: "Tareas", href: "/dashboard/tasks", icon: CheckSquare },
   { name: "Pomodoro", href: "/dashboard/pomodoro", icon: Clock },
-  { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-  { name: "Test AI", href: "/dashboard/test-ai", icon: TestTube },
+  { name: "Estadísticas", href: "/dashboard/analytics", icon: BarChart3 },
+  { name: "Probar IA", href: "/dashboard/test-ai", icon: TestTube },
 ]
 
 export function DashboardSidebar() {
@@ -47,6 +48,7 @@ export function DashboardSidebar() {
   const { user, profile } = useAuth()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const { theme, setTheme } = useTheme()
+  const [isHovering, setIsHovering] = useState(false) // Nuevo estado para hover
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -102,11 +104,18 @@ export function DashboardSidebar() {
             size="sm"
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="ml-auto p-2 hover:bg-muted rounded-lg"
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => setIsHovering(false)}
           >
-            {isCollapsed ? (
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            ) : (
-              <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+            {/* Icono PanelLeft siempre visible, cambia solo en hover */}
+            {!isHovering && (
+              <PanelLeft className="w-4 h-4 text-muted-foreground" />
+            )}
+            {isHovering && !isCollapsed && (
+              <PanelLeftClose className="w-4 h-4 text-muted-foreground" />
+            )}
+            {isHovering && isCollapsed && (
+              <PanelLeftOpen className="w-4 h-4 text-muted-foreground" />
             )}
           </Button>
         </div>

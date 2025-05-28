@@ -451,7 +451,6 @@ export default function AnalyticsPage() {
       icon: <Target className="inline w-6 h-6 text-red-500" />,
     }
   }
-  }
 
   const productivity = getProductivityLevel(overallStats.productivityScore)
 

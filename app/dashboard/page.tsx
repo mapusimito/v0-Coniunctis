@@ -424,7 +424,10 @@ export default function DashboardPage() {
       <Card className="modern-card bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
         <CardContent className="p-6">
           <div className="flex items-center space-x-4">
-            <Lightbulb className="w-6 h-6 text-yellow-400" strokeWidth={2.5} />
+            <Lightbulb
+              className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 text-yellow-400"
+              strokeWidth={2.5}
+            />
             <div>
               <h3 className="text-lg font-semibold text-foreground">Consejo de Productividad</h3>
               <p className="text-muted-foreground">
