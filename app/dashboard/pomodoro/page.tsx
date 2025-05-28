@@ -1,329 +1,929 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect, useRef } from "react"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { ArrowBigLeft, ArrowBigRight, Clock, Coffee, Maximize2, Minimize2 } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
-import { useSettings } from "@/context/settings"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Switch } from "@/components/ui/switch"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  Settings,
+  Target,
+  CheckSquare,
+  Coffee,
+  Clock,
+  Volume2,
+  VolumeX,
+  Maximize,
+  BarChart3,
+} from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
+import { supabase } from "@/lib/supabaseClient"
+
+interface Task {
+  id: string
+  title: string
+  completed: boolean
+  priority: string
+  category: string
+  estimated_pomodoros: number
+  actual_pomodoros: number
+}
+
+interface PomodoroSettings {
+  pomodoro_duration: number
+  short_break_duration: number
+  long_break_duration: number
+  pomodoros_until_long_break: number
+  sound_enabled: boolean
+  auto_start_breaks: boolean
+  auto_start_pomodoros: boolean
+}
 
 type SessionType = "pomodoro" | "short_break" | "long_break"
 
-const pomodoroDurations = {
-  pomodoro: 25 * 60,
-  short_break: 5 * 60,
-  long_break: 15 * 60,
-}
+export default function PomodoroPage() {
+  const { user } = useAuth()
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
-export default function Pomodoro() {
-  const [currentSession, setCurrentSession] = useState<SessionType>("pomodoro")
-  const [timeRemaining, setTimeRemaining] = useState(pomodoroDurations[currentSession])
+  // Timer state
+  const [timeLeft, setTimeLeft] = useState(25 * 60)
   const [isRunning, setIsRunning] = useState(false)
-  const [cyclePosition, setCyclePosition] = useState(0)
+  const [currentSession, setCurrentSession] = useState<SessionType>("pomodoro")
   const [completedPomodoros, setCompletedPomodoros] = useState(0)
-  const [isFullScreen, setIsFullScreen] = useState(false)
-  const timerRef = useRef<number | null>(null)
-  const { toast } = useToast()
-  const { settings, updateSettings } = useSettings()
+  const [cyclePosition, setCyclePosition] = useState(0)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
-  useEffect(() => {
-    setTimeRemaining(pomodoroDurations[currentSession])
-  }, [currentSession])
+  // Settings state
+  const [settings, setSettings] = useState<PomodoroSettings>({
+    pomodoro_duration: 25,
+    short_break_duration: 5,
+    long_break_duration: 15,
+    pomodoros_until_long_break: 4,
+    sound_enabled: true,
+    auto_start_breaks: true,
+    auto_start_pomodoros: false,
+  })
+  const [tempSettings, setTempSettings] = useState<PomodoroSettings>(settings)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
+  // Tasks state
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [activeTask, setActiveTask] = useState<Task | null>(null)
+
+  // Stats state
+  const [todayStats, setTodayStats] = useState({
+    completed_pomodoros: 0,
+    total_focus_time: 0,
+    completed_tasks: 0,
+  })
+
+  // Load active task from localStorage
   useEffect(() => {
-    if (isRunning) {
-      timerRef.current = window.setInterval(() => {
-        setTimeRemaining((prevTime) => prevTime - 1)
-      }, 1000)
-    } else {
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-        timerRef.current = null
+    if (typeof window !== "undefined") {
+      const savedTask = localStorage.getItem("activePomodoro")
+      if (savedTask) {
+        try {
+          const parsedTask = JSON.parse(savedTask)
+          setActiveTask(parsedTask)
+          localStorage.removeItem("activePomodoro")
+        } catch (error) {
+          console.error("Error parsing active task:", error)
+        }
       }
+    }
+  }, [])
+
+  // Initialize audio
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      audioRef.current = new Audio()
+      audioRef.current.preload = "auto"
+    }
+  }, [])
+
+  // Load settings, tasks and stats on mount
+  useEffect(() => {
+    if (user) {
+      loadSettings()
+      fetchTasks()
+      loadTodayStats()
+    }
+  }, [user])
+
+  // Timer effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null
+
+    if (isRunning && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => prev - 1)
+      }, 1000)
+    } else if (timeLeft === 0 && isRunning) {
+      handleSessionComplete()
     }
 
     return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-      }
+      if (interval) clearInterval(interval)
     }
-  }, [isRunning])
+  }, [isRunning, timeLeft])
 
+  // Fullscreen effect
   useEffect(() => {
-    if (timeRemaining < 0) {
-      handleSessionEnd()
-    }
-  }, [timeRemaining])
-
-  const handleSessionEnd = () => {
-    clearInterval(timerRef.current as number)
-    setIsRunning(false)
-
-    if (settings.sound_enabled) {
-      const audio = new Audio("/sounds/alarm.mp3")
-      audio.play()
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement)
     }
 
-    if (currentSession === "pomodoro") {
-      setCompletedPomodoros((prev) => prev + 1)
+    document.addEventListener("fullscreenchange", handleFullscreenChange)
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange)
+  }, [])
+
+  const playNotificationSound = async () => {
+    if (!settings.sound_enabled || !audioRef.current) return
+
+    try {
+      // Use a simple beep sound data URL
+      const beepSound =
+        "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT"
+      audioRef.current.src = beepSound
+      await audioRef.current.play()
+    } catch (error) {
+      console.log("Could not play notification sound:", error)
     }
-
-    toast({
-      title: `${currentSession === "pomodoro" ? "Pomodoro" : currentSession === "short_break" ? "Descanso Corto" : "Descanso Largo"} terminado!`,
-      description: "¡Bien hecho! Es hora de un descanso.",
-    })
-
-    // Logic to advance the cycle
-    if (currentSession === "pomodoro") {
-      if ((cyclePosition + 1) % 8 === 0) {
-        // After 4 pomodoros, take a long break
-        setCurrentSession("long_break")
-      } else {
-        // Otherwise, take a short break
-        setCurrentSession("short_break")
-      }
-    } else {
-      // After a break, start a new pomodoro
-      setCurrentSession("pomodoro")
-      setCyclePosition((prev) => (prev + 1) % 8)
-    }
-
-    setTimeRemaining(pomodoroDurations[currentSession])
   }
 
-  const toggleTimer = () => {
-    setIsRunning((prev) => !prev)
+  const loadSettings = async () => {
+    try {
+      const { data, error } = await supabase.from("pomodoro_settings").select("*").eq("user_id", user?.id).single()
+
+      if (error && error.code !== "PGRST116") {
+        console.error("Error loading settings:", error)
+        return
+      }
+
+      if (data) {
+        const loadedSettings = {
+          pomodoro_duration: data.pomodoro_duration,
+          short_break_duration: data.short_break_duration,
+          long_break_duration: data.long_break_duration,
+          pomodoros_until_long_break: data.pomodoros_until_long_break,
+          sound_enabled: data.sound_enabled ?? true,
+          auto_start_breaks: data.auto_start_breaks ?? true,
+          auto_start_pomodoros: data.auto_start_pomodoros ?? false,
+        }
+        setSettings(loadedSettings)
+        setTempSettings(loadedSettings)
+
+        if (currentSession === "pomodoro") {
+          setTimeLeft(loadedSettings.pomodoro_duration * 60)
+        }
+      }
+    } catch (error) {
+      console.error("Error loading settings:", error)
+    }
+  }
+
+  const saveSettings = async () => {
+    try {
+      // Primero verificar si ya existe configuración para este usuario
+      const { data: existingSettings, error: checkError } = await supabase
+        .from("pomodoro_settings")
+        .select("id")
+        .eq("user_id", user?.id)
+        .single()
+
+      if (checkError && checkError.code !== "PGRST116") {
+        throw checkError
+      }
+
+      let error
+      if (existingSettings) {
+        // Actualizar configuración existente
+        const { error: updateError } = await supabase
+          .from("pomodoro_settings")
+          .update({
+            pomodoro_duration: tempSettings.pomodoro_duration,
+            short_break_duration: tempSettings.short_break_duration,
+            long_break_duration: tempSettings.long_break_duration,
+            pomodoros_until_long_break: tempSettings.pomodoros_until_long_break,
+            sound_enabled: tempSettings.sound_enabled,
+            auto_start_breaks: tempSettings.auto_start_breaks,
+            auto_start_pomodoros: tempSettings.auto_start_pomodoros,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", user?.id)
+
+        error = updateError
+      } else {
+        // Crear nueva configuración
+        const { error: insertError } = await supabase.from("pomodoro_settings").insert({
+          user_id: user?.id,
+          pomodoro_duration: tempSettings.pomodoro_duration,
+          short_break_duration: tempSettings.short_break_duration,
+          long_break_duration: tempSettings.long_break_duration,
+          pomodoros_until_long_break: tempSettings.pomodoros_until_long_break,
+          sound_enabled: tempSettings.sound_enabled,
+          auto_start_breaks: tempSettings.auto_start_breaks,
+          auto_start_pomodoros: tempSettings.auto_start_pomodoros,
+        })
+
+        error = insertError
+      }
+
+      if (error) throw error
+
+      setSettings(tempSettings)
+      setSettingsOpen(false)
+
+      if (!isRunning) {
+        const duration = getDurationForSession(currentSession, tempSettings)
+        setTimeLeft(duration * 60)
+      }
+    } catch (error) {
+      console.error("Error saving settings:", error)
+    }
+  }
+
+  const loadTodayStats = async () => {
+    try {
+      const today = new Date().toISOString().split("T")[0]
+
+      // Get today's completed pomodoro sessions
+      const { data: sessions, error: sessionsError } = await supabase
+        .from("pomodoro_sessions")
+        .select("duration")
+        .eq("user_id", user?.id)
+        .eq("completed", true)
+        .gte("completed_at", `${today}T00:00:00`)
+        .lt("completed_at", `${today}T23:59:59`)
+
+      if (sessionsError) throw sessionsError
+
+      // Get today's completed tasks
+      const { data: completedTasks, error: tasksError } = await supabase
+        .from("tasks")
+        .select("id")
+        .eq("user_id", user?.id)
+        .eq("completed", true)
+        .gte("updated_at", `${today}T00:00:00`)
+
+      if (tasksError) throw tasksError
+
+      const totalFocusTime = sessions?.reduce((sum, session) => sum + session.duration, 0) || 0
+
+      setTodayStats({
+        completed_pomodoros: sessions?.length || 0,
+        total_focus_time: totalFocusTime,
+        completed_tasks: completedTasks?.length || 0,
+      })
+    } catch (error) {
+      console.error("Error loading today stats:", error)
+    }
+  }
+
+  const fetchTasks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("user_id", user?.id)
+        .eq("completed", false)
+        .order("created_at", { ascending: false })
+
+      if (error) throw error
+      setTasks(data || [])
+    } catch (error) {
+      console.error("Error fetching tasks:", error)
+    }
+  }
+
+  const getDurationForSession = (session: SessionType, settingsToUse = settings) => {
+    switch (session) {
+      case "pomodoro":
+        return settingsToUse.pomodoro_duration
+      case "short_break":
+        return settingsToUse.short_break_duration
+      case "long_break":
+        return settingsToUse.long_break_duration
+      default:
+        return settingsToUse.pomodoro_duration
+    }
+  }
+
+  const getNextSessionInCycle = (currentPos: number): SessionType => {
+    const cycle = [
+      "pomodoro",
+      "short_break",
+      "pomodoro",
+      "short_break",
+      "pomodoro",
+      "short_break",
+      "pomodoro",
+      "long_break",
+    ]
+    return cycle[currentPos] as SessionType
+  }
+
+  const handleSessionComplete = async () => {
+    setIsRunning(false)
+    await playNotificationSound()
+
+    // Show browser notification
+    if ("Notification" in window && Notification.permission === "granted") {
+      const sessionName =
+        currentSession === "pomodoro"
+          ? "Pomodoro"
+          : currentSession === "short_break"
+            ? "Descanso Corto"
+            : "Descanso Largo"
+      new Notification(`¡${sessionName} Completado!`, {
+        body: currentSession === "pomodoro" ? "¡Tiempo de descanso!" : "¡Hora de trabajar!",
+        icon: "/favicon.ico",
+      })
+    }
+
+    // Update stats and tasks
+    if (currentSession === "pomodoro") {
+      setCompletedPomodoros((prev) => prev + 1)
+      if (activeTask) {
+        await updateTaskPomodoros()
+      }
+      await recordSession()
+      await loadTodayStats()
+    }
+
+    // Auto-advance to next session
+    const nextPosition = (cyclePosition + 1) % 8
+    const nextSession = getNextSessionInCycle(nextPosition)
+
+    setCyclePosition(nextPosition)
+    setCurrentSession(nextSession)
+    setTimeLeft(getDurationForSession(nextSession) * 60)
+
+    // Auto-start based on settings
+    const shouldAutoStart =
+      (nextSession === "pomodoro" && settings.auto_start_pomodoros) ||
+      (nextSession !== "pomodoro" && settings.auto_start_breaks)
+
+    if (shouldAutoStart) {
+      setTimeout(() => {
+        setIsRunning(true)
+      }, 1000)
+    }
+  }
+
+  const updateTaskPomodoros = async () => {
+    if (!activeTask) return
+
+    try {
+      const { error } = await supabase
+        .from("tasks")
+        .update({
+          actual_pomodoros: activeTask.actual_pomodoros + 1,
+        })
+        .eq("id", activeTask.id)
+
+      if (error) throw error
+
+      setActiveTask((prev) => (prev ? { ...prev, actual_pomodoros: prev.actual_pomodoros + 1 } : null))
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === activeTask.id ? { ...task, actual_pomodoros: task.actual_pomodoros + 1 } : task,
+        ),
+      )
+    } catch (error) {
+      console.error("Error updating task:", error)
+    }
+  }
+
+  const recordSession = async () => {
+    try {
+      await supabase.from("pomodoro_sessions").insert({
+        user_id: user?.id,
+        task_id: activeTask?.id || null,
+        duration: settings.pomodoro_duration,
+        session_type: "work",
+        completed: true,
+        completed_at: new Date().toISOString(),
+      })
+    } catch (error) {
+      console.error("Error recording session:", error)
+    }
+  }
+
+  const handleTabChange = (newSession: SessionType) => {
+    if (isRunning) {
+      setIsRunning(false)
+    }
+
+    setCurrentSession(newSession)
+    setTimeLeft(getDurationForSession(newSession) * 60)
+
+    if (newSession === "pomodoro") {
+      setCyclePosition(0)
+    } else if (newSession === "short_break") {
+      setCyclePosition(1)
+    } else if (newSession === "long_break") {
+      setCyclePosition(7)
+    }
   }
 
   const resetTimer = () => {
-    clearInterval(timerRef.current as number)
     setIsRunning(false)
-    setTimeRemaining(pomodoroDurations[currentSession])
+    setTimeLeft(getDurationForSession(currentSession) * 60)
+  }
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen()
+      } else {
+        await document.exitFullscreen()
+      }
+    } catch (error) {
+      console.error("Error toggling fullscreen:", error)
+    }
+  }
+
+  const requestNotificationPermission = async () => {
+    if ("Notification" in window && Notification.permission === "default") {
+      await Notification.requestPermission()
+    }
+  }
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
 
   const getProgressPercentage = () => {
-    return (1 - timeRemaining / pomodoroDurations[currentSession]) * 100
-  }
-
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60)
-    const seconds = time % 60
-    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
-  }
-
-  const toggleFullScreen = () => {
-    setIsFullScreen((prev) => !prev)
-  }
-
-  const getSessionBg = (session: SessionType) => {
-    switch (session) {
-      case "pomodoro":
-        return "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800"
-      case "short_break":
-        return "bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800"
-      case "long_break":
-        return "bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800"
-      default:
-        return "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800"
-    }
+    const totalDuration = getDurationForSession(currentSession) * 60
+    return ((totalDuration - timeLeft) / totalDuration) * 100
   }
 
   const getSessionColor = (session: SessionType) => {
     switch (session) {
       case "pomodoro":
-        return "text-red-600 dark:text-red-400"
+        return "text-red-600"
       case "short_break":
-        return "text-green-600 dark:text-green-400"
+        return "text-green-600"
       case "long_break":
-        return "text-blue-600 dark:text-blue-400"
+        return "text-blue-600"
       default:
-        return "text-red-600 dark:text-red-400"
+        return "text-red-600"
     }
   }
 
+  const getSessionBg = (session: SessionType) => {
+    switch (session) {
+      case "pomodoro":
+        return "bg-red-50 border-red-200"
+      case "short_break":
+        return "bg-green-50 border-green-200"
+      case "long_break":
+        return "bg-blue-50 border-blue-200"
+      default:
+        return "bg-red-50 border-red-200"
+    }
+  }
+
+  // Request notification permission on mount
+  useEffect(() => {
+    requestNotificationPermission()
+  }, [])
+
+  if (isFullscreen) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${getSessionBg(currentSession)}`}>
+        <div className="text-center space-y-8 p-8">
+          <div className={`text-9xl font-bold ${getSessionColor(currentSession)}`}>{formatTime(timeLeft)}</div>
+          <div className="space-y-4">
+            <h2 className={`text-4xl font-semibold ${getSessionColor(currentSession)}`}>
+              {currentSession === "pomodoro"
+                ? "Pomodoro"
+                : currentSession === "short_break"
+                  ? "Descanso Corto"
+                  : "Descanso Largo"}
+            </h2>
+            {activeTask && <p className="text-2xl text-gray-600">{activeTask.title}</p>}
+          </div>
+          <div className="flex justify-center space-x-6">
+            <Button size="lg" onClick={() => setIsRunning(!isRunning)} className="px-8 py-4 text-xl">
+              {isRunning ? <Pause className="w-8 h-8 mr-3" /> : <Play className="w-8 h-8 mr-3" />}
+              {isRunning ? "Pausar" : "Iniciar"}
+            </Button>
+            <Button size="lg" variant="outline" onClick={resetTimer} className="px-6 py-4">
+              <RotateCcw className="w-8 h-8" />
+            </Button>
+            <Button size="lg" variant="outline" onClick={toggleFullscreen} className="px-6 py-4">
+              <Maximize className="w-8 h-8" />
+            </Button>
+          </div>
+          <Progress value={getProgressPercentage()} className="w-96 h-6 mx-auto" />
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="container relative py-10">
-      <div
-        className="absolute top-0 left-0 w-full h-full bg-grid-sm/[0.2] dark:bg-grid-sm/[0.4] z-0 pointer-events-none"
-        style={{ clipPath: "url(#grid)" }}
-      ></div>
-      <div className="relative flex flex-col items-center justify-center w-full max-w-2xl mx-auto p-4 rounded-lg shadow-md z-10">
-        {isFullScreen ? (
-          <div className="flex flex-col items-center justify-center">
-            <div className="text-4xl font-bold mb-4">{formatTime(timeRemaining)}</div>
-            <Progress
-              value={getProgressPercentage()}
-              className={`w-96 h-6 mx-auto ${
-                currentSession === "pomodoro"
-                  ? "[&>div]:bg-red-600 dark:[&>div]:bg-red-500"
-                  : currentSession === "short_break"
-                    ? "[&>div]:bg-green-600 dark:[&>div]:bg-green-500"
-                    : "[&>div]:bg-blue-600 dark:[&>div]:bg-blue-500"
-              }`}
-            />
-            <div className="flex space-x-4 mt-4">
-              <Button variant="outline" size="icon" onClick={toggleTimer}>
-                {isRunning ? <ArrowBigLeft className="w-6 h-6" /> : <ArrowBigRight className="w-6 h-6" />}
+    <div className="min-h-screen p-6 space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-bold">Temporizador Pomodoro</h1>
+        <p className="text-gray-600">Enfócate en tus tareas con la Técnica Pomodoro</p>
+      </div>
+
+      <div className="max-w-6xl mx-auto">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-red-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Pomodoros Hoy</p>
+                  <p className="text-2xl font-bold text-red-600">{todayStats.completed_pomodoros}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <BarChart3 className="w-4 h-4 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Tiempo de Enfoque</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {Math.floor(todayStats.total_focus_time / 60)}h {todayStats.total_focus_time % 60}m
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <CheckSquare className="w-4 h-4 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Tareas Completadas</p>
+                  <p className="text-2xl font-bold text-green-600">{todayStats.completed_tasks}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Timer Card */}
+        <Card className={`text-center mb-6 ${getSessionBg(currentSession)}`}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" size="sm" onClick={toggleFullscreen}>
+                <Maximize className="w-4 h-4" />
               </Button>
-              <Button variant="outline" size="icon" onClick={resetTimer}>
-                <Clock className="w-6 h-6" />
+              <div className="flex items-center space-x-2">
+                <div
+                  className={`w-3 h-3 rounded-full ${
+                    currentSession === "pomodoro"
+                      ? "bg-red-500"
+                      : currentSession === "short_break"
+                        ? "bg-green-500"
+                        : "bg-blue-500"
+                  }`}
+                />
+                <CardTitle className={`text-2xl ${getSessionColor(currentSession)}`}>
+                  {currentSession === "pomodoro"
+                    ? "Pomodoro"
+                    : currentSession === "short_break"
+                      ? "Descanso Corto"
+                      : "Descanso Largo"}
+                </CardTitle>
+              </div>
+              <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <Settings className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Configuración del Pomodoro</DialogTitle>
+                    <DialogDescription>Personaliza tu experiencia de pomodoro</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <h4 className="font-medium">Duraciones (minutos)</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Pomodoro</Label>
+                          <Input
+                            type="number"
+                            value={tempSettings.pomodoro_duration}
+                            onChange={(e) =>
+                              setTempSettings((prev) => ({
+                                ...prev,
+                                pomodoro_duration: Number.parseInt(e.target.value) || 25,
+                              }))
+                            }
+                            min="1"
+                            max="60"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Descanso Corto</Label>
+                          <Input
+                            type="number"
+                            value={tempSettings.short_break_duration}
+                            onChange={(e) =>
+                              setTempSettings((prev) => ({
+                                ...prev,
+                                short_break_duration: Number.parseInt(e.target.value) || 5,
+                              }))
+                            }
+                            min="1"
+                            max="30"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Descanso Largo</Label>
+                          <Input
+                            type="number"
+                            value={tempSettings.long_break_duration}
+                            onChange={(e) =>
+                              setTempSettings((prev) => ({
+                                ...prev,
+                                long_break_duration: Number.parseInt(e.target.value) || 15,
+                              }))
+                            }
+                            min="1"
+                            max="60"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Pomodoros hasta Descanso Largo</Label>
+                          <Input
+                            type="number"
+                            value={tempSettings.pomodoros_until_long_break}
+                            onChange={(e) =>
+                              setTempSettings((prev) => ({
+                                ...prev,
+                                pomodoros_until_long_break: Number.parseInt(e.target.value) || 4,
+                              }))
+                            }
+                            min="2"
+                            max="8"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="font-medium">Automatización</h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label>Sonidos de notificación</Label>
+                          <Switch
+                            checked={tempSettings.sound_enabled}
+                            onCheckedChange={(checked) =>
+                              setTempSettings((prev) => ({
+                                ...prev,
+                                sound_enabled: checked,
+                              }))
+                            }
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label>Auto-iniciar descansos</Label>
+                          <Switch
+                            checked={tempSettings.auto_start_breaks}
+                            onCheckedChange={(checked) =>
+                              setTempSettings((prev) => ({
+                                ...prev,
+                                auto_start_breaks: checked,
+                              }))
+                            }
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label>Auto-iniciar pomodoros</Label>
+                          <Switch
+                            checked={tempSettings.auto_start_pomodoros}
+                            onCheckedChange={(checked) =>
+                              setTempSettings((prev) => ({
+                                ...prev,
+                                auto_start_pomodoros: checked,
+                              }))
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex space-x-2">
+                      <Button onClick={saveSettings} className="flex-1">
+                        Guardar
+                      </Button>
+                      <Button variant="outline" onClick={() => setSettingsOpen(false)} className="flex-1">
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            {activeTask && (
+              <CardDescription className="text-lg">
+                Trabajando en: <span className="font-semibold">{activeTask.title}</span>
+              </CardDescription>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-8">
+            <div className={`text-8xl font-bold ${getSessionColor(currentSession)} mb-6`}>{formatTime(timeLeft)}</div>
+
+            <div className="space-y-2">
+              <Progress value={getProgressPercentage()} className="h-4" />
+              <div className="text-sm text-gray-600">{Math.round(getProgressPercentage())}% completado</div>
+            </div>
+
+            <div className="flex justify-center space-x-4">
+              <Button size="lg" onClick={() => setIsRunning(!isRunning)} className="px-8 py-4 text-lg">
+                {isRunning ? (
+                  <>
+                    <Pause className="w-6 h-6 mr-2" />
+                    Pausar
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-6 h-6 mr-2" />
+                    Iniciar
+                  </>
+                )}
               </Button>
-              <Button variant="outline" size="icon" onClick={toggleFullScreen}>
-                <Minimize2 className="w-6 h-6" />
+              <Button size="lg" variant="outline" onClick={resetTimer} className="px-6 py-4">
+                <RotateCcw className="w-6 h-6" />
+              </Button>
+              <Button size="lg" variant="outline" onClick={toggleFullscreen} className="px-6 py-4">
+                <Maximize className="w-6 h-6" />
               </Button>
             </div>
-          </div>
-        ) : (
-          <>
-            <Tabs defaultvalue="pomodoro" className="w-full">
+
+            <Tabs value={currentSession} onValueChange={(value) => handleTabChange(value as SessionType)}>
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="pomodoro" className="text-red-600 dark:text-red-400">
+                <TabsTrigger value="pomodoro" className="text-red-600">
                   <Clock className="w-4 h-4 mr-2" />
                   Pomodoro
                 </TabsTrigger>
-                <TabsTrigger value="short_break" className="text-green-600 dark:text-green-400">
+                <TabsTrigger value="short_break" className="text-green-600">
                   <Coffee className="w-4 h-4 mr-2" />
                   Descanso Corto
                 </TabsTrigger>
-                <TabsTrigger value="long_break" className="text-blue-600 dark:text-blue-400">
+                <TabsTrigger value="long_break" className="text-blue-600">
                   <Coffee className="w-4 h-4 mr-2" />
                   Descanso Largo
                 </TabsTrigger>
               </TabsList>
-              <TabsContent value="pomodoro">
-                <SessionContent
-                  session="pomodoro"
-                  timeRemaining={timeRemaining}
-                  formatTime={formatTime}
-                  getProgressPercentage={getProgressPercentage}
-                  toggleTimer={toggleTimer}
-                  resetTimer={resetTimer}
-                  isRunning={isRunning}
-                  toggleFullScreen={toggleFullScreen}
-                  currentSession={currentSession}
-                />
-              </TabsContent>
-              <TabsContent value="short_break">
-                <SessionContent
-                  session="short_break"
-                  timeRemaining={timeRemaining}
-                  formatTime={formatTime}
-                  getProgressPercentage={getProgressPercentage}
-                  toggleTimer={toggleTimer}
-                  resetTimer={resetTimer}
-                  isRunning={isRunning}
-                  toggleFullScreen={toggleFullScreen}
-                  currentSession={currentSession}
-                />
-              </TabsContent>
-              <TabsContent value="long_break">
-                <SessionContent
-                  session="long_break"
-                  timeRemaining={timeRemaining}
-                  formatTime={formatTime}
-                  getProgressPercentage={getProgressPercentage}
-                  toggleTimer={toggleTimer}
-                  resetTimer={resetTimer}
-                  isRunning={isRunning}
-                  toggleFullScreen={toggleFullScreen}
-                  currentSession={currentSession}
-                />
-              </TabsContent>
             </Tabs>
-            <div className="flex items-center justify-center">
+
+            <div className="flex items-center justify-center space-x-8">
               <div className="text-center">
-                <div className="text-sm text-gray-500 dark:text-gray-400">Enfócate en el momento presente</div>
+                <div className="text-2xl font-bold text-red-600">{completedPomodoros}</div>
+                <div className="text-sm text-gray-600">Pomodoros Completados</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-600">{cyclePosition + 1}/8</div>
+                <div className="text-sm text-gray-600">Posición en el Ciclo</div>
+              </div>
+              <div className="text-center">
+                <div className="flex items-center justify-center">
+                  {settings.sound_enabled ? (
+                    <Volume2 className="w-6 h-6 text-green-600" />
+                  ) : (
+                    <VolumeX className="w-6 h-6 text-gray-400" />
+                  )}
+                </div>
+                <div className="text-sm text-gray-600">Sonido</div>
               </div>
             </div>
-          </>
-        )}
-      </div>
-    </div>
-  )
-}
+          </CardContent>
+        </Card>
 
-interface SessionContentProps {
-  session: SessionType
-  timeRemaining: number
-  formatTime: (time: number) => string
-  getProgressPercentage: () => number
-  toggleTimer: () => void
-  resetTimer: () => void
-  isRunning: boolean
-  toggleFullScreen: () => void
-  currentSession: SessionType
-}
+        {/* Tasks Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Target className="w-5 h-5 text-primary" />
+                <span>Tarea Activa</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {activeTask ? (
+                <div className="space-y-3">
+                  <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg">
+                    <h3 className="font-semibold">{activeTask.title}</h3>
+                    <div className="flex items-center space-x-2 mt-2">
+                      <Badge
+                        variant={
+                          activeTask.priority === "high"
+                            ? "destructive"
+                            : activeTask.priority === "medium"
+                              ? "default"
+                              : "secondary"
+                        }
+                      >
+                        {activeTask.priority === "high" ? "Alta" : activeTask.priority === "medium" ? "Media" : "Baja"}
+                      </Badge>
+                      <span className="text-sm text-gray-600">{activeTask.category}</span>
+                    </div>
+                    <div className="mt-2">
+                      <div className="text-sm font-medium">
+                        🍅 {activeTask.actual_pomodoros}/{activeTask.estimated_pomodoros}
+                      </div>
+                      <Progress
+                        value={(activeTask.actual_pomodoros / activeTask.estimated_pomodoros) * 100}
+                        className="h-2 mt-1"
+                      />
+                    </div>
+                  </div>
+                  <Button variant="outline" onClick={() => setActiveTask(null)} className="w-full">
+                    Quitar Tarea Activa
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>No hay tarea activa</p>
+                  <p className="text-sm">Puedes usar el pomodoro sin una tarea específica</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-const SessionContent: React.FC<SessionContentProps> = ({
-  session,
-  timeRemaining,
-  formatTime,
-  getProgressPercentage,
-  toggleTimer,
-  resetTimer,
-  isRunning,
-  toggleFullScreen,
-  currentSession,
-}) => {
-  const getSessionBg = (session: SessionType) => {
-    switch (session) {
-      case "pomodoro":
-        return "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800"
-      case "short_break":
-        return "bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800"
-      case "long_break":
-        return "bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800"
-      default:
-        return "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800"
-    }
-  }
-
-  const getSessionColor = (session: SessionType) => {
-    switch (session) {
-      case "pomodoro":
-        return "text-red-600 dark:text-red-400"
-      case "short_break":
-        return "text-green-600 dark:text-green-400"
-      case "long_break":
-        return "text-blue-600 dark:text-blue-400"
-      default:
-        return "text-red-600 dark:text-red-400"
-    }
-  }
-
-  return (
-    <div
-      className={`flex flex-col items-center justify-center ${getSessionBg(session)} border-2 rounded-lg p-6 space-y-4`}
-    >
-      <div className={`text-6xl font-bold ${getSessionColor(session)}`}>{formatTime(timeRemaining)}</div>
-      <div className="space-y-2">
-        <Progress
-          value={getProgressPercentage()}
-          className={`h-4 ${
-            currentSession === "pomodoro"
-              ? "[&>div]:bg-red-600 dark:[&>div]:bg-red-500"
-              : currentSession === "short_break"
-                ? "[&>div]:bg-green-600 dark:[&>div]:bg-green-500"
-                : "[&>div]:bg-blue-600 dark:[&>div]:bg-blue-500"
-          }`}
-        />
-        <div className="text-sm text-gray-600 dark:text-gray-400">
-          {Math.round(getProgressPercentage())}% completado
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <CheckSquare className="w-5 h-5 text-secondary" />
+                <span>Tareas Disponibles</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 max-h-64 overflow-y-auto">
+              {tasks.length > 0 ? (
+                tasks.slice(0, 5).map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center space-x-3 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                    onClick={() => setActiveTask(task)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate text-sm">{task.title}</p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <Badge
+                          variant={
+                            task.priority === "high"
+                              ? "destructive"
+                              : task.priority === "medium"
+                                ? "default"
+                                : "secondary"
+                          }
+                          className="text-xs"
+                        >
+                          {task.priority === "high" ? "Alta" : task.priority === "medium" ? "Media" : "Baja"}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      🍅 {task.actual_pomodoros}/{task.estimated_pomodoros}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  <p className="text-sm">No hay tareas disponibles</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
-      </div>
-      <div className="flex space-x-4">
-        <Button variant="outline" size="icon" onClick={toggleTimer}>
-          {isRunning ? <ArrowBigLeft className="w-6 h-6" /> : <ArrowBigRight className="w-6 h-6" />}
-        </Button>
-        <Button variant="outline" size="icon" onClick={resetTimer}>
-          <Clock className="w-6 h-6" />
-        </Button>
-        <Button variant="outline" size="icon" onClick={toggleFullScreen}>
-          <Maximize2 className="w-6 h-6" />
-        </Button>
       </div>
     </div>
   )
