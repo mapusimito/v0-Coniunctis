@@ -21,6 +21,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [tab, setTab] = useState<"signin" | "signup">("signin") // Nuevo estado para la pestaña activa
   const router = useRouter()
   const { signIn, signUp, user } = useAuth()
   const { resolvedTheme } = useTheme()
@@ -101,9 +102,13 @@ export default function LoginPage() {
 
         <Card className="modern-card shadow-modern-lg">
           <CardHeader className="text-center space-y-2">
-            <CardTitle className="text-2xl font-bold text-foreground">Bienvenido de vuelta</CardTitle>
+            <CardTitle className="text-2xl font-bold text-foreground">
+              {tab === "signin" ? "Bienvenido de vuelta" : "¡Únete a nosotros!"}
+            </CardTitle>
             <CardDescription className="text-muted-foreground">
-              Inicia sesión para seguir construyendo tus proyectos.
+              {tab === "signin"
+                ? "Inicia sesión para seguir construyendo tus proyectos."
+                : "Crea una cuenta para comenzar a potenciar tu productividad."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -119,7 +124,12 @@ export default function LoginPage() {
               </Alert>
             )}
 
-            <Tabs defaultValue="signin" className="w-full">
+            <Tabs
+              defaultValue="signin"
+              className="w-full"
+              value={tab}
+              onValueChange={(value) => setTab(value as "signin" | "signup")}
+            >
               <TabsList className="grid w-full grid-cols-2 bg-muted rounded-lg">
                 <TabsTrigger value="signin" className="rounded-lg">
                   Iniciar sesión
