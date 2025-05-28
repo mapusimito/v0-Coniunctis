@@ -4,14 +4,27 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { FileText } from "lucide-react"
-
+import Image from "next/image"
+import { useTheme } from "next-themes"
 export function Header() {
+  const { theme } = useTheme()
+  const logoSrc =
+    theme === "dark"
+      ? "/images/coniunctis-logo-dark.png"
+      : "/images/coniunctis-logo-light.png"
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-black/80 backdrop-blur-sm">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-            <FileText className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 relative">
+            <Image
+              src={logoSrc}
+              alt="Coniunctis Logo"
+              fill
+              style={{ objectFit: "contain" }}
+              priority
+            />
           </div>
           <span className="text-xl font-semibold text-gray-900 dark:text-white">Coniunctis</span>
         </Link>
