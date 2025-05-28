@@ -14,6 +14,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName: string) => Promise<any>
   signIn: (email: string, password: string) => Promise<any>
   signOut: () => Promise<void>
+  resetPassword: (email: string) => Promise<any>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -24,35 +25,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get initial session
+    // Get initial session with better error handling
     const getInitialSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession()
 
-      if (session?.user) {
-        await fetchProfile(session.user.id)
+        if (error) {
+          console.warn("Session error:", error.message)
+          // Clear any invalid session data
+          await supabase.auth.signOut()
+          setUser(null)
+          setProfile(null)
+        } else {
+          setUser(session?.user ?? null)
+          if (session?.user) {
+            await fetchProfile(session.user.id)
+          }
+        }
+      } catch (error) {
+        console.error("Error getting session:", error)
+        setUser(null)
+        setProfile(null)
+      } finally {
+        setLoading(false)
       }
-
-      setLoading(false)
     }
 
     getInitialSession()
 
-    // Listen for auth changes
+    // Listen for auth changes with better error handling
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user ?? null)
+      console.log("Auth state change:", event, session?.user?.email)
 
-      if (session?.user) {
-        await fetchProfile(session.user.id)
-      } else {
+      try {
+        if (event === "SIGNED_OUT" || (event === "TOKEN_REFRESHED" && !session)) {
+          setUser(null)
+          setProfile(null)
+        } else if (session?.user) {
+          setUser(session.user)
+          await fetchProfile(session.user.id)
+        } else {
+          setUser(null)
+          setProfile(null)
+        }
+      } catch (error) {
+        console.error("Error in auth state change:", error)
+        setUser(null)
         setProfile(null)
+      } finally {
+        setLoading(false)
       }
-
-      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
@@ -109,16 +136,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    try {
+      await supabase.auth.signOut()
+      setUser(null)
+      setProfile(null)
+    } catch (error) {
+      console.error("Error signing out:", error)
+    }
   }
+
   const resetPassword = async (email: string) => {
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: "https://coniunctis.vercel.app/passwordsauth/updatepwd", 
-  })
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: "https://coniunctis.vercel.app/passwordsauth/updatepwd",
+      })
 
-  return { error }
-}
-
+      return { error }
+    } catch (error: any) {
+      return { error }
+    }
+  }
 
   const value = {
     user,
