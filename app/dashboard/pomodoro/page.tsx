@@ -599,161 +599,161 @@ export default function PomodoroPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <Button variant="ghost" size="sm" onClick={toggleFullscreen}>
-                <Maximize className="w-4 h-4" />
+          <Maximize className="w-4 h-4" />
               </Button>
               <div className="flex items-center space-x-2">
-                <div
-                  className={`w-3 h-3 rounded-full ${
-                    currentSession === "pomodoro"
-                      ? "bg-red-500"
-                      : currentSession === "short_break"
-                        ? "bg-green-500"
-                        : "bg-blue-500"
-                  }`}
-                />
-                <CardTitle className={`text-2xl ${getSessionColor(currentSession)}`}>
-                  {currentSession === "pomodoro"
-                    ? "Pomodoro"
-                    : currentSession === "short_break"
-                      ? "Descanso Corto"
-                      : "Descanso Largo"}
-                </CardTitle>
+          <div
+            className={`w-3 h-3 rounded-full ${
+              currentSession === "pomodoro"
+                ? "bg-red-500"
+                : currentSession === "short_break"
+            ? "bg-green-500"
+            : "bg-blue-500"
+            }`}
+          />
+          <CardTitle className={`text-2xl ${getSessionColor(currentSession)}`}>
+            {currentSession === "pomodoro"
+              ? "Pomodoro"
+              : currentSession === "short_break"
+                ? "Descanso Corto"
+                : "Descanso Largo"}
+          </CardTitle>
               </div>
               <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <Settings className="w-4 h-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Configuración del Pomodoro</DialogTitle>
-                    <DialogDescription>Personaliza tu experiencia de pomodoro</DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-6">
-                    <div className="space-y-4">
-                      <h4 className="font-medium">Duraciones (minutos)</h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Pomodoro</Label>
-                          <Input
-                            type="number"
-                            value={tempSettings.pomodoro_duration}
-                            onChange={(e) =>
-                              setTempSettings((prev) => ({
-                                ...prev,
-                                pomodoro_duration: Number.parseInt(e.target.value) || 25,
-                              }))
-                            }
-                            min="1"
-                            max="60"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Descanso Corto</Label>
-                          <Input
-                            type="number"
-                            value={tempSettings.short_break_duration}
-                            onChange={(e) =>
-                              setTempSettings((prev) => ({
-                                ...prev,
-                                short_break_duration: Number.parseInt(e.target.value) || 5,
-                              }))
-                            }
-                            min="1"
-                            max="30"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Descanso Largo</Label>
-                          <Input
-                            type="number"
-                            value={tempSettings.long_break_duration}
-                            onChange={(e) =>
-                              setTempSettings((prev) => ({
-                                ...prev,
-                                long_break_duration: Number.parseInt(e.target.value) || 15,
-                              }))
-                            }
-                            min="1"
-                            max="60"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Pomodoros hasta Descanso Largo</Label>
-                          <Input
-                            type="number"
-                            value={tempSettings.pomodoros_until_long_break}
-                            onChange={(e) =>
-                              setTempSettings((prev) => ({
-                                ...prev,
-                                pomodoros_until_long_break: Number.parseInt(e.target.value) || 4,
-                              }))
-                            }
-                            min="2"
-                            max="8"
-                          />
-                        </div>
-                      </div>
-                    </div>
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <Settings className="w-4 h-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Configuración del Pomodoro</DialogTitle>
+              <DialogDescription>Personaliza tu experiencia de pomodoro</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h4 className="font-medium">Duraciones (minutos)</h4>
+                <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Pomodoro</Label>
+              <Input
+                type="number"
+                value={tempSettings.pomodoro_duration}
+                onChange={(e) =>
+                  setTempSettings((prev) => ({
+              ...prev,
+              pomodoro_duration: Number.parseInt(e.target.value) || 25,
+                  }))
+                }
+                min="1"
+                max="60"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Descanso Corto</Label>
+              <Input
+                type="number"
+                value={tempSettings.short_break_duration}
+                onChange={(e) =>
+                  setTempSettings((prev) => ({
+              ...prev,
+              short_break_duration: Number.parseInt(e.target.value) || 5,
+                  }))
+                }
+                min="1"
+                max="30"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Descanso Largo</Label>
+              <Input
+                type="number"
+                value={tempSettings.long_break_duration}
+                onChange={(e) =>
+                  setTempSettings((prev) => ({
+              ...prev,
+              long_break_duration: Number.parseInt(e.target.value) || 15,
+                  }))
+                }
+                min="1"
+                max="60"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Pomodoros hasta Descanso Largo</Label>
+              <Input
+                type="number"
+                value={tempSettings.pomodoros_until_long_break}
+                onChange={(e) =>
+                  setTempSettings((prev) => ({
+              ...prev,
+              pomodoros_until_long_break: Number.parseInt(e.target.value) || 4,
+                  }))
+                }
+                min="2"
+                max="8"
+              />
+            </div>
+                </div>
+              </div>
 
-                    <div className="space-y-4">
-                      <h4 className="font-medium">Automatización</h4>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <Label>Sonidos de notificación</Label>
-                          <Switch
-                            checked={tempSettings.sound_enabled}
-                            onCheckedChange={(checked) =>
-                              setTempSettings((prev) => ({
-                                ...prev,
-                                sound_enabled: checked,
-                              }))
-                            }
-                          />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label>Auto-iniciar descansos</Label>
-                          <Switch
-                            checked={tempSettings.auto_start_breaks}
-                            onCheckedChange={(checked) =>
-                              setTempSettings((prev) => ({
-                                ...prev,
-                                auto_start_breaks: checked,
-                              }))
-                            }
-                          />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label>Auto-iniciar pomodoros</Label>
-                          <Switch
-                            checked={tempSettings.auto_start_pomodoros}
-                            onCheckedChange={(checked) =>
-                              setTempSettings((prev) => ({
-                                ...prev,
-                                auto_start_pomodoros: checked,
-                              }))
-                            }
-                          />
-                        </div>
-                      </div>
-                    </div>
+              <div className="space-y-4">
+                <h4 className="font-medium">Automatización</h4>
+                <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Sonidos de notificación</Label>
+              <Switch
+                checked={tempSettings.sound_enabled}
+                onCheckedChange={(checked) =>
+                  setTempSettings((prev) => ({
+              ...prev,
+              sound_enabled: checked,
+                  }))
+                }
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Auto-iniciar descansos</Label>
+              <Switch
+                checked={tempSettings.auto_start_breaks}
+                onCheckedChange={(checked) =>
+                  setTempSettings((prev) => ({
+              ...prev,
+              auto_start_breaks: checked,
+                  }))
+                }
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Auto-iniciar pomodoros</Label>
+              <Switch
+                checked={tempSettings.auto_start_pomodoros}
+                onCheckedChange={(checked) =>
+                  setTempSettings((prev) => ({
+              ...prev,
+              auto_start_pomodoros: checked,
+                  }))
+                }
+              />
+            </div>
+                </div>
+              </div>
 
-                    <div className="flex space-x-2">
-                      <Button onClick={saveSettings} className="flex-1">
-                        Guardar
-                      </Button>
-                      <Button variant="outline" onClick={() => setSettingsOpen(false)} className="flex-1">
-                        Cancelar
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
+              <div className="flex space-x-2">
+                <Button onClick={saveSettings} className="flex-1">
+            Guardar
+                </Button>
+                <Button variant="outline" onClick={() => setSettingsOpen(false)} className="flex-1">
+            Cancelar
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
               </Dialog>
             </div>
             {activeTask && (
               <CardDescription className="text-lg">
-                Trabajando en: <span className="font-semibold">{activeTask.title}</span>
+          Trabajando en: <span className="font-semibold">{activeTask.title}</span>
               </CardDescription>
             )}
           </CardHeader>
@@ -767,63 +767,42 @@ export default function PomodoroPage() {
 
             <div className="flex justify-center space-x-4">
               <Button size="lg" onClick={() => setIsRunning(!isRunning)} className="px-8 py-4 text-lg">
-                {isRunning ? (
-                  <>
-                    <Pause className="w-6 h-6 mr-2" />
-                    Pausar
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-6 h-6 mr-2" />
-                    Iniciar
-                  </>
-                )}
+          {isRunning ? (
+            <>
+              <Pause className="w-6 h-6 mr-2" />
+              Pausar
+            </>
+          ) : (
+            <>
+              <Play className="w-6 h-6 mr-2" />
+              Iniciar
+            </>
+          )}
               </Button>
               <Button size="lg" variant="outline" onClick={resetTimer} className="px-6 py-4">
-                <RotateCcw className="w-6 h-6" />
+          <RotateCcw className="w-6 h-6" />
               </Button>
               <Button size="lg" variant="outline" onClick={toggleFullscreen} className="px-6 py-4">
-                <Maximize className="w-6 h-6" />
+          <Maximize className="w-6 h-6" />
               </Button>
             </div>
 
             <Tabs value={currentSession} onValueChange={(value) => handleTabChange(value as SessionType)}>
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="pomodoro" className="text-red-600">
-                  <Clock className="w-4 h-4 mr-2" />
-                  Pomodoro
-                </TabsTrigger>
-                <TabsTrigger value="short_break" className="text-green-600">
-                  <Coffee className="w-4 h-4 mr-2" />
-                  Descanso Corto
-                </TabsTrigger>
-                <TabsTrigger value="long_break" className="text-blue-600">
-                  <Coffee className="w-4 h-4 mr-2" />
-                  Descanso Largo
-                </TabsTrigger>
+          <TabsTrigger value="pomodoro" className="text-red-600">
+            <Clock className="w-4 h-4 mr-2" />
+            Pomodoro
+          </TabsTrigger>
+          <TabsTrigger value="short_break" className="text-green-600">
+            <Coffee className="w-4 h-4 mr-2" />
+            Descanso Corto
+          </TabsTrigger>
+          <TabsTrigger value="long_break" className="text-blue-600">
+            <Coffee className="w-4 h-4 mr-2" />
+            Descanso Largo
+          </TabsTrigger>
               </TabsList>
             </Tabs>
-
-            <div className="flex items-center justify-center space-x-8">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">{completedPomodoros}</div>
-                <div className="text-sm text-gray-600">Pomodoros Completados</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-600">{cyclePosition + 1}/8</div>
-                <div className="text-sm text-gray-600">Posición en el Ciclo</div>
-              </div>
-              <div className="text-center">
-                <div className="flex items-center justify-center">
-                  {settings.sound_enabled ? (
-                    <Volume2 className="w-6 h-6 text-green-600" />
-                  ) : (
-                    <VolumeX className="w-6 h-6 text-gray-400" />
-                  )}
-                </div>
-                <div className="text-sm text-gray-600">Sonido</div>
-              </div>
-            </div>
           </CardContent>
         </Card>
 
