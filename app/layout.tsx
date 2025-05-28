@@ -9,15 +9,15 @@ import { NotificationCenter } from "@/components/notification-center"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "CONIUNCTIS - AI-Powered Productivity Platform",
+  title: "CONIUNCTIS - Plataforma de Productividad impulsada por IA",
   description:
-    "Transform your productivity with AI-powered writing assistance, smart task management, and focus techniques.",
+    "Transforma tu productividad con asistencia de escritura impulsada por IA, gestión inteligente de tareas y técnicas de enfoque.",
   manifest: "/manifest.json",
   icons: {
     icon: "/images/coniunctis-logo.png",
     apple: "/images/coniunctis-logo.png",
   },
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({
