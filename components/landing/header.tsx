@@ -15,9 +15,9 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-black/80 backdrop-blur-sm">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center space-x-2">
-          <div className="w-8 h-8 relative">
+      <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+        <Link href="/" className="flex items-center">
+          <div className="relative w-40 h-16">
             <Image
               src={logoSrc}
               alt="Coniunctis Logo"
@@ -26,7 +26,6 @@ export function Header() {
               priority
             />
           </div>
-          <span className="text-xl font-semibold text-gray-900 dark:text-white">Coniunctis</span>
         </Link>
 
         <nav className="hidden md:flex items-center space-x-8">

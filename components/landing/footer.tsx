@@ -14,18 +14,15 @@ export function Footer() {
     <footer id="contact" className="bg-gray-50 dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
       <div className="container mx-auto px-4 py-16">
         <div className="grid md:grid-cols-4 gap-8">
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 relative">
-                <Image
-                  src={logoSrc}
-                  alt="Coniunctis Logo"
-                  fill
-                  style={{ objectFit: "contain" }}
-                  priority
-                />
-              </div>
-              <span className="text-xl font-semibold text-gray-900 dark:text-white">Coniunctis</span>
+          <div className="space-y-4 flex flex-col items-start">
+            <div className="relative w-40 h-40">
+              <Image
+                src={logoSrc}
+                alt="Coniunctis Logo"
+                fill
+                style={{ objectFit: "contain" }}
+                priority
+              />
             </div>
             <p className="text-gray-600 dark:text-gray-300">Hecho por y para estudiantes.</p>
           </div>
