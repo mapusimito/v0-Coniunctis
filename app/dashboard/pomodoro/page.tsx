@@ -198,6 +198,7 @@ export default function PomodoroPage() {
   }
 
   const saveSettings = async () => {
+    if (!user) return; // <-- Esto previene que se ejecute si no hay usuario
     try {
       // Primero verificar si ya existe configuración para este usuario
       const { data: existingSettings, error: checkError } = await supabase
@@ -740,7 +741,7 @@ export default function PomodoroPage() {
               </div>
 
               <div className="flex space-x-2">
-                <Button onClick={saveSettings} className="flex-1">
+                <Button onClick={saveSettings} className="flex-1" disabled={!user}>
             Guardar
                 </Button>
                 <Button variant="outline" onClick={() => setSettingsOpen(false)} className="flex-1">
