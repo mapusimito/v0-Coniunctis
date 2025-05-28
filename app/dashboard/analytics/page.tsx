@@ -625,38 +625,38 @@ export default function AnalyticsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-          <PieChart className="w-5 h-5 text-secondary" />
-          <span>Distribución por Categorías</span>
+                <PieChart className="w-5 h-5 text-secondary" />
+                <span>Distribución por Categorías</span>
               </CardTitle>
               <CardDescription>Cómo distribuyes tu tiempo entre diferentes tipos de trabajo</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4"></CardContent>
+            <CardContent className="space-y-4">
               {categoryStats.length > 0 ? (
-          categoryStats.map((category, index) => (
-            <div key={category.category} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: category.color }} />
-            <span className="font-medium">{category.category}</span>
-                </div>
-                <Badge variant="outline">
-            <Clock className="w-4 h-4 text-red-500 mr-1 inline" />
-            {category.pomodoros}
-                </Badge>
-              </div>
-              <div className="text-sm text-gray-600 ml-6">
-                {formatTime(category.focus_time)} • 
-                <span className="inline-flex items-center ml-1">
-            <Check className="w-4 h-4 text-green-500 mr-1" />
-            {category.tasks} tareas
-                </span>
-              </div>
-              <Progress
-                value={(category.pomodoros / Math.max(...categoryStats.map((c) => c.pomodoros))) * 100}
-                className="h-2 ml-6"
-              />
-            </div>
-          ))
+                categoryStats.map((category, index) => (
+                  <div key={category.category} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: category.color }} />
+                        <span className="font-medium">{category.category}</span>
+                      </div>
+                      <Badge variant="outline">
+                        <Clock className="w-4 h-4 text-red-500 mr-1 inline" />
+                        {category.pomodoros}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-gray-600 ml-6">
+                      {formatTime(category.focus_time)} • 
+                      <span className="inline-flex items-center ml-1">
+                        <Check className="w-4 h-4 text-green-500 mr-1" />
+                        {category.tasks} tareas
+                      </span>
+                    </div>
+                    <Progress
+                      value={(category.pomodoros / Math.max(...categoryStats.map((c) => c.pomodoros))) * 100}
+                      className="h-2 ml-6"
+                    />
+                  </div>
+                ))
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <PieChart className="w-12 h-12 mx-auto mb-4 text-gray-300" />
