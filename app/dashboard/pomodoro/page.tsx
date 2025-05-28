@@ -1,17 +1,14 @@
 "use client"
 
-import { TabsContent } from "@/components/ui/tabs"
-
 import type React from "react"
-import { ArrowBigLeft, ArrowBigRight } from "lucide-react" // Import ArrowBigLeft and ArrowBigRight
-import { useSettings } from "@/hooks/useSettings" // Declare the useSettings hook
 
 import { useState, useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Coffee, Clock, Maximize } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { ArrowBigLeft, ArrowBigRight, Clock, Coffee, Maximize2, Minimize2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { useSettings } from "@/context/settings"
 
 type SessionType = "pomodoro" | "short_break" | "long_break"
 
@@ -30,7 +27,7 @@ export default function Pomodoro() {
   const [isFullScreen, setIsFullScreen] = useState(false)
   const timerRef = useRef<number | null>(null)
   const { toast } = useToast()
-  const { settings, updateSettings } = useSettings() // Import the useSettings hook
+  const { settings, updateSettings } = useSettings()
 
   useEffect(() => {
     setTimeRemaining(pomodoroDurations[currentSession])
@@ -175,7 +172,7 @@ export default function Pomodoro() {
                 <Clock className="w-6 h-6" />
               </Button>
               <Button variant="outline" size="icon" onClick={toggleFullScreen}>
-                <Maximize className="w-6 h-6" />
+                <Minimize2 className="w-6 h-6" />
               </Button>
             </div>
           </div>
@@ -325,7 +322,7 @@ const SessionContent: React.FC<SessionContentProps> = ({
           <Clock className="w-6 h-6" />
         </Button>
         <Button variant="outline" size="icon" onClick={toggleFullScreen}>
-          <Maximize className="w-6 h-6" />
+          <Maximize2 className="w-6 h-6" />
         </Button>
       </div>
     </div>
