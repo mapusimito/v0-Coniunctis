@@ -1,3 +1,4 @@
+"use client"
 import { Clock, BarChart3, Target, Zap } from "lucide-react"
 
 export function PomodoroSection() {

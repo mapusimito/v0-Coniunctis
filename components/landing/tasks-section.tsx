@@ -1,3 +1,4 @@
+"use client"
 import { CheckSquare, Clock, Target, TrendingUp } from "lucide-react"
 
 export function TasksSection() {

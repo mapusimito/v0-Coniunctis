@@ -1,3 +1,4 @@
+"use client"
 import { Brain, CheckSquare, Clock } from "lucide-react"
 
 const features = [

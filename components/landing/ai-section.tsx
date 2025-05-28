@@ -1,3 +1,4 @@
+"use client"
 import { MessageSquare, Wand2, CheckCircle, PlusCircle, FileText, BookOpen } from "lucide-react"
 
 export function AISection() {
