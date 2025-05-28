@@ -6,10 +6,23 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Clock, TrendingUp, Target, Calendar, Zap, Award, BarChart3, PieChart, Activity, Timer } from "lucide-react"
+import {
+  Clock,
+  TrendingUp,
+  Target,
+  Calendar,
+  Zap,
+  Award,
+  BarChart3,
+  PieChart,
+  Activity,
+  Timer,
+  Rocket,
+  ThumbsUp,
+  Check,
+} from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
-import { Rocket, ThumbsUp, TrendingUp, Target } from "lucide-react"
 
 interface PomodoroSession {
   id: string
