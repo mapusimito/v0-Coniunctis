@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,15 +12,23 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Sparkles, Loader2, ArrowLeft } from "lucide-react"
+import { Loader2, ArrowLeft } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
+import { useTheme } from "next-themes"
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const { signIn, signUp, user } = useAuth()
+  const { resolvedTheme } = useTheme()
+
+  // Once mounted on client, we can show the UI
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Redirect if already logged in
   useEffect(() => {
@@ -70,15 +79,24 @@ export default function LoginPage() {
     setIsLoading(false)
   }
 
+  // Determine which logo to show based on theme
+  const logoSrc = resolvedTheme === "dark" ? "/images/coniunctis-logo-dark.png" : "/images/coniunctis-logo-light.png"
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo */}
-        <div className="flex items-center justify-center space-x-3 mb-8">
-          <div className="w-12 h-12 bg-gradient-to-r from-primary to-secondary rounded-xl flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-3xl font-bold text-gradient">Coniunctis</span>
+        <div className="flex justify-center mb-8">
+          {mounted && (
+            <Image
+              src={logoSrc || "/placeholder.svg"}
+              alt="Coniunctis Logo"
+              width={280}
+              height={80}
+              priority
+              className="h-auto"
+            />
+          )}
         </div>
 
         <Card className="modern-card shadow-modern-lg">

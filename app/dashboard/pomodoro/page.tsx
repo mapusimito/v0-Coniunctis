@@ -1,7 +1,3 @@
-// =======================
-// Imports and Interfaces
-// =======================
-
 "use client"
 
 import { useState, useEffect, useRef } from "react"
@@ -38,7 +34,6 @@ import {
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
 
-
 interface Task {
   id: string
   title: string
@@ -61,20 +56,9 @@ interface PomodoroSettings {
 
 type SessionType = "pomodoro" | "short_break" | "long_break"
 
-// =======================
-// Main Pomodoro Component
-// =======================
-
 export default function PomodoroPage() {
-  // =======================
-  // Auth and Refs
-  // =======================
   const { user } = useAuth()
   const audioRef = useRef<HTMLAudioElement | null>(null)
-
-  // =======================
-  // State Definitions
-  // =======================
 
   // Timer state
   const [timeLeft, setTimeLeft] = useState(25 * 60)
@@ -107,10 +91,6 @@ export default function PomodoroPage() {
     total_focus_time: 0,
     completed_tasks: 0,
   })
-
-  // =======================
-  // Effects: Loaders & Initializers
-  // =======================
 
   // Load active task from localStorage
   useEffect(() => {
@@ -162,50 +142,6 @@ export default function PomodoroPage() {
     }
   }, [isRunning, timeLeft])
 
-  / =======================
-// Helper Functions
-function getEndTime(timeLeft: number) {
-  const now = new Date();
-  const end = new Date(now.getTime() + timeLeft * 1000); // timeLeft está en segundos
-
-  const options: Intl.DateTimeFormatOptions = {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  };
-
-  return end.toLocaleTimeString('es-VE', options); // Ajusta la zona si quieres
-}
-function getEstimatedEndTimeForTask(): string {
-  if (!activeTask || !settings) return "Sin tarea activa";
-
-  const ahora = new Date();
-  let tiempoTotal = 0; // en minutos
-
-  const totalPomodoros = activeTask.remaining_pomodoros || 0;
-  const duracionPomodoro = settings.pomodoro_duration;
-  const duracionDescansoCorto = settings.short_break_duration;
-  const duracionDescansoLargo = settings.long_break_duration;
-
-  for (let i = 0; i < totalPomodoros; i++) {
-    tiempoTotal += duracionPomodoro;
-
-    const esUltimo = i === totalPomodoros - 1;
-    const esCuarto = (i + 1) % 4 === 0;
-
-    if (!esUltimo) {
-      tiempoTotal += esCuarto ? duracionDescansoLargo : duracionDescansoCorto;
-    }
-  }
-
-  const horaFin = new Date(ahora.getTime() + tiempoTotal * 60 * 1000);
-
-  return horaFin.toLocaleTimeString("es-VE", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
   // Fullscreen effect
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -215,15 +151,6 @@ function getEstimatedEndTimeForTask(): string {
     document.addEventListener("fullscreenchange", handleFullscreenChange)
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange)
   }, [])
-
-  // Request notification permission on mount
-  useEffect(() => {
-    requestNotificationPermission()
-  }, [])
-
-  // =======================
-  // Utility Functions
-  // =======================
 
   const playNotificationSound = async () => {
     if (!settings.sound_enabled || !audioRef.current) return
@@ -575,9 +502,10 @@ function getEstimatedEndTimeForTask(): string {
     }
   }
 
-  // =======================
-  // Fullscreen UI
-  // =======================
+  // Request notification permission on mount
+  useEffect(() => {
+    requestNotificationPermission()
+  }, [])
 
   if (isFullscreen) {
     return (
@@ -612,15 +540,11 @@ function getEstimatedEndTimeForTask(): string {
     )
   }
 
-  // =======================
-  // Main Render
-  // =======================
-
   return (
     <div className="min-h-screen p-6 space-y-6">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold">Coniunctis Pomodoro</h1>
+        <h1 className="text-3xl font-bold">Temporizador Pomodoro</h1>
         <p className="text-gray-600">Enfócate en tus tareas con la Técnica Pomodoro</p>
       </div>
 
@@ -833,65 +757,74 @@ function getEstimatedEndTimeForTask(): string {
               </CardDescription>
             )}
           </CardHeader>
-            <CardContent className="space-y-8">
-              <div className={`text-8xl font-bold ${getSessionColor(currentSession)} mb-6`}>
-                {formatTime(timeLeft)}
-              </div>
+          <CardContent className="space-y-8">
+            <div className={`text-8xl font-bold ${getSessionColor(currentSession)} mb-6`}>{formatTime(timeLeft)}</div>
 
-              <div className="space-y-2">
-                <Progress value={getProgressPercentage()} className="h-4" />
-                <div className="text-sm text-gray-600">{Math.round(getProgressPercentage())}% completado</div>
-              </div>
+            <div className="space-y-2">
+              <Progress value={getProgressPercentage()} className="h-4" />
+              <div className="text-sm text-gray-600">{Math.round(getProgressPercentage())}% completado</div>
+            </div>
 
-              <div className="flex justify-center space-x-4">
-                <Button size="lg" onClick={() => setIsRunning(!isRunning)} className="px-8 py-4 text-lg">
-                  {isRunning ? (
-                    <>
-                      <Pause className="w-6 h-6 mr-2" />
-                      Pausar
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-6 h-6 mr-2" />
-                      Iniciar
-                    </>
-                  )}
-                </Button>
-                <Button size="lg" variant="outline" onClick={resetTimer} className="px-6 py-4">
-                  <RotateCcw className="w-6 h-6" />
-                </Button>
-                <Button size="lg" variant="outline" onClick={toggleFullscreen} className="px-6 py-4">
-                  <Maximize className="w-6 h-6" />
-                </Button>
-              <Tabs value={currentSession} onValueChange={(value) => handleTabChange(value as SessionType)}>
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="pomodoro" className="text-red-600">
-                    <Clock className="w-4 h-4 mr-2" />
-                    Pomodoro
-                  </TabsTrigger>
-                  <TabsTrigger value="short_break" className="text-green-600">
-                    <Coffee className="w-4 h-4 mr-2" />
-                    Descanso Corto
-                  </TabsTrigger>
-                  <TabsTrigger value="long_break" className="text-blue-600">
-                    <Coffee className="w-4 h-4 mr-2" />
-                    Descanso Largo
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-              <div className="text-center mt-4">
-                {activeTask ? (
+            <div className="flex justify-center space-x-4">
+              <Button size="lg" onClick={() => setIsRunning(!isRunning)} className="px-8 py-4 text-lg">
+                {isRunning ? (
                   <>
-                    <div className="text-md text-gray-500">
-                      La tarea <span className="font-semibold">{activeTask.title}</span> se completará a las:
-                    </div>
-                    <div className="text-2xl font-semibold text-gray-700">{getEstimatedEndTimeForTask()}</div>
+                    <Pause className="w-6 h-6 mr-2" />
+                    Pausar
                   </>
                 ) : (
-                  <div className="text-md text-gray-400 italic">Sin tarea activa</div>
+                  <>
+                    <Play className="w-6 h-6 mr-2" />
+                    Iniciar
+                  </>
                 )}
+              </Button>
+              <Button size="lg" variant="outline" onClick={resetTimer} className="px-6 py-4">
+                <RotateCcw className="w-6 h-6" />
+              </Button>
+              <Button size="lg" variant="outline" onClick={toggleFullscreen} className="px-6 py-4">
+                <Maximize className="w-6 h-6" />
+              </Button>
+            </div>
+
+            <Tabs value={currentSession} onValueChange={(value) => handleTabChange(value as SessionType)}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="pomodoro" className="text-red-600">
+                  <Clock className="w-4 h-4 mr-2" />
+                  Pomodoro
+                </TabsTrigger>
+                <TabsTrigger value="short_break" className="text-green-600">
+                  <Coffee className="w-4 h-4 mr-2" />
+                  Descanso Corto
+                </TabsTrigger>
+                <TabsTrigger value="long_break" className="text-blue-600">
+                  <Coffee className="w-4 h-4 mr-2" />
+                  Descanso Largo
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            <div className="flex items-center justify-center space-x-8">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600">{completedPomodoros}</div>
+                <div className="text-sm text-gray-600">Pomodoros Completados</div>
               </div>
-            </CardContent>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-600">{cyclePosition + 1}/8</div>
+                <div className="text-sm text-gray-600">Posición en el Ciclo</div>
+              </div>
+              <div className="text-center">
+                <div className="flex items-center justify-center">
+                  {settings.sound_enabled ? (
+                    <Volume2 className="w-6 h-6 text-green-600" />
+                  ) : (
+                    <VolumeX className="w-6 h-6 text-gray-400" />
+                  )}
+                </div>
+                <div className="text-sm text-gray-600">Sonido</div>
+              </div>
+            </div>
+          </CardContent>
         </Card>
 
         {/* Tasks Section */}
@@ -924,7 +857,7 @@ function getEstimatedEndTimeForTask(): string {
                     </div>
                     <div className="mt-2">
                       <div className="text-sm font-medium">
-                         {activeTask.actual_pomodoros}/{activeTask.estimated_pomodoros}
+                        🍅 {activeTask.actual_pomodoros}/{activeTask.estimated_pomodoros}
                       </div>
                       <Progress
                         value={(activeTask.actual_pomodoros / activeTask.estimated_pomodoros) * 100}
@@ -979,7 +912,7 @@ function getEstimatedEndTimeForTask(): string {
                       </div>
                     </div>
                     <div className="text-xs text-gray-500">
-                       {task.actual_pomodoros}/{task.estimated_pomodoros}
+                      🍅 {task.actual_pomodoros}/{task.estimated_pomodoros}
                     </div>
                   </div>
                 ))
