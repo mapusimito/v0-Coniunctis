@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['@lexical/react', '@lexical/utils'],
-  },
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -10,7 +7,6 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ['localhost'],
     unoptimized: true,
   },
 }
