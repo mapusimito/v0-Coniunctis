@@ -1,15 +1,29 @@
 import Link from "next/link"
 import { FileText, Mail, Phone } from "lucide-react"
+import Image from "next/image"
+import { useTheme } from "next-themes"
 
 export function Footer() {
+  const { theme } = useTheme()
+  const logoSrc =
+    theme === "dark"
+      ? "/images/coniunctis-logo-dark.png"
+      : "/images/coniunctis-logo-light.png"
+
   return (
     <footer id="contact" className="bg-gray-50 dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
       <div className="container mx-auto px-4 py-16">
         <div className="grid md:grid-cols-4 gap-8">
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                <FileText className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 relative">
+                <Image
+                  src={logoSrc}
+                  alt="Coniunctis Logo"
+                  fill
+                  style={{ objectFit: "contain" }}
+                  priority
+                />
               </div>
               <span className="text-xl font-semibold text-gray-900 dark:text-white">Coniunctis</span>
             </div>
