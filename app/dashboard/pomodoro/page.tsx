@@ -249,10 +249,10 @@ export default function PomodoroPage() {
       setSettings(tempSettings)
       setSettingsOpen(false)
 
-      if (!isRunning) {
-        const duration = getDurationForSession(currentSession, tempSettings)
-        setTimeLeft(duration * 60)
-      }
+      // Asegura que el temporizador se actualice con la nueva configuración
+      const duration = getDurationForSession(currentSession, tempSettings)
+      setTimeLeft(duration * 60)
+
     } catch (error) {
       console.error("Error saving settings:", error)
     }
