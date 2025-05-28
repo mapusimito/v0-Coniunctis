@@ -38,50 +38,6 @@ import {
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
 
-// =======================
-// Helper Functions
-function getEndTime(timeLeft: number) {
-  const now = new Date();
-  const end = new Date(now.getTime() + timeLeft * 1000); // timeLeft está en segundos
-
-  const options: Intl.DateTimeFormatOptions = {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  };
-
-  return end.toLocaleTimeString('es-VE', options); // Ajusta la zona si quieres
-}
-function getEstimatedEndTimeForTask(): string {
-  if (!activeTask || !settings) return "Sin tarea activa";
-
-  const ahora = new Date();
-  let tiempoTotal = 0; // en minutos
-
-  const totalPomodoros = activeTask.remaining_pomodoros || 0;
-  const duracionPomodoro = settings.pomodoro_duration;
-  const duracionDescansoCorto = settings.short_break_duration;
-  const duracionDescansoLargo = settings.long_break_duration;
-
-  for (let i = 0; i < totalPomodoros; i++) {
-    tiempoTotal += duracionPomodoro;
-
-    const esUltimo = i === totalPomodoros - 1;
-    const esCuarto = (i + 1) % 4 === 0;
-
-    if (!esUltimo) {
-      tiempoTotal += esCuarto ? duracionDescansoLargo : duracionDescansoCorto;
-    }
-  }
-
-  const horaFin = new Date(ahora.getTime() + tiempoTotal * 60 * 1000);
-
-  return horaFin.toLocaleTimeString("es-VE", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
 
 interface Task {
   id: string
@@ -206,6 +162,50 @@ export default function PomodoroPage() {
     }
   }, [isRunning, timeLeft])
 
+  / =======================
+// Helper Functions
+function getEndTime(timeLeft: number) {
+  const now = new Date();
+  const end = new Date(now.getTime() + timeLeft * 1000); // timeLeft está en segundos
+
+  const options: Intl.DateTimeFormatOptions = {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  };
+
+  return end.toLocaleTimeString('es-VE', options); // Ajusta la zona si quieres
+}
+function getEstimatedEndTimeForTask(): string {
+  if (!activeTask || !settings) return "Sin tarea activa";
+
+  const ahora = new Date();
+  let tiempoTotal = 0; // en minutos
+
+  const totalPomodoros = activeTask.remaining_pomodoros || 0;
+  const duracionPomodoro = settings.pomodoro_duration;
+  const duracionDescansoCorto = settings.short_break_duration;
+  const duracionDescansoLargo = settings.long_break_duration;
+
+  for (let i = 0; i < totalPomodoros; i++) {
+    tiempoTotal += duracionPomodoro;
+
+    const esUltimo = i === totalPomodoros - 1;
+    const esCuarto = (i + 1) % 4 === 0;
+
+    if (!esUltimo) {
+      tiempoTotal += esCuarto ? duracionDescansoLargo : duracionDescansoCorto;
+    }
+  }
+
+  const horaFin = new Date(ahora.getTime() + tiempoTotal * 60 * 1000);
+
+  return horaFin.toLocaleTimeString("es-VE", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
   // Fullscreen effect
   useEffect(() => {
     const handleFullscreenChange = () => {
