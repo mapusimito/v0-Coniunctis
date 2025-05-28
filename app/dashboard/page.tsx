@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Checkbox } from "@/components/ui/checkbox"
-import { FileText, CheckSquare, Clock, Plus, ArrowRight, TrendingUp, Target, Zap, Sparkles } from "lucide-react"
+import { FileText, CheckSquare, Clock, Plus, ArrowRight, TrendingUp, Target, Lightbulb } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
 import Link from "next/link"
@@ -183,9 +183,11 @@ export default function DashboardPage() {
       {/* Welcome Section */}
       <div className="space-y-4">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-gradient-to-r from-primary to-secondary rounded-xl flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-white" />
-          </div>
+          <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="#3e81f4" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="8" r="5" />
+            <circle cx="12" cy="12" r="10" />
+            <path d="M7 20c0-2.5 2.5-4 5-4s5 1.5 5 4" />
+          </svg>
           <div>
             <h1 className="text-4xl font-bold text-foreground">¡Hola, {displayName}! 👋</h1>
             <p className="text-lg text-muted-foreground">¿Listo para ser productivo hoy?</p>
@@ -354,7 +356,7 @@ export default function DashboardPage() {
                 <Link href="/dashboard/editor">
                   <Button size="sm" className="modern-button-primary">
                     <Plus className="w-4 h-4 mr-2" />
-                    Crear Primer Documento
+                    Crear Documento
                   </Button>
                 </Link>
               </div>
@@ -409,7 +411,7 @@ export default function DashboardPage() {
                 <Link href="/dashboard/tasks">
                   <Button size="sm" className="modern-button-primary">
                     <Plus className="w-4 h-4 mr-2" />
-                    Crear Primera Tarea
+                    Crear Tarea
                   </Button>
                 </Link>
               </div>
@@ -422,9 +424,7 @@ export default function DashboardPage() {
       <Card className="modern-card bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
         <CardContent className="p-6">
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-primary to-secondary rounded-xl flex items-center justify-center">
-              <Zap className="w-6 h-6 text-white" />
-            </div>
+            <Lightbulb className="w-6 h-6 text-yellow-400" strokeWidth={2.5} />
             <div>
               <h3 className="text-lg font-semibold text-foreground">Consejo de Productividad</h3>
               <p className="text-muted-foreground">

@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Clock, TrendingUp, Target, Calendar, Zap, Award, BarChart3, PieChart, Activity, Timer } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
+import { Rocket, ThumbsUp, TrendingUp, Target } from "lucide-react"
 
 interface PomodoroSession {
   id: string
@@ -426,10 +427,30 @@ export default function AnalyticsPage() {
   }
 
   const getProductivityLevel = (score: number) => {
-    if (score >= 80) return { level: "Excelente", color: "text-green-600", emoji: "🚀" }
-    if (score >= 60) return { level: "Bueno", color: "text-blue-600", emoji: "💪" }
-    if (score >= 40) return { level: "Regular", color: "text-yellow-600", emoji: "📈" }
-    return { level: "Necesita Mejora", color: "text-red-600", emoji: "🎯" }
+    if (score >= 80)
+      return {
+        level: "Excelente",
+        color: "text-green-500",
+        icon: <Rocket className="inline w-6 h-6 text-green-500" />,
+      }
+    if (score >= 60)
+      return {
+        level: "Bueno",
+        color: "text-sky-500",
+        icon: <ThumbsUp className="inline w-6 h-6 text-sky-500" />,
+      }
+    if (score >= 40)
+      return {
+        level: "Regular",
+        color: "text-yellow-500",
+        icon: <TrendingUp className="inline w-6 h-6 text-yellow-500" />,
+      }
+    return {
+      level: "Necesita Mejora",
+      color: "text-red-500",
+      icon: <Target className="inline w-6 h-6 text-red-500" />,
+    }
+  }
   }
 
   const productivity = getProductivityLevel(overallStats.productivityScore)
@@ -565,31 +586,37 @@ export default function AnalyticsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Calendar className="w-5 h-5 text-primary" />
-                <span>Actividad Diaria</span>
+          <Calendar className="w-5 h-5 text-primary" />
+          <span>Actividad Diaria</span>
               </CardTitle>
               <CardDescription>Tu progreso día a día en el período seleccionado</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {dailyStats.slice(-7).map((day, index) => (
-                  <div key={day.date} className="flex items-center space-x-4">
-                    <div className="w-20 text-sm font-medium">
-                      {new Date(day.date).toLocaleDateString("es-ES", { weekday: "short", day: "numeric" })}
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span>🍅 {day.pomodoros} pomodoros</span>
-                        <span>{formatTime(day.focus_time)}</span>
-                      </div>
-                      <Progress value={Math.min((day.pomodoros / 8) * 100, 100)} className="h-2" />
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>✅ {day.tasks_completed} tareas</span>
-                        <span>Eficiencia: {day.efficiency}%</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+          {dailyStats.slice(-7).map((day, index) => (
+            <div key={day.date} className="flex items-center space-x-4">
+              <div className="w-20 text-sm font-medium">
+                {new Date(day.date).toLocaleDateString("es-ES", { weekday: "short", day: "numeric" })}
+              </div>
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+            <span className="flex items-center space-x-1">
+              <Clock className="w-4 h-4 text-red-500" />
+              <span>{day.pomodoros} pomodoros</span>
+            </span>
+            <span>{formatTime(day.focus_time)}</span>
+                </div>
+                <Progress value={Math.min((day.pomodoros / 8) * 100, 100)} className="h-2" />
+                <div className="flex items-center justify-between text-xs text-gray-500">
+            <span className="flex items-center space-x-1">
+              <Check className="w-4 h-4 text-green-500" />
+              <span>{day.tasks_completed} tareas</span>
+            </span>
+            <span>Eficiencia: {day.efficiency}%</span>
+                </div>
+              </div>
+            </div>
+          ))}
               </div>
             </CardContent>
           </Card>
@@ -599,31 +626,38 @@ export default function AnalyticsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <PieChart className="w-5 h-5 text-secondary" />
-                <span>Distribución por Categorías</span>
+          <PieChart className="w-5 h-5 text-secondary" />
+          <span>Distribución por Categorías</span>
               </CardTitle>
               <CardDescription>Cómo distribuyes tu tiempo entre diferentes tipos de trabajo</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4"></CardContent>
               {categoryStats.length > 0 ? (
-                categoryStats.map((category, index) => (
-                  <div key={category.category} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: category.color }} />
-                        <span className="font-medium">{category.category}</span>
-                      </div>
-                      <Badge variant="outline">{category.pomodoros} 🍅</Badge>
-                    </div>
-                    <div className="text-sm text-gray-600 ml-6">
-                      {formatTime(category.focus_time)} • {category.tasks} tareas
-                    </div>
-                    <Progress
-                      value={(category.pomodoros / Math.max(...categoryStats.map((c) => c.pomodoros))) * 100}
-                      className="h-2 ml-6"
-                    />
-                  </div>
-                ))
+          categoryStats.map((category, index) => (
+            <div key={category.category} className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: category.color }} />
+            <span className="font-medium">{category.category}</span>
+                </div>
+                <Badge variant="outline">
+            <Clock className="w-4 h-4 text-red-500 mr-1 inline" />
+            {category.pomodoros}
+                </Badge>
+              </div>
+              <div className="text-sm text-gray-600 ml-6">
+                {formatTime(category.focus_time)} • 
+                <span className="inline-flex items-center ml-1">
+            <Check className="w-4 h-4 text-green-500 mr-1" />
+            {category.tasks} tareas
+                </span>
+              </div>
+              <Progress
+                value={(category.pomodoros / Math.max(...categoryStats.map((c) => c.pomodoros))) * 100}
+                className="h-2 ml-6"
+              />
+            </div>
+          ))
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <PieChart className="w-12 h-12 mx-auto mb-4 text-gray-300" />
