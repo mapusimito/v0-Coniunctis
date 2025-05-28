@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { FileText, CheckSquare, Clock, Menu, User, Settings, LogOut, Home, TestTube } from "lucide-react"
+import { FileText, CheckSquare, Clock, Menu, User, Settings, LogOut, Home, TestTube, BarChart3 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
 
@@ -24,6 +24,7 @@ const navigation = [
   { name: "Documentos", href: "/dashboard/documents", icon: FileText },
   { name: "Tareas", href: "/dashboard/tasks", icon: CheckSquare },
   { name: "Pomodoro", href: "/dashboard/pomodoro", icon: Clock },
+  { name: "Estadísticas", href: "/dashboard/analytics", icon: BarChart3 },
   { name: "Test AI", href: "/dashboard/test-ai", icon: TestTube },
 ]
 

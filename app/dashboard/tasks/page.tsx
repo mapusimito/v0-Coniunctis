@@ -20,6 +20,7 @@ import { Plus, Clock, CheckSquare, Circle, Play, MoreHorizontal, Trash2 } from "
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
+import { useRouter } from "next/navigation"
 
 interface Task {
   id: string
@@ -45,6 +46,9 @@ export default function TasksPage() {
     estimated_pomodoros: 1,
   })
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [editTask, setEditTask] = useState<Task | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     if (user) {
@@ -66,6 +70,20 @@ export default function TasksPage() {
       console.error("Error fetching tasks:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const updateTask = async (taskId: string, updatedData: Partial<Task>) => {
+    try {
+      const { error } = await supabase.from("tasks").update(updatedData).eq("id", taskId)
+
+      if (error) throw error
+
+      setTasks(tasks.map((task) => (task.id === taskId ? { ...task, ...updatedData } : task)))
+      setIsEditDialogOpen(false)
+      setEditTask(null)
+    } catch (error) {
+      console.error("Error updating task:", error)
     }
   }
 
@@ -124,10 +142,31 @@ export default function TasksPage() {
     }
   }
 
+  const startPomodoro = async (task: Task) => {
+    try {
+      // Guarda la tarea activa en localStorage para que pomodoro pueda accederla
+      localStorage.setItem("activePomodoro", JSON.stringify(task))
+      router.push("/dashboard/pomodoro")
+    } catch (error) {
+      console.error("Error starting pomodoro:", error)
+    }
+  }
+
   const completedTasks = tasks.filter((task) => task.completed)
   const activeTasks = tasks.filter((task) => !task.completed)
   const totalTasks = tasks.length
   const progressPercentage = totalTasks > 0 ? (completedTasks.length / totalTasks) * 100 : 0
+
+  // Ordenar tareas por prioridad: high > medium > low
+  const priorityOrder = { high: 1, medium: 2, low: 3 }
+  const sortedActiveTasks = [...activeTasks].sort(
+    (a, b) =>
+      priorityOrder[a.priority as keyof typeof priorityOrder] - priorityOrder[b.priority as keyof typeof priorityOrder],
+  )
+  const sortedCompletedTasks = [...completedTasks].sort(
+    (a, b) =>
+      priorityOrder[a.priority as keyof typeof priorityOrder] - priorityOrder[b.priority as keyof typeof priorityOrder],
+  )
 
   if (loading) {
     return (
@@ -270,8 +309,8 @@ export default function TasksPage() {
             <CardDescription>Tasks you're currently working on</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {activeTasks.length > 0 ? (
-              activeTasks.map((task) => (
+            {sortedActiveTasks.length > 0 ? (
+              sortedActiveTasks.map((task) => (
                 <div key={task.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
                   <button onClick={() => toggleTask(task.id, task.completed)} className="flex-shrink-0">
                     <Circle className="w-5 h-5 text-gray-400 hover:text-primary transition-colors" />
@@ -301,7 +340,7 @@ export default function TasksPage() {
                   </div>
 
                   <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => startPomodoro(task)}>
                       <Play className="w-4 h-4" />
                     </Button>
                     <DropdownMenu>
@@ -311,6 +350,29 @@ export default function TasksPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setEditTask(task)
+                            setIsEditDialogOpen(true)
+                          }}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="mr-2"
+                          >
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                          </svg>
+                          Editar
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => deleteTask(task.id)} className="text-red-600">
                           <Trash2 className="w-4 h-4 mr-2" />
                           Delete
@@ -336,8 +398,8 @@ export default function TasksPage() {
             <CardDescription>Tasks you've finished</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {completedTasks.length > 0 ? (
-              completedTasks.map((task) => (
+            {sortedCompletedTasks.length > 0 ? (
+              sortedCompletedTasks.map((task) => (
                 <div key={task.id} className="flex items-center space-x-3 p-3 border rounded-lg bg-green-50">
                   <button onClick={() => toggleTask(task.id, task.completed)} className="flex-shrink-0">
                     <CheckSquare className="w-5 h-5 text-green-600" />
@@ -379,6 +441,92 @@ export default function TasksPage() {
           </CardContent>
         </Card>
       </div>
+      {/* Dialog para editar tarea */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Tarea</DialogTitle>
+            <DialogDescription>Modifica los detalles de esta tarea.</DialogDescription>
+          </DialogHeader>
+          {editTask && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-title">Título</Label>
+                <Input
+                  id="edit-title"
+                  placeholder="Título de la tarea"
+                  value={editTask.title}
+                  onChange={(e) => setEditTask({ ...editTask, title: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Descripción (Opcional)</Label>
+                <Input
+                  id="edit-description"
+                  placeholder="Descripción de la tarea"
+                  value={editTask.description}
+                  onChange={(e) => setEditTask({ ...editTask, description: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Prioridad</Label>
+                  <Select
+                    value={editTask.priority}
+                    onValueChange={(value) => setEditTask({ ...editTask, priority: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Baja</SelectItem>
+                      <SelectItem value="medium">Media</SelectItem>
+                      <SelectItem value="high">Alta</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Categoría</Label>
+                  <Select
+                    value={editTask.category}
+                    onValueChange={(value) => setEditTask({ ...editTask, category: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="work">Trabajo</SelectItem>
+                      <SelectItem value="personal">Personal</SelectItem>
+                      <SelectItem value="general">General</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Pomodoros Estimados</Label>
+                <Select
+                  value={editTask.estimated_pomodoros.toString()}
+                  onValueChange={(value) => setEditTask({ ...editTask, estimated_pomodoros: Number(value) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+                      <SelectItem key={num} value={num.toString()}>
+                        {num}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={() => updateTask(editTask.id, editTask)} className="w-full">
+                Guardar Cambios
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
