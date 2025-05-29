@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
 import Link from "next/link"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useTheme } from "next-themes"
 
 interface Document {
   id: string
@@ -42,6 +43,7 @@ interface Stats {
 export default function DashboardPage() {
   const { user, profile } = useAuth()
   const isMobile = useIsMobile()
+  const { theme } = useTheme()
   const [recentDocuments, setRecentDocuments] = useState<Document[]>([])
   const [recentTasks, setRecentTasks] = useState<Task[]>([])
   const [stats, setStats] = useState<Stats>({
@@ -183,10 +185,22 @@ export default function DashboardPage() {
   // VISTA MÓVIL COMPACTA
   if (isMobile) {
     return (
-      <div className="space-y-6 max-w-md mx-auto animate-fade-in px-2 pb-24">
+      <div
+        className={`space-y-6 max-w-md mx-auto animate-fade-in px-2 pb-24 ${
+          theme === "dark" ? "bg-gray-950 text-white" : "bg-white text-foreground"
+        }`}
+      >
         {/* Saludo */}
         <div className="flex flex-col items-center text-center space-y-2 mt-2">
-          <svg className="w-10 h-10 mb-1" viewBox="0 0 24 24" fill="none" stroke="#3e81f4" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            className="w-10 h-10 mb-1"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#3e81f4"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <circle cx="12" cy="8" r="5" />
             <circle cx="12" cy="12" r="10" />
             <path d="M7 20c0-2.5 2.5-4 5-4s5 1.5 5 4" />
@@ -197,14 +211,14 @@ export default function DashboardPage() {
 
         {/* Tarjetas de estadísticas */}
         <div className="grid grid-cols-2 gap-3 justify-items-center">
-          <Card className="w-full p-0 border-l-4 border-l-primary">
+          <Card className="w-full p-0 border-l-4 border-l-primary bg-background dark:bg-gray-900">
             <CardContent className="p-3 flex flex-col items-center">
               <FileText className="w-6 h-6 text-primary mb-1" />
               <p className="text-xs text-muted-foreground">Documentos</p>
               <p className="text-xl font-bold text-foreground">{stats.totalDocuments}</p>
             </CardContent>
           </Card>
-          <Card className="w-full p-0 border-l-4 border-l-secondary">
+          <Card className="w-full p-0 border-l-4 border-l-secondary bg-background dark:bg-gray-900">
             <CardContent className="p-3 flex flex-col items-center">
               <CheckSquare className="w-6 h-6 text-secondary mb-1" />
               <p className="text-xs text-muted-foreground">Tareas</p>
@@ -213,14 +227,14 @@ export default function DashboardPage() {
               </p>
             </CardContent>
           </Card>
-          <Card className="w-full p-0 border-l-4 border-l-green-500">
+          <Card className="w-full p-0 border-l-4 border-l-green-500 bg-background dark:bg-gray-900">
             <CardContent className="p-3 flex flex-col items-center">
               <TrendingUp className="w-6 h-6 text-green-600 mb-1" />
               <p className="text-xs text-muted-foreground">Palabras Hoy</p>
               <p className="text-xl font-bold text-foreground">{stats.todayWords}</p>
             </CardContent>
           </Card>
-          <Card className="w-full p-0 border-l-4 border-l-purple-500">
+          <Card className="w-full p-0 border-l-4 border-l-purple-500 bg-background dark:bg-gray-900">
             <CardContent className="p-3 flex flex-col items-center">
               <Target className="w-6 h-6 text-purple-600 mb-1" />
               <p className="text-xs text-muted-foreground">Progreso</p>
@@ -232,7 +246,7 @@ export default function DashboardPage() {
         {/* Botones de acciones rápidas compactos */}
         <div className="flex gap-2 w-full">
           <Link href="/dashboard/editor" className="flex-1">
-            <Card className="p-0 modern-card modern-card-hover cursor-pointer">
+            <Card className="p-0 modern-card modern-card-hover cursor-pointer bg-background dark:bg-gray-900">
               <CardContent className="flex flex-col items-center justify-center p-2">
                 <FileText className="w-6 h-6 text-primary mb-1" />
                 <span className="text-xs font-medium text-foreground">Documento</span>
@@ -240,7 +254,7 @@ export default function DashboardPage() {
             </Card>
           </Link>
           <Link href="/dashboard/tasks" className="flex-1">
-            <Card className="p-0 modern-card modern-card-hover cursor-pointer">
+            <Card className="p-0 modern-card modern-card-hover cursor-pointer bg-background dark:bg-gray-900">
               <CardContent className="flex flex-col items-center justify-center p-2">
                 <CheckSquare className="w-6 h-6 text-secondary mb-1" />
                 <span className="text-xs font-medium text-foreground">Tareas</span>
@@ -248,7 +262,7 @@ export default function DashboardPage() {
             </Card>
           </Link>
           <Link href="/dashboard/pomodoro" className="flex-1">
-            <Card className="p-0 modern-card modern-card-hover cursor-pointer">
+            <Card className="p-0 modern-card modern-card-hover cursor-pointer bg-background dark:bg-gray-900">
               <CardContent className="flex flex-col items-center justify-center p-2">
                 <Clock className="w-6 h-6 text-green-600 mb-1" />
                 <span className="text-xs font-medium text-foreground">Enfoque</span>
@@ -259,7 +273,7 @@ export default function DashboardPage() {
 
         {/* Documentos y tareas recientes (solo 3, compactos) */}
         <div className="grid grid-cols-1 gap-4">
-          <Card className="modern-card">
+          <Card className="modern-card bg-background dark:bg-gray-900">
             <CardHeader className="pb-2">
               <CardTitle className="text-base text-foreground">Documentos Recientes</CardTitle>
             </CardHeader>
@@ -292,7 +306,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="modern-card">
+          <Card className="modern-card bg-background dark:bg-gray-900">
             <CardHeader className="pb-2">
               <CardTitle className="text-base text-foreground">Tareas Recientes</CardTitle>
             </CardHeader>
@@ -330,7 +344,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Consejo de productividad compacto */}
-        <Card className="modern-card bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
+        <Card className="modern-card bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20 bg-background dark:bg-gray-900">
           <CardContent className="p-3 flex items-center space-x-3">
             <Lightbulb className="w-8 h-8 text-yellow-400 flex-shrink-0" strokeWidth={2.5} />
             <div>
