@@ -235,8 +235,7 @@ const Sidebar = React.forwardRef<
     }
 
     if (isMobile) {
-      // Solo mostrar el sidebar como Sheet (panel deslizante) cuando openMobile es true
-      return openMobile ? (
+      return (
         <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
           <SheetContent
             data-sidebar="sidebar"
@@ -252,7 +251,7 @@ const Sidebar = React.forwardRef<
             <div className="flex h-full w-full flex-col">{children}</div>
           </SheetContent>
         </Sheet>
-      ) : null
+      )
     }
 
     return (
