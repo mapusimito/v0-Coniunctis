@@ -74,28 +74,28 @@ export function DashboardSidebar() {
       {/* Header with Logo */}
       <div className="p-6 border-b border-border">
         <div className="flex items-center justify-between">
+          {/* Logo grande según tema, ocupa todo el espacio */}
           {!isCollapsed && (
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 relative">
-                <Image
-                  src="/images/coniunctis-logo.png"
-                  alt="Coniunctis"
-                  width={32}
-                  height={32}
-                  className="object-contain"
-                />
-              </div>
-              <span className="font-bold text-xl text-foreground">CONIUNCTIS</span>
+            <div className="w-full flex items-center justify-center">
+              <Image
+                src={theme === "dark" ? "/images/coniunctis-logo-dark.png" : "/images/coniunctis-logo-light.png"}
+                alt="Coniunctis"
+                width={180}
+                height={48}
+                className="object-contain"
+                priority
+              />
             </div>
           )}
           {isCollapsed && (
             <div className="w-8 h-8 relative mx-auto">
               <Image
-                src="/images/coniunctis-logo.png"
+                src={theme === "dark" ? "/images/coniunctis-logo-dark.png" : "/images/coniunctis-logo-light.png"}
                 alt="Coniunctis"
                 width={32}
                 height={32}
                 className="object-contain"
+                priority
               />
             </div>
           )}
