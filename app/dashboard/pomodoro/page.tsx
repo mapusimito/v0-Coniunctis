@@ -92,6 +92,10 @@ export default function PomodoroPage() {
     completed_tasks: 0,
   })
 
+  // Saving state
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+
   // Load active task from localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -198,7 +202,12 @@ export default function PomodoroPage() {
   }
 
   const saveSettings = async () => {
-    if (!user) return; // <-- Esto previene que se ejecute si no hay usuario
+    if (!user) {
+      setSaveError("Debes iniciar sesión para guardar la configuración.")
+      return
+    }
+    setSaving(true)
+    setSaveError(null)
     try {
       // Primero verificar si ya existe configuración para este usuario
       const { data: existingSettings, error: checkError } = await supabase
@@ -249,13 +258,13 @@ export default function PomodoroPage() {
 
       setSettings(tempSettings)
       setSettingsOpen(false)
-
-      // Asegura que el temporizador se actualice con la nueva configuración
       const duration = getDurationForSession(currentSession, tempSettings)
       setTimeLeft(duration * 60)
-
     } catch (error) {
+      setSaveError("Error al guardar la configuración.")
       console.error("Error saving settings:", error)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -741,13 +750,14 @@ export default function PomodoroPage() {
               </div>
 
               <div className="flex space-x-2">
-                <Button onClick={saveSettings} className="flex-1" disabled={!user}>
-            Guardar
+                <Button onClick={saveSettings} className="flex-1" disabled={saving}>
+            {saving ? "Guardando..." : "Guardar"}
                 </Button>
-                <Button variant="outline" onClick={() => setSettingsOpen(false)} className="flex-1">
+                <Button variant="outline" onClick={() => setSettingsOpen(false)} className="flex-1" disabled={saving}>
             Cancelar
                 </Button>
               </div>
+              {saveError && <p className="text-red-500 text-xs mt-2">{saveError}</p>}
             </div>
           </DialogContent>
               </Dialog>
