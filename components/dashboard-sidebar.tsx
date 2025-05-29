@@ -30,7 +30,6 @@ import {
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
 import { useTheme } from "next-themes"
-import { Moon, Sun } from "lucide-react"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 const navigation = [
@@ -42,7 +41,7 @@ const navigation = [
   { name: "Estadísticas", href: "/dashboard/analytics", icon: BarChart3 },
 ]
 
-// Nuevo componente para el Bottom NavBar
+// BottomNavBar solo para móvil
 function BottomNavBar({ items, pathname }: { items: typeof navigation; pathname: string }) {
   return (
     <nav className="fixed bottom-0 left-0 z-50 flex w-full justify-around bg-background border-t border-border py-1 md:hidden">
