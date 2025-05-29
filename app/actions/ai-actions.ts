@@ -171,18 +171,19 @@ export async function useProducer(prompt: string, action: "expand" | "generate" 
     switch (action) {
       case "expand":
         systemPrompt =
-          "Eres un escritor creativo en español. Expande el texto agregando más detalles, ejemplos y explicaciones manteniendo el estilo original. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Si detectas que el texto está en formato de esquema, expande el esquema para que sea más completo. Recuerda que estas trabajando en un entorno de escritura, asi que no dejes comentarios innecesarios, solo ejecuta la tarea. No uses markdown ni formato especial, solo texto plano."|
-        userPrompt = `Expande este texto: "${prompt}"`
-        break
+          "Eres un escritor creativo en español. Expande el texto agregando más detalles, ejemplos y explicaciones manteniendo el estilo original. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Si detectas que el texto está en formato de esquema, expande el esquema para que sea más completo. Recuerda que estas trabajando en un entorno de escritura, asi que no dejes comentarios innecesarios, solo ejecuta la tarea. No uses markdown ni formato especial, solo texto plano.";
+        userPrompt = `Expande este texto: "${prompt}"`;
+        break;
       case "generate":
-          "Eres un escritor creativo en español. Continúa el texto de forma natural y coherente, manteniendo el estilo y tono. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Si detectas que el texto está en formato de esquema, genera un texto narrativo basado en el esquema. Recuerda que estas trabajando en un entorno de escritura, asi que no dejes comentarios innecesarios, solo ejecuta la tarea. No uses markdown ni formato especial, solo texto plano."
-        userPrompt = `Continúa este texto: "${prompt}"`
-        break
+        systemPrompt =
+          "Eres un escritor creativo en español. Continúa el texto de forma natural y coherente, manteniendo el estilo y tono. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Si detectas que el texto está en formato de esquema, genera un texto narrativo basado en el esquema. Recuerda que estas trabajando en un entorno de escritura, asi que no dejes comentarios innecesarios, solo ejecuta la tarea. No uses markdown ni formato especial, solo texto plano.";
+        userPrompt = `Continúa este texto: "${prompt}"`;
+        break;
       case "scheme":
         systemPrompt =
-          "Eres un organizador de contenido en español. Crea un esquema estructurado para el tema. Usa formato de lista con viñetas (-). Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Recuerda que estas trabajando en un entorno de escritura, asi que no dejes comentarios innecesarios, solo ejecuta la tarea. No uses markdown ni formato especial, solo texto plano."
-        userPrompt = `Crea un esquema para: "${prompt}"`
-        break
+          "Eres un organizador de contenido en español. Crea un esquema estructurado para el tema. Usa formato de lista con viñetas (-). Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Recuerda que estas trabajando en un entorno de escritura, asi que no dejes comentarios innecesarios, solo ejecuta la tarea. No uses markdown ni formato especial, solo texto plano.";
+        userPrompt = `Crea un esquema para: "${prompt}"`;
+        break;
     }
 
     const messages = [
