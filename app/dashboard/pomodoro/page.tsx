@@ -33,6 +33,18 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
+import { useTheme } from "next-themes"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { LogOut } from "lucide-react"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface Task {
   id: string
@@ -57,6 +69,8 @@ interface PomodoroSettings {
 type SessionType = "pomodoro" | "short_break" | "long_break"
 
 export default function PomodoroPage() {
+  const { theme } = useTheme()
+  const isMobile = useIsMobile()
   const { user } = useAuth()
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
@@ -545,6 +559,227 @@ export default function PomodoroPage() {
             </Button>
           </div>
           <Progress value={getProgressPercentage()} className="w-96 h-6 mx-auto" />
+        </div>
+      </div>
+    )
+  }
+
+  // VISTA MÓVIL
+  if (isMobile) {
+    return (
+      <div
+        className={`min-h-screen flex flex-col justify-between pb-24 px-2 pt-2 max-w-md mx-auto ${
+          theme === "dark" ? "bg-gray-950 text-white" : "bg-white text-foreground"
+        }`}
+      >
+        {/* Perfil en la esquina superior izquierda */}
+        <div className="flex items-center justify-between mb-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="focus:outline-none">
+                <Avatar className="h-9 w-9 border border-border">
+                  <AvatarImage src={user?.avatar_url || "/placeholder.svg"} alt={user?.full_name || ""} />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {user?.full_name?.charAt(0) || user?.email?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56 modern-card" align="start" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">{user?.full_name || "Usuario"}</p>
+                  <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={async () => {
+                  await supabase.auth.signOut()
+                }}
+                className="cursor-pointer text-destructive"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Cerrar Sesión</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Título y subtítulo */}
+        <div className="text-center mb-2">
+          <h1 className="text-lg font-bold leading-tight">Temporizador Pomodoro</h1>
+          <p className="text-xs text-muted-foreground">
+            Enfócate en tus tareas con la Técnica Pomodoro
+          </p>
+        </div>
+
+        {/* Estadísticas */}
+        <div className="grid grid-cols-3 gap-2 mb-2">
+          <Card className="p-0 bg-background dark:bg-zinc-900">
+            <CardContent className="p-2 flex flex-col items-center">
+              <span className="text-[11px] font-medium text-muted-foreground">Pomodoros hoy</span>
+              <span className="text-lg font-bold text-red-600">{todayStats.completed_pomodoros}</span>
+            </CardContent>
+          </Card>
+          <Card className="p-0 bg-background dark:bg-zinc-900">
+            <CardContent className="p-2 flex flex-col items-center">
+              <span className="text-[11px] font-medium text-muted-foreground">Tiempo de enfoque</span>
+              <span className="text-lg font-bold text-blue-600">
+                {Math.floor(todayStats.total_focus_time / 60)}h {todayStats.total_focus_time % 60}m
+              </span>
+            </CardContent>
+          </Card>
+          <Card className="p-0 bg-background dark:bg-zinc-900">
+            <CardContent className="p-2 flex flex-col items-center">
+              <span className="text-[11px] font-medium text-muted-foreground">Tareas completadas</span>
+              <span className="text-lg font-bold text-green-600">{todayStats.completed_tasks}</span>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Temporizador principal */}
+        <Card className={`mb-2 bg-background dark:bg-zinc-900 border-2 ${getSessionBg(currentSession)}`}>
+          <CardContent className="flex flex-col items-center justify-center p-4">
+            <div className={`text-5xl font-bold ${getSessionColor(currentSession)} mb-2`}>
+              {formatTime(timeLeft)}
+            </div>
+            <div className="flex justify-center space-x-2 mb-2">
+              <Button size="sm" onClick={() => setIsRunning(!isRunning)} className="px-4 py-1 text-xs">
+                {isRunning ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
+                {isRunning ? "Pausar" : "Iniciar"}
+              </Button>
+              <Button size="sm" variant="outline" onClick={resetTimer} className="px-2 py-1">
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={toggleFullscreen} className="px-2 py-1">
+                <Maximize className="w-4 h-4" />
+              </Button>
+            </div>
+            <Progress value={getProgressPercentage()} className="h-2 w-full mb-1" />
+            <div className="text-[11px] text-muted-foreground">{Math.round(getProgressPercentage())}% completado</div>
+          </CardContent>
+        </Card>
+
+        {/* Tabs para cambiar sesión */}
+        <Tabs value={currentSession} onValueChange={(value) => handleTabChange(value as SessionType)}>
+          <TabsList className="grid w-full grid-cols-3 mb-2">
+            <TabsTrigger value="pomodoro" className="text-red-600 text-xs">
+              Pomo
+            </TabsTrigger>
+            <TabsTrigger value="short_break" className="text-green-600 text-xs">
+              Des. C
+            </TabsTrigger>
+            <TabsTrigger value="long_break" className="text-blue-600 text-xs">
+              Des. L
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {/* Tareas activas y disponibles */}
+        <div className="grid grid-cols-2 gap-2">
+          <Card className="p-0 bg-background dark:bg-zinc-900">
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="text-xs font-semibold flex items-center gap-1">
+                <Target className="w-4 h-4 text-primary" />
+                Tarea Activa
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-2 px-3">
+              {activeTask ? (
+                <div className="space-y-1">
+                  <div className="font-semibold text-xs truncate">{activeTask.title}</div>
+                  <div className="flex items-center space-x-1 mt-1">
+                    <Badge
+                      variant={
+                        activeTask.priority === "high"
+                          ? "destructive"
+                          : activeTask.priority === "medium"
+                          ? "default"
+                          : "secondary"
+                      }
+                      className="text-[10px]"
+                    >
+                      {activeTask.priority === "high"
+                        ? "Alta"
+                        : activeTask.priority === "medium"
+                        ? "Media"
+                        : "Baja"}
+                    </Badge>
+                    <span className="text-[10px] text-muted-foreground">{activeTask.category}</span>
+                  </div>
+                  <div className="text-[11px] font-medium mt-1">
+                    🍅 {activeTask.actual_pomodoros}/{activeTask.estimated_pomodoros}
+                  </div>
+                  <Progress
+                    value={(activeTask.actual_pomodoros / activeTask.estimated_pomodoros) * 100}
+                    className="h-1 mt-1"
+                  />
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={() => setActiveTask(null)}
+                    className="w-full mt-2 text-xs py-1"
+                  >
+                    Quitar
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-2 text-muted-foreground text-xs">
+                  <Target className="w-6 h-6 mx-auto mb-1 text-muted-foreground/40" />
+                  <p>No hay tarea activa</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          <Card className="p-0 bg-background dark:bg-zinc-900">
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="text-xs font-semibold flex items-center gap-1">
+                <CheckSquare className="w-4 h-4 text-secondary" />
+                Tareas Disponibles
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-2 px-3 max-h-32 overflow-y-auto">
+              {tasks.length > 0 ? (
+                tasks.slice(0, 5).map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center space-x-2 p-1 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                    onClick={() => setActiveTask(task)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate text-xs">{task.title}</p>
+                      <div className="flex items-center space-x-1 mt-0.5">
+                        <Badge
+                          variant={
+                            task.priority === "high"
+                              ? "destructive"
+                              : task.priority === "medium"
+                              ? "default"
+                              : "secondary"
+                          }
+                          className="text-[10px]"
+                        >
+                          {task.priority === "high"
+                            ? "Alta"
+                            : task.priority === "medium"
+                            ? "Media"
+                            : "Baja"}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      🍅 {task.actual_pomodoros}/{task.estimated_pomodoros}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-2 text-muted-foreground text-xs">
+                  <p>No hay tareas</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     )
