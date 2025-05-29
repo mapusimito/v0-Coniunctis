@@ -68,6 +68,66 @@ interface Stats {
   weekProgress: number
 }
 
+function getGreeting(now: Date) {
+  const hour = now.getHours()
+  const minute = now.getMinutes()
+  // 4:00am - 11:59am
+  if (hour >= 4 && hour < 12) return "Buenos días"
+  // 12:00pm - 6:29pm
+  if ((hour === 12) || (hour > 12 && hour < 18) || (hour === 18 && minute < 30)) return "Buenas tardes"
+  // 6:30pm - 3:59am
+  return "Buenas noches"
+}
+
+function DigitalClock() {
+  const [now, setNow] = useState(new Date())
+  const { theme } = useTheme()
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Formato de hora 12h
+  const hours = now.getHours() % 12 || 12
+  const minutes = now.getMinutes().toString().padStart(2, "0")
+  const ampm = now.getHours() >= 12 ? "P.M." : "A.M."
+
+  // Formato de fecha
+  const days = [
+    "Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"
+  ]
+  const months = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  ]
+  const dayName = days[now.getDay()]
+  const day = now.getDate()
+  const month = months[now.getMonth()]
+  const year = now.getFullYear()
+
+  return (
+    <div
+      className="hidden md:flex flex-col items-end justify-center text-right select-none rounded-xl px-4 py-2"
+      style={{
+        background: theme === "dark" ? "#18181b" : "#f9fafb",
+        color: theme === "dark" ? "#fff" : "#18181b",
+        boxShadow: theme === "dark"
+          ? "0 2px 8px 0 rgba(0,0,0,0.25)"
+          : "0 2px 8px 0 rgba(0,0,0,0.07)",
+        minWidth: 170,
+      }}
+    >
+      <span className="text-2xl font-bold leading-tight tracking-tight">
+        {hours}:{minutes} <span className="text-base font-semibold">{ampm}</span>
+      </span>
+      <span className="text-sm font-medium opacity-80">
+        {dayName}, {day} de {month} de {year}
+      </span>
+    </div>
+  )
+}
+
 export default function DashboardPage() {
   const { user, profile } = useAuth()
   const isMobile = useIsMobile()
@@ -82,6 +142,7 @@ export default function DashboardPage() {
     weekProgress: 0,
   })
   const [loading, setLoading] = useState(true)
+  const [now, setNow] = useState(new Date())
 
   const displayName =
     profile?.full_name?.split(" ")[0] ||
@@ -93,6 +154,11 @@ export default function DashboardPage() {
       fetchDashboardData()
     }
   }, [user])
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   const fetchDashboardData = async () => {
     try {
@@ -489,7 +555,7 @@ export default function DashboardPage() {
     )
   }
 
-  // VISTA DE ESCRITORIO (sin cambios)
+  // VISTA DE ESCRITORIO (sin cambios en la lógica, solo cambia el saludo)
   return (
     <div className="space-y-8 max-w-7xl mx-auto animate-fade-in">
       {/* Welcome Section */}
@@ -510,7 +576,7 @@ export default function DashboardPage() {
           </svg>
           <div>
             <h1 className="text-4xl font-bold text-foreground">
-              ¡Hola, {displayName}! 👋
+              ¡{getGreeting(now)}, {displayName}! 👋
             </h1>
             <p className="text-lg text-muted-foreground">
               ¿Listo para ser productivo hoy?
@@ -571,8 +637,8 @@ export default function DashboardPage() {
               <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-xl flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-green-600" />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
         </Card>
 
         <Card className="modern-card modern-card-hover border-l-4 border-l-purple-500">
