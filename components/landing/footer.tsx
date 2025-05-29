@@ -56,13 +56,13 @@ export function Footer() {
             <h4 className="font-semibold text-gray-900 dark:text-white">Producto</h4>
             <div className="space-y-2">
               <Link
-                href="/login?tab=signin"
+                href="/login"
                 className="block text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 Iniciar sesión
               </Link>
               <Link
-                href="/login?tab=signup"
+                href="/login"
                 className="block text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 Crear cuenta
