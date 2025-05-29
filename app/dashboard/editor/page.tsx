@@ -22,6 +22,9 @@ import {
   Share2,
   Lock,
   Eye,
+  Bot,
+  Glasses,
+  MessageCircleQuestion,
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
@@ -474,22 +477,23 @@ export default function EditorPage() {
               aria-expanded={showToolbar}
               aria-controls="ai-toolbar-panel"
             >
-              <Sparkles className="w-4 h-4 mr-2" />
+              <Bot className="w-4 h-4 mr-2" />
               Herramientas de IA
             </Button>
             {showToolbar && (
               <div
                 id="ai-toolbar-panel"
-                className="flex items-center space-x-2 p-4 border border-border rounded-xl bg-card mt-4 animate-fade-in"
+                className="flex flex-wrap items-center gap-2 p-4 border border-border rounded-xl bg-card mt-4 animate-fade-in"
+                style={{ maxWidth: 700 }}
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-medium text-foreground">Asistente:</span>
                   <Button variant="ghost" size="sm" onClick={() => handleAssistant("grammar")} className="rounded-lg">
                     <CheckCircle className="w-4 h-4 mr-1" />
                     Gramática
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => handleAssistant("explain")} className="rounded-lg">
-                    <MessageSquare className="w-4 h-4 mr-1" />
+                    <MessageCircleQuestion className="w-4 h-4 mr-1" />
                     Explicar
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => handleAssistant("simple")} className="rounded-lg">
@@ -497,12 +501,12 @@ export default function EditorPage() {
                     Simplificar
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => handleAssistant("complex")} className="rounded-lg">
-                    <Sparkles className="w-4 h-4 mr-1" />
+                    <Glasses className="w-4 h-4 mr-1" />
                     Complejizar
                   </Button>
                 </div>
-                <div className="w-px h-6 bg-border" />
-                <div className="flex items-center space-x-2">
+                <div className="w-px h-6 bg-border hidden md:block" />
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-medium text-foreground">Productor:</span>
                   <Button variant="ghost" size="sm" onClick={() => handleProducer("expand")} className="rounded-lg">
                     <PlusCircle className="w-4 h-4 mr-1" />
@@ -544,16 +548,14 @@ export default function EditorPage() {
             readOnly={isReadOnly}
           />
 
-          {/* AI Result Panel - Solo si puede editar */}
-          {showAI && !isReadOnly && (
+            {/* AI Result Panel - Solo si puede editar */}
+            {showAI && !isReadOnly && (
             <Card className="absolute top-4 right-4 w-96 shadow-modern-lg border-primary/20 max-h-96 overflow-y-auto modern-card animate-scale-in">
               <CardContent className="p-6">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-xl flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="font-semibold text-foreground">Resultado de ConiunctisIA</span>
-                </div>
+              <div className="flex items-center space-x-3 mb-4">
+                <Bot className="w-8 h-8 text-blue-500" />
+                <span className="font-semibold text-foreground">Resultado de ConiunctisIA</span>
+              </div>
 
                 {isAILoading ? (
                   <div className="flex items-center space-x-2 py-8">
