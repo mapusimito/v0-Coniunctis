@@ -42,7 +42,6 @@ const navigation = [
   { name: "Pomo", href: "/dashboard/pomodoro", icon: Clock },         // Compactado
   { name: "Stats", href: "/dashboard/analytics", icon: BarChart3 },   // Compactado
 ]
-
 // BottomNavBar solo para móvil, ahora con nombres compactos y mejor alineación
 function BottomNavBar({ items, pathname }: { items: typeof navigation; pathname: string }) {
   const { theme, setTheme } = useTheme()
@@ -52,7 +51,7 @@ function BottomNavBar({ items, pathname }: { items: typeof navigation; pathname:
   let navItems = [...items]
   if (homeIndex !== -1) {
     const [homeItem] = navItems.splice(homeIndex, 1)
-    const middle = Math.floor(navItems.length / 2)
+    const middle = Math.ceil(navItems.length / 2)
     navItems.splice(middle, 0, homeItem)
   }
 

@@ -555,33 +555,37 @@ export default function DashboardPage() {
     )
   }
 
-  // VISTA DE ESCRITORIO (sin cambios en la lógica, solo cambia el saludo)
+  // VISTA DE ESCRITORIO (agrega el reloj digital en la esquina superior derecha)
   return (
     <div className="space-y-8 max-w-7xl mx-auto animate-fade-in">
       {/* Welcome Section */}
       <div className="space-y-4">
-        <div className="flex items-center space-x-3">
-          <svg
-            className="w-12 h-12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#3e81f4"
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="8" r="5" />
-            <circle cx="12" cy="12" r="10" />
-            <path d="M7 20c0-2.5 2.5-4 5-4s5 1.5 5 4" />
-          </svg>
-          <div>
-            <h1 className="text-4xl font-bold text-foreground">
-              ¡{getGreeting(now)}, {displayName}! 👋
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              ¿Listo para ser productivo hoy?
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <svg
+              className="w-12 h-12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#3e81f4"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="8" r="5" />
+              <circle cx="12" cy="12" r="10" />
+              <path d="M7 20c0-2.5 2.5-4 5-4s5 1.5 5 4" />
+            </svg>
+            <div>
+              <h1 className="text-4xl font-bold text-foreground">
+                ¡{getGreeting(now)}, {displayName}! 👋
+              </h1>
+              <p className="text-lg text-muted-foreground">
+                ¿Listo para ser productivo hoy?
+              </p>
+            </div>
           </div>
+          {/* Reloj digital en la esquina superior derecha */}
+          <DigitalClock />
         </div>
       </div>
 
