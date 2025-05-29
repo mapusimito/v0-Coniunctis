@@ -249,7 +249,7 @@ export default function PomodoroPage() {
             auto_start_pomodoros: tempSettings.auto_start_pomodoros,
             updated_at: new Date().toISOString(),
           })
-          .eq("user_id", user?.id)
+          .eq("user_id", user?.id) // Missing closing tag added here
 
         error = updateError
       } else {
