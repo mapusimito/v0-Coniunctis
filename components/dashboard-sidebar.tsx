@@ -32,6 +32,7 @@ import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
 import { useTheme } from "next-themes"
 import { Moon, Sun } from "lucide-react"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -47,7 +48,9 @@ export function DashboardSidebar() {
   const { user, profile } = useAuth()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const { theme, setTheme } = useTheme()
-  const [isHovering, setIsHovering] = useState(false) // Nuevo estado para hover
+  const [isHovering, setIsHovering] = useState(false)
+  const isMobile = useIsMobile()
+  const [openMobile, setOpenMobile] = useState(false)
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -66,6 +69,107 @@ export function DashboardSidebar() {
     }
 
     return breadcrumbs.join(" / ")
+  }
+
+  // Si es móvil, mostrar solo el trigger y el panel hamburguesa
+  if (isMobile) {
+    return (
+      <>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="fixed top-4 left-4 z-50 md:hidden"
+          onClick={() => setOpenMobile(true)}
+        >
+          <PanelLeft className="w-6 h-6" />
+        </Button>
+        {openMobile && (
+          <div className="fixed inset-0 z-50 bg-black/40" onClick={() => setOpenMobile(false)} />
+        )}
+        <div
+          className={`fixed top-0 left-0 z-[60] h-full w-64 bg-background shadow-lg transition-transform duration-300 md:hidden ${openMobile ? "translate-x-0" : "-translate-x-full"}`}
+          style={{ maxWidth: 320 }}
+        >
+          <div className="p-6 border-b border-border flex items-center justify-between">
+            <Image
+              src={theme === "dark" ? "/images/coniunctis-logo-dark.png" : "/images/coniunctis-imagologo.png"}
+              alt="Coniunctis"
+              width={180}
+              height={48}
+              className="object-contain"
+              priority
+            />
+            <Button variant="ghost" size="icon" onClick={() => setOpenMobile(false)}>
+              <PanelLeftClose className="w-5 h-5" />
+            </Button>
+          </div>
+          <nav className="flex-1 p-4 space-y-1">
+            {navigation.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <Link key={item.name} href={item.href} onClick={() => setOpenMobile(false)}>
+                  <div className={`modern-nav-item ${isActive ? "modern-nav-item-active" : ""}`}>
+                    <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+                    <span className={isActive ? "text-primary" : "text-foreground"}>{item.name}</span>
+                  </div>
+                </Link>
+              )
+            })}
+          </nav>
+          <div className="p-4 border-t border-border">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full hover:bg-muted rounded-lg p-3 justify-start"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} alt={profile?.full_name || ""} />
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col items-start">
+                      <p className="text-sm font-medium text-foreground">{profile?.full_name || "Usuario"}</p>
+                      <p className="text-xs text-muted-foreground truncate max-w-[120px]">{user?.email}</p>
+                    </div>
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 modern-card" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{profile?.full_name || "Usuario"}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="cursor-pointer">
+                  {theme === "dark" ? (
+                    <>
+                      <Sun className="mr-2 h-4 w-4" />
+                      <span>Modo Claro</span>
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="mr-2 h-4 w-4" />
+                      <span>Modo Oscuro</span>
+                    </>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Cerrar Sesión</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </>
+    )
   }
 
   return (
