@@ -228,13 +228,13 @@ export default function PomodoroPage() {
         .from("pomodoro_settings")
         .select("id")
         .eq("user_id", user?.id)
-        .single()
+        .single();
 
       if (checkError && checkError.code !== "PGRST116") {
-        throw checkError
+        throw checkError;
       }
 
-      let error
+      let error;
       if (existingSettings) {
         // Actualizar configuración existente
         const { error: updateError } = await supabase
@@ -248,35 +248,36 @@ export default function PomodoroPage() {
             auto_start_breaks: tempSettings.auto_start_breaks,
             auto_start_pomodoros: tempSettings.auto_start_pomodoros,
             updated_at: new Date().toISOString(),
-          })
-          .eq("user_id", user?.id) // Missing closing tag added here
+          .eq("user_id", user?.id);
 
-        error = updateError
+        error = updateError;
+
       } else {
         // Crear nueva configuración
-        const { error: insertError } = await supabase.from("pomodoro_settings").insert({
-          user_id: user?.id,
-          pomodoro_duration: tempSettings.pomodoro_duration,
-          short_break_duration: tempSettings.short_break_duration,
-          long_break_duration: tempSettings.long_break_duration,
-          pomodoros_until_long_break: tempSettings.pomodoros_until_long_break,
-          sound_enabled: tempSettings.sound_enabled,
-          auto_start_breaks: tempSettings.auto_start_breaks,
-          auto_start_pomodoros: tempSettings.auto_start_pomodoros,
-        })
+        const { error: insertError } = await supabase
+          .from("pomodoro_settings")
+          .insert({
+            user_id: user?.id,
+            pomodoro_duration: tempSettings.pomodoro_duration,
+            short_break_duration: tempSettings.short_break_duration,
+            long_break_duration: tempSettings.long_break_duration,
+            pomodoros_until_long_break: tempSettings.pomodoros_until_long_break,
+            sound_enabled: tempSettings.sound_enabled,
+            auto_start_breaks: tempSettings.auto_start_breaks,
+            auto_start_pomodoros: tempSettings.auto_start_pomodoros,
+          });
 
-        error = insertError
-      }
+        error = insertError;
+      } // Closing bracket added here
+      if (error) throw error;
 
-      if (error) throw error
-
-      setSettings(tempSettings)
-      setSettingsOpen(false)
-      const duration = getDurationForSession(currentSession, tempSettings)
-      setTimeLeft(duration * 60)
+      setSettings(tempSettings);
+      setSettingsOpen(false);
+      const duration = getDurationForSession(currentSession, tempSettings);
+      setTimeLeft(duration * 60);
     } catch (error) {
-      setSaveError("Error al guardar la configuración.")
-      console.error("Error saving settings:", error)
+      setSaveError("Error al guardar la configuración.");
+      console.error("Error saving settings:", error);
     } finally {
       setSaving(false)
     }
