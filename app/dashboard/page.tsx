@@ -10,6 +10,7 @@ import { FileText, CheckSquare, Clock, Plus, ArrowRight, TrendingUp, Target, Lig
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
 import Link from "next/link"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface Document {
   id: string
@@ -40,6 +41,7 @@ interface Stats {
 
 export default function DashboardPage() {
   const { user, profile } = useAuth()
+  const isMobile = useIsMobile()
   const [recentDocuments, setRecentDocuments] = useState<Document[]>([])
   const [recentTasks, setRecentTasks] = useState<Task[]>([])
   const [stats, setStats] = useState<Stats>({
@@ -178,6 +180,172 @@ export default function DashboardPage() {
     )
   }
 
+  // VISTA MÓVIL COMPACTA
+  if (isMobile) {
+    return (
+      <div className="space-y-6 max-w-md mx-auto animate-fade-in px-2 pb-24">
+        {/* Saludo */}
+        <div className="flex flex-col items-center text-center space-y-2 mt-2">
+          <svg className="w-10 h-10 mb-1" viewBox="0 0 24 24" fill="none" stroke="#3e81f4" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="8" r="5" />
+            <circle cx="12" cy="12" r="10" />
+            <path d="M7 20c0-2.5 2.5-4 5-4s5 1.5 5 4" />
+          </svg>
+          <h1 className="text-2xl font-bold text-foreground leading-tight">¡Hola, {displayName}! 👋</h1>
+          <p className="text-base text-muted-foreground">¿Listo para ser productivo hoy?</p>
+        </div>
+
+        {/* Tarjetas de estadísticas */}
+        <div className="grid grid-cols-2 gap-3 justify-items-center">
+          <Card className="w-full p-0 border-l-4 border-l-primary">
+            <CardContent className="p-3 flex flex-col items-center">
+              <FileText className="w-6 h-6 text-primary mb-1" />
+              <p className="text-xs text-muted-foreground">Documentos</p>
+              <p className="text-xl font-bold text-foreground">{stats.totalDocuments}</p>
+            </CardContent>
+          </Card>
+          <Card className="w-full p-0 border-l-4 border-l-secondary">
+            <CardContent className="p-3 flex flex-col items-center">
+              <CheckSquare className="w-6 h-6 text-secondary mb-1" />
+              <p className="text-xs text-muted-foreground">Tareas</p>
+              <p className="text-xl font-bold text-foreground">
+                {stats.completedTasks}/{stats.totalTasks}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="w-full p-0 border-l-4 border-l-green-500">
+            <CardContent className="p-3 flex flex-col items-center">
+              <TrendingUp className="w-6 h-6 text-green-600 mb-1" />
+              <p className="text-xs text-muted-foreground">Palabras Hoy</p>
+              <p className="text-xl font-bold text-foreground">{stats.todayWords}</p>
+            </CardContent>
+          </Card>
+          <Card className="w-full p-0 border-l-4 border-l-purple-500">
+            <CardContent className="p-3 flex flex-col items-center">
+              <Target className="w-6 h-6 text-purple-600 mb-1" />
+              <p className="text-xs text-muted-foreground">Progreso</p>
+              <p className="text-xl font-bold text-foreground">{Math.round(stats.weekProgress)}%</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Botones de acciones rápidas compactos */}
+        <div className="flex gap-2 w-full">
+          <Link href="/dashboard/editor" className="flex-1">
+            <Card className="p-0 modern-card modern-card-hover cursor-pointer">
+              <CardContent className="flex flex-col items-center justify-center p-2">
+                <FileText className="w-6 h-6 text-primary mb-1" />
+                <span className="text-xs font-medium text-foreground">Documento</span>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/dashboard/tasks" className="flex-1">
+            <Card className="p-0 modern-card modern-card-hover cursor-pointer">
+              <CardContent className="flex flex-col items-center justify-center p-2">
+                <CheckSquare className="w-6 h-6 text-secondary mb-1" />
+                <span className="text-xs font-medium text-foreground">Tareas</span>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/dashboard/pomodoro" className="flex-1">
+            <Card className="p-0 modern-card modern-card-hover cursor-pointer">
+              <CardContent className="flex flex-col items-center justify-center p-2">
+                <Clock className="w-6 h-6 text-green-600 mb-1" />
+                <span className="text-xs font-medium text-foreground">Enfoque</span>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+
+        {/* Documentos y tareas recientes (solo 3, compactos) */}
+        <div className="grid grid-cols-1 gap-4">
+          <Card className="modern-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base text-foreground">Documentos Recientes</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {recentDocuments.length > 0 ? (
+                recentDocuments.slice(0, 3).map((doc) => (
+                  <Link key={doc.id} href={`/dashboard/editor?id=${doc.id}`}>
+                    <div className="flex items-center justify-between p-2 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
+                      <div className="flex items-center space-x-2">
+                        <FileText className="w-5 h-5 text-primary" />
+                        <div>
+                          <p className="font-medium text-xs text-foreground truncate max-w-[120px]">{doc.title}</p>
+                          <div className="flex items-center space-x-1 text-[11px] text-muted-foreground">
+                            <span>{getTimeAgo(doc.updated_at)}</span>
+                            <span>•</span>
+                            <span>{doc.word_count} palabras</span>
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-xs font-medium text-primary">{doc.progress_percentage}%</span>
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <div className="text-center py-4 text-muted-foreground text-xs">
+                  <FileText className="w-8 h-8 mx-auto mb-2 text-muted-foreground/50" />
+                  <p>No hay documentos aún</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="modern-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base text-foreground">Tareas Recientes</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {recentTasks.length > 0 ? (
+                recentTasks.slice(0, 3).map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center space-x-2 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <Checkbox
+                      checked={task.completed}
+                      onCheckedChange={() => toggleTask(task.id, task.completed)}
+                      className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                    />
+                    <div className="flex-1">
+                      <p className={`font-medium text-xs truncate ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                        {task.title}
+                      </p>
+                      <div className="flex items-center space-x-1 mt-0.5">
+                        <Badge className={`text-[10px] border ${getPriorityColor(task.priority)}`}>{task.priority}</Badge>
+                        <span className="text-[10px] text-muted-foreground">{task.category}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-muted-foreground text-xs">
+                  <CheckSquare className="w-8 h-8 mx-auto mb-2 text-muted-foreground/50" />
+                  <p>No hay tareas aún</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Consejo de productividad compacto */}
+        <Card className="modern-card bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
+          <CardContent className="p-3 flex items-center space-x-3">
+            <Lightbulb className="w-8 h-8 text-yellow-400 flex-shrink-0" strokeWidth={2.5} />
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-0.5">Consejo de Productividad</h3>
+              <p className="text-xs text-muted-foreground">
+                Usa la técnica Pomodoro para mantener el enfoque. 25 minutos de trabajo concentrado seguidos de 5 minutos de descanso pueden aumentar significativamente tu productividad.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // VISTA DE ESCRITORIO (sin cambios)
   return (
     <div className="space-y-8 max-w-7xl mx-auto animate-fade-in">
       {/* Welcome Section */}

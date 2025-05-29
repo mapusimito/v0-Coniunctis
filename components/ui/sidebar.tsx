@@ -4,6 +4,7 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
+import { usePathname } from "next/navigation"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -162,6 +163,7 @@ const Sidebar = React.forwardRef<
     side?: "left" | "right"
     variant?: "sidebar" | "floating" | "inset"
     collapsible?: "offcanvas" | "icon" | "none"
+    navItems?: Array<{ name: string; href: string; icon: React.ElementType }>
   }
 >(
   (
@@ -171,11 +173,51 @@ const Sidebar = React.forwardRef<
       collapsible = "offcanvas",
       className,
       children,
+      navItems = [],
       ...props
     },
     ref
   ) => {
     const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+    const pathname = usePathname()
+
+    // Agrega este nuevo componente para el BottomNavBar
+    function BottomNavBar({
+      items,
+    }: {
+      items: Array<{ name: string; href: string; icon: React.ElementType }>
+    }) {
+      return (
+        <nav className="fixed bottom-0 left-0 z-50 flex w-full justify-around bg-background border-t border-border py-1 md:hidden">
+          {items.map((item) => {
+            const Icon = item.icon
+            const isActive = pathname === item.href
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                className={`flex flex-col items-center justify-center px-2 py-1 ${
+                  isActive ? "text-primary" : "text-muted-foreground"
+                }`}
+                aria-label={item.name}
+              >
+                <Icon className={`w-6 h-6 ${isActive ? "scale-110" : ""}`} />
+              </a>
+            )
+          })}
+        </nav>
+      )
+    }
+
+    // En móvil, muestra el BottomNavBar en vez del sidebar hamburguesa
+    if (isMobile) {
+      return (
+        <>
+          <div className="hidden">{children}</div>
+          <BottomNavBar items={navItems} />
+        </>
+      )
+    }
 
     if (collapsible === "none") {
       return (
