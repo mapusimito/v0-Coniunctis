@@ -19,11 +19,13 @@ import {
   FileText,
   CheckSquare,
   Clock,
-  TestTube,
-  User,
-  Settings,
-  LogOut,
+  PanelLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
   BarChart3,
+  Moon,
+  Sun,
+  LogOut,
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
