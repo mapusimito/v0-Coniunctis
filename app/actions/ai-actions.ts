@@ -109,7 +109,9 @@ export async function useAssistant(
       case "grammar":
         systemPrompt =
           "Eres un corrector de gramática general, especializado en español. Corrige los errores gramaticales y de ortografía del texto. Devuelve solo el texto corregido, sin explicaciones. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma."
-        userPrompt = `Corrige este texto: "${text}"`
+        // Limpia el texto de comillas problemáticas
+        const cleanText = text.replace(/["'`]/g, "");
+        userPrompt = `Corrige este texto: '${cleanText}'`
         break
       case "explain":
         systemPrompt =
@@ -117,7 +119,8 @@ export async function useAssistant(
         userPrompt = `Explica este texto: "${text}"`
         break
       case "simple":
-          "Eres un editor que simplifica textos en español. Reescribe el texto de manera más simple y fácil de entender, manteniendo el significado. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Recuerda que estas trabajando en un entorno de escritura, asi que no dejes comentarios innecesarios, solo ejecuta la tarea. No uses markdown ni formato especial, solo texto plano."
+          systemPrompt =
+            "Eres un editor que simplifica textos en español. Reescribe el texto de manera más simple y fácil de entender, manteniendo el significado. Devuelve solo el texto simplificado, sin explicaciones ni opciones. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma. Recuerda que estas trabajando en un entorno de escritura, asi que no dejes comentarios innecesarios, solo ejecuta la tarea. No uses markdown ni formato especial, solo texto plano."
         userPrompt = `Simplifica este texto: "${text}"`
         break
       case "complex":
