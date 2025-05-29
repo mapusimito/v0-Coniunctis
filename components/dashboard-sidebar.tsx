@@ -15,10 +15,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-  LayoutDashboard,
   FileText,
   FilePlus,
-  Home,
+  Home, // Cambia House por Home
   CheckSquare,
   Clock,
   PanelLeft,
@@ -35,9 +34,9 @@ import { useTheme } from "next-themes"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 const navigation = [
-  { name: "Inicio", href: "/dashboard", icon: Home }, // Cambiado a House
-  { name: "Editor", href: "/dashboard/editor", icon: FilePlus }, // Cambiado a FilePlus
-  { name: "Documentos", href: "/dashboard/documents", icon: FileText }, // Se mantiene FileText
+  { name: "Inicio", href: "/dashboard", icon: Home }, // Cambia House por Home
+  { name: "Editor", href: "/dashboard/editor", icon: FilePlus },
+  { name: "Documentos", href: "/dashboard/documents", icon: FileText },
   { name: "Tareas", href: "/dashboard/tasks", icon: CheckSquare },
   { name: "Pomodoro", href: "/dashboard/pomodoro", icon: Clock },
   { name: "Estadísticas", href: "/dashboard/analytics", icon: BarChart3 },
