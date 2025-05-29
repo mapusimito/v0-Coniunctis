@@ -1,17 +1,45 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Checkbox } from "@/components/ui/checkbox"
-import { FileText, CheckSquare, Clock, Plus, ArrowRight, TrendingUp, Target, Lightbulb } from "lucide-react"
+import {
+  FileText,
+  CheckSquare,
+  Clock,
+  Plus,
+  ArrowRight,
+  TrendingUp,
+  Target,
+  Lightbulb,
+  LogOut,
+  Moon,
+  Sun,
+} from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
 import Link from "next/link"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useTheme } from "next-themes"
+import Image from "next/image"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface Document {
   id: string
@@ -43,7 +71,7 @@ interface Stats {
 export default function DashboardPage() {
   const { user, profile } = useAuth()
   const isMobile = useIsMobile()
-  const { theme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const [recentDocuments, setRecentDocuments] = useState<Document[]>([])
   const [recentTasks, setRecentTasks] = useState<Task[]>([])
   const [stats, setStats] = useState<Stats>({
@@ -55,7 +83,10 @@ export default function DashboardPage() {
   })
   const [loading, setLoading] = useState(true)
 
-  const displayName = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Usuario"
+  const displayName =
+    profile?.full_name?.split(" ")[0] ||
+    user?.email?.split("@")[0] ||
+    "Usuario"
 
   useEffect(() => {
     if (user) {
@@ -66,9 +97,12 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       // Fetch accessible documents using RPC function
-      const { data: documentsData, error: documentsError } = await supabase.rpc("get_accessible_documents", {
-        uid: user?.id,
-      })
+      const { data: documentsData, error: documentsError } = await supabase.rpc(
+        "get_accessible_documents",
+        {
+          uid: user?.id,
+        },
+      )
 
       if (documentsError) {
         console.error("Error fetching documents:", documentsError)
@@ -76,7 +110,10 @@ export default function DashboardPage() {
 
       // Get recent documents (limit to 5 most recent)
       const recentDocs = (documentsData || [])
-        .sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+        .sort(
+          (a: any, b: any) =>
+            new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+        )
         .slice(0, 5)
 
       // Fetch recent tasks
@@ -106,7 +143,10 @@ export default function DashboardPage() {
       const todayDocs = (documentsData || []).filter(
         (doc: any) => doc.updated_at >= today && doc.user_id === user?.id, // Only count words from own documents
       )
-      const todayWords = todayDocs.reduce((sum: number, doc: any) => sum + (doc.word_count || 0), 0)
+      const todayWords = todayDocs.reduce(
+        (sum: number, doc: any) => sum + (doc.word_count || 0),
+        0,
+      )
 
       setRecentDocuments(recentDocs || [])
       setRecentTasks(tasksData || [])
@@ -115,7 +155,9 @@ export default function DashboardPage() {
         totalTasks: totalTasksCount || 0,
         completedTasks: completedTasksCount || 0,
         todayWords,
-        weekProgress: totalTasksCount ? ((completedTasksCount || 0) / totalTasksCount) * 100 : 0,
+        weekProgress: totalTasksCount
+          ? ((completedTasksCount || 0) / totalTasksCount) * 100
+          : 0,
       })
     } catch (error) {
       console.error("Error fetching dashboard data:", error)
@@ -126,12 +168,19 @@ export default function DashboardPage() {
 
   const toggleTask = async (taskId: string, completed: boolean) => {
     try {
-      const { error } = await supabase.from("tasks").update({ completed: !completed }).eq("id", taskId)
+      const { error } = await supabase
+        .from("tasks")
+        .update({ completed: !completed })
+        .eq("id", taskId)
 
       if (error) throw error
 
       // Update local state
-      setRecentTasks((prev) => prev.map((task) => (task.id === taskId ? { ...task, completed: !completed } : task)))
+      setRecentTasks((prev) =>
+        prev.map((task) =>
+          task.id === taskId ? { ...task, completed: !completed } : task,
+        ),
+      )
 
       // Update stats
       setStats((prev) => ({
@@ -190,23 +239,72 @@ export default function DashboardPage() {
           theme === "dark" ? "bg-gray-950 text-white" : "bg-white text-foreground"
         }`}
       >
+        {/* Perfil en la esquina superior izquierda */}
+        <div className="flex items-center justify-between pt-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="focus:outline-none">
+                <Avatar className="h-9 w-9 border border-border">
+                  <AvatarImage
+                    src={profile?.avatar_url || "/placeholder.svg"}
+                    alt={profile?.full_name || ""}
+                  />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {profile?.full_name?.charAt(0) ||
+                      user?.email?.charAt(0) ||
+                      "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="w-56 modern-card"
+              align="start"
+              forceMount
+            >
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    {profile?.full_name || "Usuario"}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {user?.email}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={async () => {
+                  await supabase.auth.signOut()
+                }}
+                className="cursor-pointer text-destructive"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Cerrar Sesión</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {/* Logo adaptativo */}
+          <div className="w-10 h-10 mb-1 flex items-center justify-center">
+            <Image
+              src={theme === "dark" ? "/images/coniunctis-logo-isolight.png" : "/images/coniunctis-logo.png"}
+              alt="Logo Coniunctis"
+              width={40}
+              height={40}
+              className="object-contain"
+              priority
+            />
+          </div>
+        </div>
+
         {/* Saludo */}
         <div className="flex flex-col items-center text-center space-y-2 mt-2">
-          <svg
-            className="w-10 h-10 mb-1"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#3e81f4"
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="8" r="5" />
-            <circle cx="12" cy="12" r="10" />
-            <path d="M7 20c0-2.5 2.5-4 5-4s5 1.5 5 4" />
-          </svg>
-          <h1 className="text-2xl font-bold text-foreground leading-tight">¡Hola, {displayName}! 👋</h1>
-          <p className="text-base text-muted-foreground">¿Listo para ser productivo hoy?</p>
+          <h1 className="text-2xl font-bold text-foreground leading-tight">
+            ¡Hola, {displayName}! 👋
+          </h1>
+          <p className="text-base text-muted-foreground">
+            ¿Listo para ser productivo hoy?
+          </p>
         </div>
 
         {/* Tarjetas de estadísticas */}
@@ -215,7 +313,9 @@ export default function DashboardPage() {
             <CardContent className="p-3 flex flex-col items-center">
               <FileText className="w-6 h-6 text-primary mb-1" />
               <p className="text-xs text-muted-foreground">Documentos</p>
-              <p className="text-xl font-bold text-foreground">{stats.totalDocuments}</p>
+              <p className="text-xl font-bold text-foreground">
+                {stats.totalDocuments}
+              </p>
             </CardContent>
           </Card>
           <Card className="w-full p-0 border-l-4 border-l-secondary bg-background dark:bg-gray-900">
@@ -231,14 +331,18 @@ export default function DashboardPage() {
             <CardContent className="p-3 flex flex-col items-center">
               <TrendingUp className="w-6 h-6 text-green-600 mb-1" />
               <p className="text-xs text-muted-foreground">Palabras Hoy</p>
-              <p className="text-xl font-bold text-foreground">{stats.todayWords}</p>
+              <p className="text-xl font-bold text-foreground">
+                {stats.todayWords}
+              </p>
             </CardContent>
           </Card>
           <Card className="w-full p-0 border-l-4 border-l-purple-500 bg-background dark:bg-gray-900">
             <CardContent className="p-3 flex flex-col items-center">
               <Target className="w-6 h-6 text-purple-600 mb-1" />
               <p className="text-xs text-muted-foreground">Progreso</p>
-              <p className="text-xl font-bold text-foreground">{Math.round(stats.weekProgress)}%</p>
+              <p className="text-xl font-bold text-foreground">
+                {Math.round(stats.weekProgress)}%
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -275,7 +379,9 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 gap-4">
           <Card className="modern-card bg-background dark:bg-gray-900">
             <CardHeader className="pb-2">
-              <CardTitle className="text-base text-foreground">Documentos Recientes</CardTitle>
+              <CardTitle className="text-base text-foreground">
+                Documentos Recientes
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {recentDocuments.length > 0 ? (
@@ -285,7 +391,9 @@ export default function DashboardPage() {
                       <div className="flex items-center space-x-2">
                         <FileText className="w-5 h-5 text-primary" />
                         <div>
-                          <p className="font-medium text-xs text-foreground truncate max-w-[120px]">{doc.title}</p>
+                          <p className="font-medium text-xs text-foreground truncate max-w-[120px]">
+                            {doc.title}
+                          </p>
                           <div className="flex items-center space-x-1 text-[11px] text-muted-foreground">
                             <span>{getTimeAgo(doc.updated_at)}</span>
                             <span>•</span>
@@ -293,7 +401,9 @@ export default function DashboardPage() {
                           </div>
                         </div>
                       </div>
-                      <span className="text-xs font-medium text-primary">{doc.progress_percentage}%</span>
+                      <span className="text-xs font-medium text-primary">
+                        {doc.progress_percentage}%
+                      </span>
                     </div>
                   </Link>
                 ))
@@ -308,7 +418,9 @@ export default function DashboardPage() {
 
           <Card className="modern-card bg-background dark:bg-gray-900">
             <CardHeader className="pb-2">
-              <CardTitle className="text-base text-foreground">Tareas Recientes</CardTitle>
+              <CardTitle className="text-base text-foreground">
+                Tareas Recientes
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {recentTasks.length > 0 ? (
@@ -323,12 +435,26 @@ export default function DashboardPage() {
                       className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
                     />
                     <div className="flex-1">
-                      <p className={`font-medium text-xs truncate ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                      <p
+                        className={`font-medium text-xs truncate ${
+                          task.completed
+                            ? "line-through text-muted-foreground"
+                            : "text-foreground"
+                        }`}
+                      >
                         {task.title}
                       </p>
                       <div className="flex items-center space-x-1 mt-0.5">
-                        <Badge className={`text-[10px] border ${getPriorityColor(task.priority)}`}>{task.priority}</Badge>
-                        <span className="text-[10px] text-muted-foreground">{task.category}</span>
+                        <Badge
+                          className={`text-[10px] border ${getPriorityColor(
+                            task.priority,
+                          )}`}
+                        >
+                          {task.priority}
+                        </Badge>
+                        <span className="text-[10px] text-muted-foreground">
+                          {task.category}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -348,9 +474,13 @@ export default function DashboardPage() {
           <CardContent className="p-3 flex items-center space-x-3">
             <Lightbulb className="w-8 h-8 text-yellow-400 flex-shrink-0" strokeWidth={2.5} />
             <div>
-              <h3 className="text-sm font-semibold text-foreground mb-0.5">Consejo de Productividad</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-0.5">
+                Consejo de Productividad
+              </h3>
               <p className="text-xs text-muted-foreground">
-                Usa la técnica Pomodoro para mantener el enfoque. 25 minutos de trabajo concentrado seguidos de 5 minutos de descanso pueden aumentar significativamente tu productividad.
+                Usa la técnica Pomodoro para mantener el enfoque. 25 minutos de
+                trabajo concentrado seguidos de 5 minutos de descanso pueden
+                aumentar significativamente tu productividad.
               </p>
             </div>
           </CardContent>
@@ -365,14 +495,26 @@ export default function DashboardPage() {
       {/* Welcome Section */}
       <div className="space-y-4">
         <div className="flex items-center space-x-3">
-          <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="#3e81f4" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            className="w-12 h-12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#3e81f4"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <circle cx="12" cy="8" r="5" />
             <circle cx="12" cy="12" r="10" />
             <path d="M7 20c0-2.5 2.5-4 5-4s5 1.5 5 4" />
           </svg>
           <div>
-            <h1 className="text-4xl font-bold text-foreground">¡Hola, {displayName}! 👋</h1>
-            <p className="text-lg text-muted-foreground">¿Listo para ser productivo hoy?</p>
+            <h1 className="text-4xl font-bold text-foreground">
+              ¡Hola, {displayName}! 👋
+            </h1>
+            <p className="text-lg text-muted-foreground">
+              ¿Listo para ser productivo hoy?
+            </p>
           </div>
         </div>
       </div>
@@ -383,8 +525,12 @@ export default function DashboardPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Documentos</p>
-                <p className="text-3xl font-bold text-foreground">{stats.totalDocuments}</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Documentos
+                </p>
+                <p className="text-3xl font-bold text-foreground">
+                  {stats.totalDocuments}
+                </p>
               </div>
               <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
                 <FileText className="w-6 h-6 text-primary" />
@@ -397,7 +543,9 @@ export default function DashboardPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Tareas Completadas</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Tareas Completadas
+                </p>
                 <p className="text-3xl font-bold text-foreground">
                   {stats.completedTasks}/{stats.totalTasks}
                 </p>
@@ -413,22 +561,30 @@ export default function DashboardPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Palabras Hoy</p>
-                <p className="text-3xl font-bold text-foreground">{stats.todayWords}</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Palabras Hoy
+                </p>
+                <p className="text-3xl font-bold text-foreground">
+                  {stats.todayWords}
+                </p>
               </div>
               <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-xl flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-green-600" />
               </div>
-            </div>
-          </CardContent>
+            </CardContent>
+          </Card>
         </Card>
 
         <Card className="modern-card modern-card-hover border-l-4 border-l-purple-500">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Progreso Semanal</p>
-                <p className="text-3xl font-bold text-foreground">{Math.round(stats.weekProgress)}%</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Progreso Semanal
+                </p>
+                <p className="text-3xl font-bold text-foreground">
+                  {Math.round(stats.weekProgress)}%
+                </p>
               </div>
               <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-xl flex items-center justify-center">
                 <Target className="w-6 h-6 text-purple-600" />
@@ -446,8 +602,12 @@ export default function DashboardPage() {
               <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
                 <FileText className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-foreground">Crear Documento</h3>
-              <p className="text-muted-foreground">Comienza a escribir con asistencia de IA</p>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">
+                Crear Documento
+              </h3>
+              <p className="text-muted-foreground">
+                Comienza a escribir con asistencia de IA
+              </p>
             </CardContent>
           </Card>
         </Link>
@@ -458,7 +618,9 @@ export default function DashboardPage() {
               <div className="w-16 h-16 bg-secondary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-secondary/20 transition-colors">
                 <CheckSquare className="w-8 h-8 text-secondary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-foreground">Gestionar Tareas</h3>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">
+                Gestionar Tareas
+              </h3>
               <p className="text-muted-foreground">Organiza y rastrea tu progreso</p>
             </CardContent>
           </Card>
@@ -470,7 +632,9 @@ export default function DashboardPage() {
               <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 dark:group-hover:bg-green-800/30 transition-colors">
                 <Clock className="w-8 h-8 text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-foreground">Tiempo de Enfoque</h3>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">
+                Tiempo de Enfoque
+              </h3>
               <p className="text-muted-foreground">Inicia una sesión Pomodoro</p>
             </CardContent>
           </Card>
@@ -484,12 +648,19 @@ export default function DashboardPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-xl text-foreground">Documentos Recientes</CardTitle>
+                <CardTitle className="text-xl text-foreground">
+                  Documentos Recientes
+                </CardTitle>
                 <CardDescription>Continúa donde lo dejaste</CardDescription>
               </div>
               <Link href="/dashboard/documents">
-                <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 hover:bg-primary/10">
-                  Ver Todos <ArrowRight className="w-4 h-4 ml-1" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-primary hover:text-primary/80 hover:bg-primary/10"
+                >
+                  Ver Todos{" "}
+                  <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
               </Link>
             </div>
@@ -525,7 +696,9 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-sm font-medium text-primary">{doc.progress_percentage}%</span>
+                      <span className="text-sm font-medium text-primary">
+                        {doc.progress_percentage}%
+                      </span>
                       <Progress value={doc.progress_percentage} className="w-16 h-2 mt-1" />
                     </div>
                   </div>
@@ -551,12 +724,19 @@ export default function DashboardPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-xl text-foreground">Tareas Recientes</CardTitle>
+                <CardTitle className="text-xl text-foreground">
+                  Tareas Recientes
+                </CardTitle>
                 <CardDescription>Mantente al día con tus prioridades</CardDescription>
               </div>
               <Link href="/dashboard/tasks">
-                <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 hover:bg-primary/10">
-                  Ver Todas <ArrowRight className="w-4 h-4 ml-1" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-primary hover:text-primary/80 hover:bg-primary/10"
+                >
+                  Ver Todas{" "}
+                  <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
               </Link>
             </div>
@@ -575,13 +755,21 @@ export default function DashboardPage() {
                   />
                   <div className="flex-1">
                     <p
-                      className={`font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}
+                      className={`font-medium ${
+                        task.completed
+                          ? "line-through text-muted-foreground"
+                          : "text-foreground"
+                      }`}
                     >
                       {task.title}
                     </p>
                     <div className="flex items-center space-x-2 mt-1">
-                      <Badge className={`text-xs border ${getPriorityColor(task.priority)}`}>{task.priority}</Badge>
-                      <span className="text-xs text-muted-foreground">{task.category}</span>
+                      <Badge className={`text-xs border ${getPriorityColor(task.priority)}`}>
+                        {task.priority}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {task.category}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -611,10 +799,13 @@ export default function DashboardPage() {
               strokeWidth={2.5}
             />
             <div>
-              <h3 className="text-lg font-semibold text-foreground">Consejo de Productividad</h3>
+              <h3 className="text-lg font-semibold text-foreground">
+                Consejo de Productividad
+              </h3>
               <p className="text-muted-foreground">
-                Usa la técnica Pomodoro para mantener el enfoque. 25 minutos de trabajo concentrado seguidos de 5
-                minutos de descanso pueden aumentar significativamente tu productividad.
+                Usa la técnica Pomodoro para mantener el enfoque. 25 minutos de
+                trabajo concentrado seguidos de 5 minutos de descanso pueden
+                aumentar significativamente tu productividad.
               </p>
             </div>
           </div>

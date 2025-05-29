@@ -108,7 +108,7 @@ export async function useAssistant(
     switch (action) {
       case "grammar":
         systemPrompt =
-          "Eres un corrector de gramática en español. Corrige los errores gramaticales y de ortografía del texto. Devuelve solo el texto corregido, sin explicaciones. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma."
+          "Eres un corrector de gramática general, especializado en español. Corrige los errores gramaticales y de ortografía del texto. Devuelve solo el texto corregido, sin explicaciones. Si ves que el texto está escrito en otro idioma, adaptate a ese idioma."
         userPrompt = `Corrige este texto: "${text}"`
         break
       case "explain":

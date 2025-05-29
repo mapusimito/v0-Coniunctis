@@ -32,6 +32,7 @@ import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
 import { useTheme } from "next-themes"
 import { useIsMobile } from "@/hooks/use-mobile"
+import clsx from "clsx"
 
 const navigation = [
   { name: "Inicio", href: "/dashboard", icon: Home }, // Cambia House por Home
@@ -42,39 +43,125 @@ const navigation = [
   { name: "Estadísticas", href: "/dashboard/analytics", icon: BarChart3 },
 ]
 
-// BottomNavBar solo para móvil, ahora con botón de modo oscuro
+// BottomNavBar solo para móvil, ahora con nombres y animación de semicírculo
 function BottomNavBar({ items, pathname }: { items: typeof navigation; pathname: string }) {
   const { theme, setTheme } = useTheme()
 
+  // Reorganiza los items para que "Inicio" (Home) esté en el centro
+  const homeIndex = items.findIndex((item) => item.icon === Home)
+  let navItems = [...items]
+  if (homeIndex !== -1) {
+    const [homeItem] = navItems.splice(homeIndex, 1)
+    const middle = Math.floor(navItems.length / 2)
+    navItems.splice(middle, 0, homeItem)
+  }
+
+  // Encuentra el índice activo para animar el semicírculo
+  const activeIndex = navItems.findIndex((item) => pathname === item.href)
+
   return (
-    <nav className="fixed bottom-0 left-0 z-50 flex w-full justify-around bg-background border-t border-border py-1 md:hidden">
-      {items.map((item) => {
-        const Icon = item.icon
-        const isActive = pathname === item.href
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            aria-label={item.name}
-            className={`flex flex-col items-center justify-center px-2 py-1 ${isActive ? "text-primary" : "text-muted-foreground"}`}
+    <nav className="fixed bottom-3 left-1/2 z-50 -translate-x-1/2 w-[98vw] max-w-md flex justify-center pointer-events-none">
+      <div className="relative w-full flex justify-center pointer-events-auto">
+        {/* Fondo del navbar con bordes redondeados */}
+        <div className="absolute inset-0 flex justify-center items-end z-0">
+          <div className="w-full h-14 bg-background border border-border rounded-2xl shadow-lg" />
+        </div>
+        {/* Semicírculo animado */}
+        <div
+          className="absolute left-0 top-0 w-full h-0 z-10 pointer-events-none"
+          style={{
+            transition: "all 0.3s cubic-bezier(.4,1.7,.7,1)",
+          }}
+        >
+          <div
+            className="absolute"
+            style={{
+              left: `calc(${((activeIndex + 0.5) / navItems.length) * 100}% - 28px)`,
+              top: "-22px",
+              transition: "left 0.3s cubic-bezier(.4,1.7,.7,1)",
+            }}
           >
-            <Icon className={`w-6 h-6 ${isActive ? "scale-110" : ""}`} />
-          </Link>
-        )
-      })}
-      {/* Botón de modo oscuro/claro */}
-      <button
-        aria-label="Cambiar modo"
-        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        className="flex flex-col items-center justify-center px-2 py-1 text-muted-foreground"
-        type="button"
-      >
-        {theme === "dark" ? (
-          <Sun className="w-6 h-6" />
-        ) : (
-          <Moon className="w-6 h-6" />
-        )}
-      </button>
+            <svg width={56} height={28} viewBox="0 0 56 28" className="block">
+              <path
+                d="M0,28 Q28,0 56,28"
+                fill={theme === "dark" ? "#18181b" : "#fff"}
+                stroke={theme === "dark" ? "#27272a" : "#e5e7eb"}
+                strokeWidth="1.5"
+                style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.10))" }}
+              />
+            </svg>
+          </div>
+        </div>
+        {/* Botones */}
+        <div className="relative flex w-full z-20">
+          {navItems.map((item, idx) => {
+            const Icon = item.icon
+            const isActive = pathname === item.href
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-label={item.name}
+                className={clsx(
+                  "flex-1 flex flex-col items-center justify-end py-1 transition-all duration-200",
+                  "relative z-20",
+                  isActive ? "font-semibold" : "font-normal"
+                )}
+                style={{
+                  marginTop: isActive ? -18 : 0,
+                  transition: "margin-top 0.3s cubic-bezier(.4,1.7,.7,1)",
+                }}
+              >
+                <div
+                  className={clsx(
+                    "flex flex-col items-center justify-center rounded-full transition-all duration-200",
+                    isActive
+                      ? "bg-primary/10 text-primary shadow-lg"
+                      : "text-muted-foreground"
+                  )}
+                  style={{
+                    width: isActive ? 44 : 36,
+                    height: isActive ? 44 : 36,
+                    marginBottom: 2,
+                    zIndex: 30,
+                  }}
+                >
+                  <Icon className={clsx("transition-all", isActive ? "w-6 h-6" : "w-5 h-5")} />
+                </div>
+                <span
+                  className={clsx(
+                    "text-[10px] mt-0.5 transition-colors",
+                    isActive ? "text-primary" : "text-muted-foreground"
+                  )}
+                  style={{
+                    fontSize: isActive ? 11 : 10,
+                  }}
+                >
+                  {item.name}
+                </span>
+              </Link>
+            )
+          })}
+          {/* Botón de modo oscuro/claro */}
+          <button
+            aria-label="Cambiar modo"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="flex flex-col items-center justify-end py-1 flex-1"
+            type="button"
+            tabIndex={0}
+            style={{ marginTop: 0 }}
+          >
+            <div className="flex flex-col items-center justify-center rounded-full text-muted-foreground w-9 h-9 mb-1">
+              {theme === "dark" ? (
+                <Sun className="w-5 h-5" />
+              ) : (
+                <Moon className="w-5 h-5" />
+              )}
+            </div>
+            <span className="text-[10px] mt-0.5 text-muted-foreground">Tema</span>
+          </button>
+        </div>
+      </div>
     </nav>
   )
 }
