@@ -25,7 +25,6 @@ const navigation = [
   { name: "Tareas", href: "/dashboard/tasks", icon: CheckSquare },
   { name: "Pomodoro", href: "/dashboard/pomodoro", icon: Clock },
   { name: "Estadísticas", href: "/dashboard/analytics", icon: BarChart3 },
-  { name: "Test AI", href: "/dashboard/test-ai", icon: TestTube },
 ]
 
 export function DashboardNav() {
