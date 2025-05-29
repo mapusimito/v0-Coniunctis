@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Dialog,
   DialogContent,
@@ -26,10 +28,11 @@ import {
   CheckSquare,
   Coffee,
   Clock,
-  Volume2,
-  VolumeX,
   Maximize,
   BarChart3,
+  Plus,
+  Check,
+  Undo,
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
@@ -54,6 +57,7 @@ interface Task {
   category: string
   estimated_pomodoros: number
   actual_pomodoros: number
+  description?: string
 }
 
 interface PomodoroSettings {
@@ -97,7 +101,16 @@ export default function PomodoroPage() {
 
   // Tasks state
   const [tasks, setTasks] = useState<Task[]>([])
+  const [completedTasks, setCompletedTasks] = useState<Task[]>([])
   const [activeTask, setActiveTask] = useState<Task | null>(null)
+  const [showAddTask, setShowAddTask] = useState(false)
+  const [newTask, setNewTask] = useState({
+    title: "",
+    description: "",
+    priority: "medium",
+    category: "trabajo",
+    estimated_pomodoros: 1,
+  })
 
   // Stats state
   const [todayStats, setTodayStats] = useState({
@@ -139,6 +152,7 @@ export default function PomodoroPage() {
     if (user) {
       loadSettings()
       fetchTasks()
+      fetchCompletedTasks()
       loadTodayStats()
     }
   }, [user])
@@ -228,13 +242,13 @@ export default function PomodoroPage() {
         .from("pomodoro_settings")
         .select("id")
         .eq("user_id", user?.id)
-        .single();
+        .single()
 
       if (checkError && checkError.code !== "PGRST116") {
-        throw checkError;
+        throw checkError
       }
 
-      let error;
+      let error
       if (existingSettings) {
         // Actualizar configuración existente
         const { error: updateError } = await supabase
@@ -248,36 +262,35 @@ export default function PomodoroPage() {
             auto_start_breaks: tempSettings.auto_start_breaks,
             auto_start_pomodoros: tempSettings.auto_start_pomodoros,
             updated_at: new Date().toISOString(),
-          .eq("user_id", user?.id);
+          })
+          .eq("user_id", user?.id)
 
-        error = updateError;
-
+        error = updateError
       } else {
         // Crear nueva configuración
-        const { error: insertError } = await supabase
-          .from("pomodoro_settings")
-          .insert({
-            user_id: user?.id,
-            pomodoro_duration: tempSettings.pomodoro_duration,
-            short_break_duration: tempSettings.short_break_duration,
-            long_break_duration: tempSettings.long_break_duration,
-            pomodoros_until_long_break: tempSettings.pomodoros_until_long_break,
-            sound_enabled: tempSettings.sound_enabled,
-            auto_start_breaks: tempSettings.auto_start_breaks,
-            auto_start_pomodoros: tempSettings.auto_start_pomodoros,
-          });
+        const { error: insertError } = await supabase.from("pomodoro_settings").insert({
+          user_id: user?.id,
+          pomodoro_duration: tempSettings.pomodoro_duration,
+          short_break_duration: tempSettings.short_break_duration,
+          long_break_duration: tempSettings.long_break_duration,
+          pomodoros_until_long_break: tempSettings.pomodoros_until_long_break,
+          sound_enabled: tempSettings.sound_enabled,
+          auto_start_breaks: tempSettings.auto_start_breaks,
+          auto_start_pomodoros: tempSettings.auto_start_pomodoros,
+        })
 
-        error = insertError;
-      } // Closing bracket added here
-      if (error) throw error;
+        error = insertError
+      }
 
-      setSettings(tempSettings);
-      setSettingsOpen(false);
-      const duration = getDurationForSession(currentSession, tempSettings);
-      setTimeLeft(duration * 60);
+      if (error) throw error
+
+      setSettings(tempSettings)
+      setSettingsOpen(false)
+      const duration = getDurationForSession(currentSession, tempSettings)
+      setTimeLeft(duration * 60)
     } catch (error) {
-      setSaveError("Error al guardar la configuración.");
-      console.error("Error saving settings:", error);
+      setSaveError("Error al guardar la configuración.")
+      console.error("Error saving settings:", error)
     } finally {
       setSaving(false)
     }
@@ -333,6 +346,84 @@ export default function PomodoroPage() {
       setTasks(data || [])
     } catch (error) {
       console.error("Error fetching tasks:", error)
+    }
+  }
+
+  const fetchCompletedTasks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("user_id", user?.id)
+        .eq("completed", true)
+        .order("updated_at", { ascending: false })
+        .limit(10)
+
+      if (error) throw error
+      setCompletedTasks(data || [])
+    } catch (error) {
+      console.error("Error fetching completed tasks:", error)
+    }
+  }
+
+  const toggleTaskCompletion = async (task: Task) => {
+    try {
+      const newCompletedStatus = !task.completed
+      const { error } = await supabase
+        .from("tasks")
+        .update({
+          completed: newCompletedStatus,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", task.id)
+
+      if (error) throw error
+
+      // Refresh both lists
+      await fetchTasks()
+      await fetchCompletedTasks()
+      await loadTodayStats()
+
+      // If the active task was completed, remove it from active
+      if (activeTask?.id === task.id && newCompletedStatus) {
+        setActiveTask(null)
+      }
+    } catch (error) {
+      console.error("Error toggling task completion:", error)
+    }
+  }
+
+  const addNewTask = async () => {
+    if (!newTask.title.trim()) return
+
+    try {
+      const { error } = await supabase.from("tasks").insert({
+        user_id: user?.id,
+        title: newTask.title,
+        description: newTask.description,
+        priority: newTask.priority,
+        category: newTask.category,
+        estimated_pomodoros: newTask.estimated_pomodoros,
+        actual_pomodoros: 0,
+        completed: false,
+      })
+
+      if (error) throw error
+
+      // Reset form
+      setNewTask({
+        title: "",
+        description: "",
+        priority: "medium",
+        category: "trabajo",
+        estimated_pomodoros: 1,
+      })
+      setShowAddTask(false)
+
+      // Refresh tasks
+      await fetchTasks()
+    } catch (error) {
+      console.error("Error adding task:", error)
     }
   }
 
@@ -514,9 +605,8 @@ export default function PomodoroPage() {
     }
   }
 
-  // Ajusta la función getSessionBg para modo oscuro en escritorio
+  // Función mejorada para el fondo del temporizador en modo oscuro
   const getSessionBg = (session: SessionType) => {
-    // En modo oscuro, fondo gris y borde de color según la pestaña
     if (typeof window !== "undefined" && document.documentElement.classList.contains("dark")) {
       switch (session) {
         case "pomodoro":
@@ -529,7 +619,7 @@ export default function PomodoroPage() {
           return "bg-zinc-900 border-2 border-red-500"
       }
     }
-    // Modo claro (igual que antes)
+    // Modo claro
     switch (session) {
       case "pomodoro":
         return "bg-red-50 border-2 border-red-200"
@@ -588,7 +678,7 @@ export default function PomodoroPage() {
           theme === "dark" ? "bg-gray-950 text-white" : "bg-white text-foreground"
         }`}
       >
-        {/* Perfil en la esquina superior izquierda */}
+        {/* Header con perfil y configuración */}
         <div className="flex items-center justify-between mb-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -620,14 +710,155 @@ export default function PomodoroPage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Botón de configuración */}
+          <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="sm" className="p-2">
+                <Settings className="w-5 h-5" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-sm mx-2">
+              <DialogHeader>
+                <DialogTitle>Configuración</DialogTitle>
+                <DialogDescription>Personaliza tu experiencia de pomodoro</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                <div className="space-y-3">
+                  <h4 className="font-medium text-sm">Duraciones (minutos)</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Pomodoro</Label>
+                      <Input
+                        type="number"
+                        value={tempSettings.pomodoro_duration}
+                        onChange={(e) =>
+                          setTempSettings((prev) => ({
+                            ...prev,
+                            pomodoro_duration: Number.parseInt(e.target.value) || 25,
+                          }))
+                        }
+                        min="1"
+                        max="60"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Descanso Corto</Label>
+                      <Input
+                        type="number"
+                        value={tempSettings.short_break_duration}
+                        onChange={(e) =>
+                          setTempSettings((prev) => ({
+                            ...prev,
+                            short_break_duration: Number.parseInt(e.target.value) || 5,
+                          }))
+                        }
+                        min="1"
+                        max="30"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Descanso Largo</Label>
+                      <Input
+                        type="number"
+                        value={tempSettings.long_break_duration}
+                        onChange={(e) =>
+                          setTempSettings((prev) => ({
+                            ...prev,
+                            long_break_duration: Number.parseInt(e.target.value) || 15,
+                          }))
+                        }
+                        min="1"
+                        max="60"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Pomodoros hasta Largo</Label>
+                      <Input
+                        type="number"
+                        value={tempSettings.pomodoros_until_long_break}
+                        onChange={(e) =>
+                          setTempSettings((prev) => ({
+                            ...prev,
+                            pomodoros_until_long_break: Number.parseInt(e.target.value) || 4,
+                          }))
+                        }
+                        min="2"
+                        max="8"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-medium text-sm">Automatización</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Sonidos</Label>
+                      <Switch
+                        checked={tempSettings.sound_enabled}
+                        onCheckedChange={(checked) =>
+                          setTempSettings((prev) => ({
+                            ...prev,
+                            sound_enabled: checked,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Auto-iniciar descansos</Label>
+                      <Switch
+                        checked={tempSettings.auto_start_breaks}
+                        onCheckedChange={(checked) =>
+                          setTempSettings((prev) => ({
+                            ...prev,
+                            auto_start_breaks: checked,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Auto-iniciar pomodoros</Label>
+                      <Switch
+                        checked={tempSettings.auto_start_pomodoros}
+                        onCheckedChange={(checked) =>
+                          setTempSettings((prev) => ({
+                            ...prev,
+                            auto_start_pomodoros: checked,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex space-x-2 pt-2">
+                  <Button onClick={saveSettings} className="flex-1 h-8 text-xs" disabled={saving}>
+                    {saving ? "Guardando..." : "Guardar"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setSettingsOpen(false)}
+                    className="flex-1 h-8 text-xs"
+                    disabled={saving}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+                {saveError && <p className="text-red-500 text-xs">{saveError}</p>}
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Título y subtítulo */}
         <div className="text-center mb-2">
           <h1 className="text-lg font-bold leading-tight">Temporizador Pomodoro</h1>
-          <p className="text-xs text-muted-foreground">
-            Enfócate en tus tareas con la Técnica Pomodoro
-          </p>
+          <p className="text-xs text-muted-foreground">Enfócate en tus tareas con la Técnica Pomodoro</p>
         </div>
 
         {/* Estadísticas */}
@@ -655,11 +886,9 @@ export default function PomodoroPage() {
         </div>
 
         {/* Temporizador principal */}
-        <Card className={`mb-2 bg-background dark:bg-zinc-900 border-2 ${getSessionBg(currentSession)}`}>
+        <Card className={`mb-2 ${getSessionBg(currentSession)}`}>
           <CardContent className="flex flex-col items-center justify-center p-4">
-            <div className={`text-5xl font-bold ${getSessionColor(currentSession)} mb-2`}>
-              {formatTime(timeLeft)}
-            </div>
+            <div className={`text-5xl font-bold ${getSessionColor(currentSession)} mb-2`}>{formatTime(timeLeft)}</div>
             <div className="flex justify-center space-x-2 mb-2">
               <Button size="sm" onClick={() => setIsRunning(!isRunning)} className="px-4 py-1 text-xs">
                 {isRunning ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
@@ -693,7 +922,7 @@ export default function PomodoroPage() {
         </Tabs>
 
         {/* Tareas activas y disponibles */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 mb-2">
           <Card className="p-0 bg-background dark:bg-zinc-900">
             <CardHeader className="py-2 px-3">
               <CardTitle className="text-xs font-semibold flex items-center gap-1">
@@ -711,18 +940,13 @@ export default function PomodoroPage() {
                         activeTask.priority === "high"
                           ? "destructive"
                           : activeTask.priority === "medium"
-                          ? "default"
-                          : "secondary"
+                            ? "default"
+                            : "secondary"
                       }
                       className="text-[10px]"
                     >
-                      {activeTask.priority === "high"
-                        ? "Alta"
-                        : activeTask.priority === "medium"
-                        ? "Media"
-                        : "Baja"}
+                      {activeTask.priority === "high" ? "Alta" : activeTask.priority === "medium" ? "Media" : "Baja"}
                     </Badge>
-                    <span className="text-[10px] text-muted-foreground">{activeTask.category}</span>
                   </div>
                   <div className="text-[11px] font-medium mt-1">
                     🍅 {activeTask.actual_pomodoros}/{activeTask.estimated_pomodoros}
@@ -748,11 +972,17 @@ export default function PomodoroPage() {
               )}
             </CardContent>
           </Card>
+
           <Card className="p-0 bg-background dark:bg-zinc-900">
             <CardHeader className="py-2 px-3">
-              <CardTitle className="text-xs font-semibold flex items-center gap-1">
-                <CheckSquare className="w-4 h-4 text-secondary" />
-                Tareas Disponibles
+              <CardTitle className="text-xs font-semibold flex items-center gap-1 justify-between">
+                <div className="flex items-center gap-1">
+                  <CheckSquare className="w-4 h-4 text-secondary" />
+                  Tareas
+                </div>
+                <Button variant="ghost" size="xs" onClick={() => setShowAddTask(true)} className="p-1 h-5 w-5">
+                  <Plus className="w-3 h-3" />
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent className="py-2 px-3 max-h-32 overflow-y-auto">
@@ -760,38 +990,645 @@ export default function PomodoroPage() {
                 tasks.slice(0, 5).map((task) => (
                   <div
                     key={task.id}
-                    className="flex items-center space-x-2 p-1 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                    onClick={() => setActiveTask(task)}
+                    className="flex items-center space-x-2 p-1 border rounded-lg hover:bg-muted/50 mb-1"
                   >
-                    <div className="flex-1 min-w-0">
+                    <button
+                      onClick={() => toggleTaskCompletion(task)}
+                      className="flex-shrink-0 w-4 h-4 border rounded flex items-center justify-center hover:bg-green-100"
+                    >
+                      {task.completed && <Check className="w-3 h-3 text-green-600" />}
+                    </button>
+                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setActiveTask(task)}>
                       <p className="font-medium truncate text-xs">{task.title}</p>
-                      <div className="flex items-center space-x-1 mt-0.5">
-                        <Badge
-                          variant={
-                            task.priority === "high"
-                              ? "destructive"
-                              : task.priority === "medium"
-                              ? "default"
-                              : "secondary"
-                          }
-                          className="text-[10px]"
-                        >
-                          {task.priority === "high"
-                            ? "Alta"
-                            : task.priority === "medium"
-                            ? "Media"
-                            : "Baja"}
-                        </Badge>
+                      <div className="text-[10px] text-muted-foreground">
+                        🍅 {task.actual_pomodoros}/{task.estimated_pomodoros}
                       </div>
-                    </div>
-                    <div className="text-[10px] text-muted-foreground">
-                      🍅 {task.actual_pomodoros}/{task.estimated_pomodoros}
                     </div>
                   </div>
                 ))
               ) : (
                 <div className="text-center py-2 text-muted-foreground text-xs">
                   <p>No hay tareas</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Tareas completadas */}
+        {completedTasks.length > 0 && (
+          <Card className="p-0 bg-background dark:bg-zinc-900 mb-2">
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="text-xs font-semibold flex items-center gap-1">
+                <Check className="w-4 h-4 text-green-600" />
+                Completadas
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-2 px-3 max-h-24 overflow-y-auto">
+              {completedTasks.slice(0, 3).map((task) => (
+                <div key={task.id} className="flex items-center space-x-2 p-1 border rounded-lg mb-1 opacity-60">
+                  <button
+                    onClick={() => toggleTaskCompletion(task)}
+                    className="flex-shrink-0 w-4 h-4 border rounded flex items-center justify-center bg-green-100"
+                  >
+                    <Check className="w-3 h-3 text-green-600" />
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate text-xs line-through">{task.title}</p>
+                  </div>
+                  <button onClick={() => toggleTaskCompletion(task)} className="flex-shrink-0 p-1">
+                    <Undo className="w-3 h-3 text-muted-foreground" />
+                  </button>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Dialog para agregar nueva tarea */}
+        <Dialog open={showAddTask} onOpenChange={setShowAddTask}>
+          <DialogContent className="max-w-sm mx-2">
+            <DialogHeader>
+              <DialogTitle>Nueva Tarea</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs">Título</Label>
+                <Input
+                  value={newTask.title}
+                  onChange={(e) => setNewTask((prev) => ({ ...prev, title: e.target.value }))}
+                  placeholder="Nombre de la tarea"
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Descripción</Label>
+                <Textarea
+                  value={newTask.description}
+                  onChange={(e) => setNewTask((prev) => ({ ...prev, description: e.target.value }))}
+                  placeholder="Descripción opcional"
+                  className="h-16 text-xs resize-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Prioridad</Label>
+                  <Select
+                    value={newTask.priority}
+                    onValueChange={(value) => setNewTask((prev) => ({ ...prev, priority: value }))}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Baja</SelectItem>
+                      <SelectItem value="medium">Media</SelectItem>
+                      <SelectItem value="high">Alta</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Pomodoros</Label>
+                  <Input
+                    type="number"
+                    value={newTask.estimated_pomodoros}
+                    onChange={(e) =>
+                      setNewTask((prev) => ({ ...prev, estimated_pomodoros: Number.parseInt(e.target.value) || 1 }))
+                    }
+                    min="1"
+                    className="h-8 text-xs"
+                  />
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                <Button onClick={addNewTask} className="flex-1 h-8 text-xs">
+                  Agregar
+                </Button>
+                <Button variant="outline" onClick={() => setShowAddTask(false)} className="flex-1 h-8 text-xs">
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    )
+  }
+
+  // VISTA ESCRITORIO
+  return (
+    <div className="min-h-screen p-6 space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-bold">Temporizador Pomodoro</h1>
+        <p className="text-gray-600">Enfócate en tus tareas con la Técnica Pomodoro</p>
+      </div>
+
+      <div className="max-w-6xl mx-auto">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-red-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Pomodoros Hoy</p>
+                  <p className="text-2xl font-bold text-red-600">{todayStats.completed_pomodoros}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <BarChart3 className="w-4 h-4 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Tiempo de Enfoque</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {Math.floor(todayStats.total_focus_time / 60)}h {todayStats.total_focus_time % 60}m
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <CheckSquare className="w-4 h-4 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Tareas Completadas</p>
+                  <p className="text-2xl font-bold text-green-600">{todayStats.completed_tasks}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Timer Card - Aplicando el estilo mejorado para modo oscuro */}
+        <Card className={`text-center mb-6 ${getSessionBg(currentSession)}`}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" size="sm" onClick={toggleFullscreen}>
+                <Maximize className="w-4 h-4" />
+              </Button>
+              <div className="flex items-center space-x-2">
+                <div
+                  className={`w-3 h-3 rounded-full ${
+                    currentSession === "pomodoro"
+                      ? "bg-red-500"
+                      : currentSession === "short_break"
+                        ? "bg-green-500"
+                        : "bg-blue-500"
+                  }`}
+                />
+                <CardTitle className={`text-2xl ${getSessionColor(currentSession)}`}>
+                  {currentSession === "pomodoro"
+                    ? "Pomodoro"
+                    : currentSession === "short_break"
+                      ? "Descanso Corto"
+                      : "Descanso Largo"}
+                </CardTitle>
+              </div>
+              <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <Settings className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Configuración del Pomodoro</DialogTitle>
+                    <DialogDescription>Personaliza tu experiencia de pomodoro</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <h4 className="font-medium">Duraciones (minutos)</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Pomodoro</Label>
+                          <Input
+                            type="number"
+                            value={tempSettings.pomodoro_duration}
+                            onChange={(e) =>
+                              setTempSettings((prev) => ({
+                                ...prev,
+                                pomodoro_duration: Number.parseInt(e.target.value) || 25,
+                              }))
+                            }
+                            min="1"
+                            max="60"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Descanso Corto</Label>
+                          <Input
+                            type="number"
+                            value={tempSettings.short_break_duration}
+                            onChange={(e) =>
+                              setTempSettings((prev) => ({
+                                ...prev,
+                                short_break_duration: Number.parseInt(e.target.value) || 5,
+                              }))
+                            }
+                            min="1"
+                            max="30"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Descanso Largo</Label>
+                          <Input
+                            type="number"
+                            value={tempSettings.long_break_duration}
+                            onChange={(e) =>
+                              setTempSettings((prev) => ({
+                                ...prev,
+                                long_break_duration: Number.parseInt(e.target.value) || 15,
+                              }))
+                            }
+                            min="1"
+                            max="60"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Pomodoros hasta Descanso Largo</Label>
+                          <Input
+                            type="number"
+                            value={tempSettings.pomodoros_until_long_break}
+                            onChange={(e) =>
+                              setTempSettings((prev) => ({
+                                ...prev,
+                                pomodoros_until_long_break: Number.parseInt(e.target.value) || 4,
+                              }))
+                            }
+                            min="2"
+                            max="8"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="font-medium">Automatización</h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label>Sonidos de notificación</Label>
+                          <Switch
+                            checked={tempSettings.sound_enabled}
+                            onCheckedChange={(checked) =>
+                              setTempSettings((prev) => ({
+                                ...prev,
+                                sound_enabled: checked,
+                              }))
+                            }
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label>Auto-iniciar descansos</Label>
+                          <Switch
+                            checked={tempSettings.auto_start_breaks}
+                            onCheckedChange={(checked) =>
+                              setTempSettings((prev) => ({
+                                ...prev,
+                                auto_start_breaks: checked,
+                              }))
+                            }
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label>Auto-iniciar pomodoros</Label>
+                          <Switch
+                            checked={tempSettings.auto_start_pomodoros}
+                            onCheckedChange={(checked) =>
+                              setTempSettings((prev) => ({
+                                ...prev,
+                                auto_start_pomodoros: checked,
+                              }))
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex space-x-2">
+                      <Button onClick={saveSettings} className="flex-1" disabled={saving}>
+                        {saving ? "Guardando..." : "Guardar"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setSettingsOpen(false)}
+                        className="flex-1"
+                        disabled={saving}
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                    {saveError && <p className="text-red-500 text-xs mt-2">{saveError}</p>}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            {activeTask && (
+              <CardDescription className="text-lg">
+                Trabajando en: <span className="font-semibold">{activeTask.title}</span>
+              </CardDescription>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-8">
+            <div className={`text-8xl font-bold ${getSessionColor(currentSession)} mb-6`}>{formatTime(timeLeft)}</div>
+
+            <div className="space-y-2">
+              <Progress value={getProgressPercentage()} className="h-4" />
+              <div className="text-sm text-gray-600">{Math.round(getProgressPercentage())}% completado</div>
+            </div>
+
+            <div className="flex justify-center space-x-4">
+              <Button size="lg" onClick={() => setIsRunning(!isRunning)} className="px-8 py-4 text-lg">
+                {isRunning ? (
+                  <>
+                    <Pause className="w-6 h-6 mr-2" />
+                    Pausar
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-6 h-6 mr-2" />
+                    Iniciar
+                  </>
+                )}
+              </Button>
+              <Button size="lg" variant="outline" onClick={resetTimer} className="px-6 py-4">
+                <RotateCcw className="w-6 h-6" />
+              </Button>
+              <Button size="lg" variant="outline" onClick={toggleFullscreen} className="px-6 py-4">
+                <Maximize className="w-6 h-6" />
+              </Button>
+            </div>
+
+            <Tabs value={currentSession} onValueChange={(value) => handleTabChange(value as SessionType)}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="pomodoro" className="text-red-600">
+                  <Clock className="w-4 h-4 mr-2" />
+                  Pomodoro
+                </TabsTrigger>
+                <TabsTrigger value="short_break" className="text-green-600">
+                  <Coffee className="w-4 h-4 mr-2" />
+                  Descanso Corto
+                </TabsTrigger>
+                <TabsTrigger value="long_break" className="text-blue-600">
+                  <Coffee className="w-4 h-4 mr-2" />
+                  Descanso Largo
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </CardContent>
+        </Card>
+
+        {/* Tasks Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Target className="w-5 h-5 text-primary" />
+                <span>Tarea Activa</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {activeTask ? (
+                <div className="space-y-3">
+                  <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg">
+                    <h3 className="font-semibold">{activeTask.title}</h3>
+                    <div className="flex items-center space-x-2 mt-2">
+                      <Badge
+                        variant={
+                          activeTask.priority === "high"
+                            ? "destructive"
+                            : activeTask.priority === "medium"
+                              ? "default"
+                              : "secondary"
+                        }
+                      >
+                        {activeTask.priority === "high" ? "Alta" : activeTask.priority === "medium" ? "Media" : "Baja"}
+                      </Badge>
+                      <span className="text-sm text-gray-600">{activeTask.category}</span>
+                    </div>
+                    <div className="mt-2">
+                      <div className="text-sm font-medium">
+                        🍅 {activeTask.actual_pomodoros}/{activeTask.estimated_pomodoros}
+                      </div>
+                      <Progress
+                        value={(activeTask.actual_pomodoros / activeTask.estimated_pomodoros) * 100}
+                        className="h-2 mt-1"
+                      />
+                    </div>
+                  </div>
+                  <Button variant="outline" onClick={() => setActiveTask(null)} className="w-full">
+                    Quitar Tarea Activa
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>No hay tarea activa</p>
+                  <p className="text-sm">Puedes usar el pomodoro sin una tarea específica</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <CheckSquare className="w-5 h-5 text-secondary" />
+                  <span>Tareas Disponibles</span>
+                </div>
+                <Dialog open={showAddTask} onOpenChange={setShowAddTask}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Agregar
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Nueva Tarea</DialogTitle>
+                      <DialogDescription>Agrega una nueva tarea a tu lista</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Título</Label>
+                        <Input
+                          value={newTask.title}
+                          onChange={(e) => setNewTask((prev) => ({ ...prev, title: e.target.value }))}
+                          placeholder="Nombre de la tarea"
+                        />
+                      </div>
+                      <div>
+                        <Label>Descripción</Label>
+                        <Textarea
+                          value={newTask.description}
+                          onChange={(e) => setNewTask((prev) => ({ ...prev, description: e.target.value }))}
+                          placeholder="Descripción opcional"
+                          className="resize-none"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label>Prioridad</Label>
+                          <Select
+                            value={newTask.priority}
+                            onValueChange={(value) => setNewTask((prev) => ({ ...prev, priority: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="low">Baja</SelectItem>
+                              <SelectItem value="medium">Media</SelectItem>
+                              <SelectItem value="high">Alta</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>Pomodoros Estimados</Label>
+                          <Input
+                            type="number"
+                            value={newTask.estimated_pomodoros}
+                            onChange={(e) =>
+                              setNewTask((prev) => ({
+                                ...prev,
+                                estimated_pomodoros: Number.parseInt(e.target.value) || 1,
+                              }))
+                            }
+                            min="1"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label>Categoría</Label>
+                        <Select
+                          value={newTask.category}
+                          onValueChange={(value) => setNewTask((prev) => ({ ...prev, category: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="trabajo">Trabajo</SelectItem>
+                            <SelectItem value="personal">Personal</SelectItem>
+                            <SelectItem value="estudio">Estudio</SelectItem>
+                            <SelectItem value="proyecto">Proyecto</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button onClick={addNewTask} className="flex-1">
+                          Agregar Tarea
+                        </Button>
+                        <Button variant="outline" onClick={() => setShowAddTask(false)} className="flex-1">
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 max-h-64 overflow-y-auto">
+              {tasks.length > 0 ? (
+                tasks.slice(0, 8).map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center space-x-3 p-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
+                  >
+                    <button
+                      onClick={() => toggleTaskCompletion(task)}
+                      className="flex-shrink-0 w-5 h-5 border rounded flex items-center justify-center hover:bg-green-100 dark:hover:bg-green-900"
+                    >
+                      {task.completed && <Check className="w-3 h-3 text-green-600" />}
+                    </button>
+                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setActiveTask(task)}>
+                      <p className="font-medium truncate text-sm">{task.title}</p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <Badge
+                          variant={
+                            task.priority === "high"
+                              ? "destructive"
+                              : task.priority === "medium"
+                                ? "default"
+                                : "secondary"
+                          }
+                          className="text-[10px]"
+                        >
+                          {task.priority === "high" ? "Alta" : task.priority === "medium" ? "Media" : "Baja"}
+                        </Badge>
+                        <span className="text-xs text-gray-500">
+                          🍅 {task.actual_pomodoros}/{task.estimated_pomodoros}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  <p className="text-sm">No hay tareas disponibles</p>
+                  <Button variant="outline" size="sm" onClick={() => setShowAddTask(true)} className="mt-2">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Agregar Primera Tarea
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Check className="w-5 h-5 text-green-600" />
+                <span>Tareas Completadas</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 max-h-64 overflow-y-auto">
+              {completedTasks.length > 0 ? (
+                completedTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center space-x-3 p-2 border rounded-lg opacity-60 hover:opacity-80"
+                  >
+                    <button
+                      onClick={() => toggleTaskCompletion(task)}
+                      className="flex-shrink-0 w-5 h-5 border rounded flex items-center justify-center bg-green-100 dark:bg-green-900"
+                    >
+                      <Check className="w-3 h-3 text-green-600" />
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate text-sm line-through">{task.title}</p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <Badge variant="secondary" className="text-[10px]">
+                          {task.priority === "high" ? "Alta" : task.priority === "medium" ? "Media" : "Baja"}
+                        </Badge>
+                        <span className="text-xs text-gray-500">
+                          🍅 {task.actual_pomodoros}/{task.estimated_pomodoros}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => toggleTaskCompletion(task)}
+                      className="flex-shrink-0 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                      title="Reactivar tarea"
+                    >
+                      <Undo className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  <p className="text-sm">No hay tareas completadas</p>
                 </div>
               )}
             </CardContent>
