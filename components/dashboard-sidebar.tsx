@@ -35,19 +35,19 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import clsx from "clsx"
 
 const navigation = [
-  { name: "Inicio", href: "/dashboard", icon: Home }, // Cambia House por Home
+  { name: "Inicio", href: "/dashboard", icon: Home },
   { name: "Editor", href: "/dashboard/editor", icon: FilePlus },
   { name: "Documentos", href: "/dashboard/documents", icon: FileText },
   { name: "Tareas", href: "/dashboard/tasks", icon: CheckSquare },
-  { name: "Pomodoro", href: "/dashboard/pomodoro", icon: Clock },
-  { name: "Estadísticas", href: "/dashboard/analytics", icon: BarChart3 },
+  { name: "Pomo", href: "/dashboard/pomodoro", icon: Clock },         // Compactado
+  { name: "Stats", href: "/dashboard/analytics", icon: BarChart3 },   // Compactado
 ]
 
-// BottomNavBar solo para móvil, ahora con nombres y animación de semicírculo
+// BottomNavBar solo para móvil, ahora con nombres compactos y mejor alineación
 function BottomNavBar({ items, pathname }: { items: typeof navigation; pathname: string }) {
   const { theme, setTheme } = useTheme()
 
-  // Reorganiza los items para que "Inicio" (Home) esté en el centro
+  // Ordena los items para que "Inicio" (Home) esté en el centro SIEMPRE
   const homeIndex = items.findIndex((item) => item.icon === Home)
   let navItems = [...items]
   if (homeIndex !== -1) {
@@ -56,9 +56,6 @@ function BottomNavBar({ items, pathname }: { items: typeof navigation; pathname:
     navItems.splice(middle, 0, homeItem)
   }
 
-  // Encuentra el índice activo para animar el semicírculo
-  const activeIndex = navItems.findIndex((item) => pathname === item.href)
-
   return (
     <nav className="fixed bottom-3 left-1/2 z-50 -translate-x-1/2 w-[98vw] max-w-md flex justify-center pointer-events-none">
       <div className="relative w-full flex justify-center pointer-events-auto">
@@ -66,35 +63,9 @@ function BottomNavBar({ items, pathname }: { items: typeof navigation; pathname:
         <div className="absolute inset-0 flex justify-center items-end z-0">
           <div className="w-full h-14 bg-background border border-border rounded-2xl shadow-lg" />
         </div>
-        {/* Semicírculo animado */}
-        <div
-          className="absolute left-0 top-0 w-full h-0 z-10 pointer-events-none"
-          style={{
-            transition: "all 0.3s cubic-bezier(.4,1.7,.7,1)",
-          }}
-        >
-          <div
-            className="absolute"
-            style={{
-              left: `calc(${((activeIndex + 0.5) / navItems.length) * 100}% - 28px)`,
-              top: "-22px",
-              transition: "left 0.3s cubic-bezier(.4,1.7,.7,1)",
-            }}
-          >
-            <svg width={56} height={28} viewBox="0 0 56 28" className="block">
-              <path
-                d="M0,28 Q28,0 56,28"
-                fill={theme === "dark" ? "#18181b" : "#fff"}
-                stroke={theme === "dark" ? "#27272a" : "#e5e7eb"}
-                strokeWidth="1.5"
-                style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.10))" }}
-              />
-            </svg>
-          </div>
-        </div>
         {/* Botones */}
         <div className="relative flex w-full z-20">
-          {navItems.map((item, idx) => {
+          {navItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
             return (
@@ -146,16 +117,18 @@ function BottomNavBar({ items, pathname }: { items: typeof navigation; pathname:
           <button
             aria-label="Cambiar modo"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="flex flex-col items-center justify-end py-1 flex-1"
+            className="flex-1 flex flex-col items-center justify-end py-1"
             type="button"
             tabIndex={0}
-            style={{ marginTop: 0 }}
+            style={{
+              marginTop: 0,
+            }}
           >
             <div className="flex flex-col items-center justify-center rounded-full text-muted-foreground w-9 h-9 mb-1">
               {theme === "dark" ? (
-                <Sun className="w-5 h-5" />
+                <Sun className="w-5 h-5" style={{ marginTop: 2 }} />
               ) : (
-                <Moon className="w-5 h-5" />
+                <Moon className="w-5 h-5" style={{ marginTop: 2 }} />
               )}
             </div>
             <span className="text-[10px] mt-0.5 text-muted-foreground">Tema</span>
