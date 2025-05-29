@@ -17,6 +17,8 @@ import {
 import {
   LayoutDashboard,
   FileText,
+  FilePlus,
+  House,
   CheckSquare,
   Clock,
   PanelLeft,
@@ -33,16 +35,18 @@ import { useTheme } from "next-themes"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Editor", href: "/dashboard/editor", icon: FileText },
-  { name: "Documentos", href: "/dashboard/documents", icon: FileText },
+  { name: "Inicio", href: "/dashboard", icon: House }, // Cambiado a House
+  { name: "Editor", href: "/dashboard/editor", icon: FilePlus }, // Cambiado a FilePlus
+  { name: "Documentos", href: "/dashboard/documents", icon: FileText }, // Se mantiene FileText
   { name: "Tareas", href: "/dashboard/tasks", icon: CheckSquare },
   { name: "Pomodoro", href: "/dashboard/pomodoro", icon: Clock },
   { name: "Estadísticas", href: "/dashboard/analytics", icon: BarChart3 },
 ]
 
-// BottomNavBar solo para móvil
+// BottomNavBar solo para móvil, ahora con botón de modo oscuro
 function BottomNavBar({ items, pathname }: { items: typeof navigation; pathname: string }) {
+  const { theme, setTheme } = useTheme()
+
   return (
     <nav className="fixed bottom-0 left-0 z-50 flex w-full justify-around bg-background border-t border-border py-1 md:hidden">
       {items.map((item) => {
@@ -59,6 +63,19 @@ function BottomNavBar({ items, pathname }: { items: typeof navigation; pathname:
           </Link>
         )
       })}
+      {/* Botón de modo oscuro/claro */}
+      <button
+        aria-label="Cambiar modo"
+        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        className="flex flex-col items-center justify-center px-2 py-1 text-muted-foreground"
+        type="button"
+      >
+        {theme === "dark" ? (
+          <Sun className="w-6 h-6" />
+        ) : (
+          <Moon className="w-6 h-6" />
+        )}
+      </button>
     </nav>
   )
 }
