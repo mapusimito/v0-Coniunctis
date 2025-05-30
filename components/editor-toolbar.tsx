@@ -35,20 +35,6 @@ export function EditorToolbar() {
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
   const isMobile = useIsMobile()
-  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
-
-  // Detectar si el teclado está abierto (solo móvil)
-  useEffect(() => {
-    if (!isMobile) return
-    const onFocus = () => setIsKeyboardOpen(true)
-    const onBlur = () => setIsKeyboardOpen(false)
-    window.addEventListener("focusin", onFocus)
-    window.addEventListener("focusout", onBlur)
-    return () => {
-      window.removeEventListener("focusin", onFocus)
-      window.removeEventListener("focusout", onBlur)
-    }
-  }, [isMobile])
 
   const updateToolbar = useCallback(() => {
     const selection = $getSelection()
@@ -136,100 +122,9 @@ export function EditorToolbar() {
     editor.dispatchCommand(REDO_COMMAND, undefined)
   }
 
-  // --- Vista móvil: toolbar flotante sobre el teclado ---
-  if (isMobile) {
-    return (
-      <div
-        className={`fixed left-0 right-0 z-50 transition-all ${
-          isKeyboardOpen ? "bottom-0" : "-bottom-24"
-        } flex items-center gap-2 p-2 bg-card border-t border-border shadow-lg`}
-        style={{
-          // Para asegurar que esté sobre el teclado en iOS/Android
-          touchAction: "none",
-        }}
-      >
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={undo}
-          disabled={!canUndo}
-          className="h-9 w-9 p-0 hover:bg-muted rounded-lg"
-        >
-          <Undo className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={redo}
-          disabled={!canRedo}
-          className="h-9 w-9 p-0 hover:bg-muted rounded-lg"
-        >
-          <Redo className="h-4 w-4" />
-        </Button>
-        <Separator orientation="vertical" className="h-6 bg-border" />
-        <Select value={blockType} onValueChange={formatHeading}>
-          <SelectTrigger className="w-24 h-9 bg-background border-border rounded-lg">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-card border-border rounded-lg">
-            <SelectItem value="paragraph">Párrafo</SelectItem>
-            <SelectItem value="h1">Título 1</SelectItem>
-            <SelectItem value="h2">Título 2</SelectItem>
-            <SelectItem value="h3">Título 3</SelectItem>
-            <SelectItem value="h4">Título 4</SelectItem>
-            <SelectItem value="h5">Título 5</SelectItem>
-            <SelectItem value="h6">Título 6</SelectItem>
-          </SelectContent>
-        </Select>
-        <Separator orientation="vertical" className="h-6 bg-border" />
-        <Button
-          variant={isBold ? "default" : "ghost"}
-          size="sm"
-          onClick={() => formatText("bold")}
-          className="h-9 w-9 p-0 hover:bg-muted rounded-lg"
-        >
-          <Bold className="h-4 w-4" />
-        </Button>
-        <Button
-          variant={isItalic ? "default" : "ghost"}
-          size="sm"
-          onClick={() => formatText("italic")}
-          className="h-9 w-9 p-0 hover:bg-muted rounded-lg"
-        >
-          <Italic className="h-4 w-4" />
-        </Button>
-        <Button
-          variant={isUnderline ? "default" : "ghost"}
-          size="sm"
-          onClick={() => formatText("underline")}
-          className="h-9 w-9 p-0 hover:bg-muted rounded-lg"
-        >
-          <Underline className="h-4 w-4" />
-        </Button>
-        <Button
-          variant={isStrikethrough ? "default" : "ghost"}
-          size="sm"
-          onClick={() => formatText("strikethrough")}
-          className="h-9 w-9 p-0 hover:bg-muted rounded-lg"
-        >
-          <Strikethrough className="h-4 w-4" />
-        </Button>
-        <Separator orientation="vertical" className="h-6 bg-border" />
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={clearEditor}
-          className="h-9 w-9 p-0 text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded-lg"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-    )
-  }
-
-  // --- Vista escritorio: toolbar superior ---
+  // Toolbar siempre arriba, tanto en móvil como escritorio
   return (
-    <div className="flex items-center gap-3 p-4 border-b border-border bg-card">
+    <div className={`flex items-center gap-3 p-2 border-b border-border bg-card ${isMobile ? "sticky top-0 z-10" : ""}`}>
       {/* Deshacer/Rehacer */}
       <div className="flex items-center gap-1">
         <Button
@@ -256,7 +151,7 @@ export function EditorToolbar() {
 
       {/* Selector de encabezados */}
       <Select value={blockType} onValueChange={formatHeading}>
-        <SelectTrigger className="w-36 h-9 bg-background border-border rounded-lg">
+        <SelectTrigger className={`${isMobile ? "w-24" : "w-36"} h-9 bg-background border-border rounded-lg`}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="bg-card border-border rounded-lg">

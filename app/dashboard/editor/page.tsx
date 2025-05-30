@@ -454,9 +454,15 @@ export default function EditorPage() {
             readOnly={isReadOnly}
             style={{ background: "transparent" }}
           />
+          {/* Botón generar título automático */}
+          {!isReadOnly && (
+            <Button variant="ghost" size="icon" className="rounded-lg ml-1" onClick={generateTitle} disabled={isAILoading}>
+              <Zap className="w-5 h-5" />
+            </Button>
+          )}
           {/* Guardar */}
           {!isReadOnly && (
-            <Button size="icon" className="rounded-lg ml-2" onClick={saveDocument} disabled={isSaving}>
+            <Button size="icon" className="rounded-lg ml-1" onClick={saveDocument} disabled={isSaving}>
               {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
             </Button>
           )}
@@ -486,6 +492,40 @@ export default function EditorPage() {
             <span>{charCount} car.</span>
           </div>
         </div>
+        {/* Herramientas de IA */}
+        {!isReadOnly && (
+          <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-border bg-card/80 dark:bg-zinc-900/80">
+            <span className="text-sm font-medium text-foreground">IA:</span>
+            <Button variant="ghost" size="sm" onClick={() => handleAssistant("grammar")} className="rounded-lg">
+              <CheckCircle className="w-4 h-4 mr-1" />
+              Gramática
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => handleAssistant("explain")} className="rounded-lg">
+              <MessageCircleQuestion className="w-4 h-4 mr-1" />
+              Explicar
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => handleAssistant("simple")} className="rounded-lg">
+              <Wand2 className="w-4 h-4 mr-1" />
+              Simplificar
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => handleAssistant("complex")} className="rounded-lg">
+              <Glasses className="w-4 h-4 mr-1" />
+              Complejizar
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => handleProducer("expand")} className="rounded-lg">
+              <PlusCircle className="w-4 h-4 mr-1" />
+              Expandir
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => handleProducer("generate")} className="rounded-lg">
+              <FileText className="w-4 h-4 mr-1" />
+              Generar
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => handleProducer("scheme")} className="rounded-lg">
+              <BookOpen className="w-4 h-4 mr-1" />
+              Esquema
+            </Button>
+          </div>
+        )}
         {/* Mensaje solo lectura */}
         {isReadOnly && (
           <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 dark:bg-orange-900/20 border-b border-orange-200 dark:border-orange-800 text-xs text-orange-700 dark:text-orange-300">
