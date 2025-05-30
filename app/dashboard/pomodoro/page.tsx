@@ -263,7 +263,11 @@ export default function PomodoroPage() {
             auto_start_pomodoros: tempSettings.auto_start_pomodoros,
             updated_at: new Date().toISOString(),
           })
+<<<<<<< Updated upstream
           .eq("user_id", user?.id)
+=======
+          .eq("user_id", user?.id) // Missing closing tag added here
+>>>>>>> Stashed changes
 
         error = updateError
       } else {
@@ -441,7 +445,7 @@ export default function PomodoroPage() {
   }
 
   const getNextSessionInCycle = (currentPos: number): SessionType => {
-    const cycle = [
+    const cycle: SessionType[] = [
       "pomodoro",
       "short_break",
       "pomodoro",
@@ -451,7 +455,11 @@ export default function PomodoroPage() {
       "pomodoro",
       "long_break",
     ]
-    return cycle[currentPos] as SessionType
+    // Protección contra índices fuera de rango
+    if (currentPos < 0 || currentPos >= cycle.length) {
+      return "pomodoro"
+    }
+    return cycle[currentPos]
   }
 
   const handleSessionComplete = async () => {
