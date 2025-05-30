@@ -186,10 +186,7 @@ export default function TasksPage() {
   if (loading) {
     return (
       <div className="p-6 space-y-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        </div>
+        {/* ...loading skeleton... */}
       </div>
     )
   }
@@ -432,7 +429,7 @@ export default function TasksPage() {
                         <p className="font-medium line-through text-gray-600">{task.title}</p>
                         {task.description && <p className="text-sm text-gray-500 line-through">{task.description}</p>}
                         <div className="flex items-center space-x-2 mt-1">
-                          <Badge variant="outline" className="text-xs"></Badge>
+                          <Badge variant="outline" className="text-xs">
                             {task.priority === "high"
                               ? "Alta"
                               : task.priority === "medium"
@@ -565,7 +562,7 @@ export default function TasksPage() {
 
   // --- VISTA ESCRITORIO (sin cambios) ---
   return (
-    <div className="p-6 space-y-6"></div>
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -696,12 +693,11 @@ export default function TasksPage() {
           <CardContent className="space-y-3">
             {sortedActiveTasks.length > 0 ? (
               sortedActiveTasks.map((task) => (
-                <div key={task.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50"></div>
+                <div key={task.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
                   <button onClick={() => toggleTask(task.id, task.completed)} className="flex-shrink-0">
                     <Circle className="w-5 h-5 text-gray-400 hover:text-primary transition-colors" />
                   </button>
-
-                  <div className="flex-1 min-w-0"></div>
+                  <div className="flex-1 min-w-0">
                     <p className="font-medium">{task.title}</p>
                     {task.description && <p className="text-sm text-gray-600">{task.description}</p>}
                     <div className="flex items-center space-x-2 mt-1">
@@ -731,7 +727,6 @@ export default function TasksPage() {
                       </span>
                     </div>
                   </div>
-
                   <div className="flex items-center space-x-2">
                     <Button variant="outline" size="sm" onClick={() => startPomodoro(task)}>
                       <Play className="w-4 h-4" />
@@ -749,21 +744,6 @@ export default function TasksPage() {
                             setIsEditDialogOpen(true)
                           }}
                         >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="mr-2"
-                          >
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                          </svg>
                           Editar
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => deleteTask(task.id)} className="text-red-600">

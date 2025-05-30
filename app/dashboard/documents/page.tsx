@@ -53,7 +53,6 @@ export default function DocumentsPage() {
     }
 
     try {
-    } catch (error) {
       const { data, error } = await supabase
         .from("documents")
         .select("*")
