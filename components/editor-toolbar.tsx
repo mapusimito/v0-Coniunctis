@@ -32,8 +32,6 @@ export function EditorToolbar() {
   const [isUnderline, setIsUnderline] = useState(false)
   const [isStrikethrough, setIsStrikethrough] = useState(false)
   const [blockType, setBlockType] = useState("paragraph")
-  const [canUndo, setCanUndo] = useState(false)
-  const [canRedo, setCanRedo] = useState(false)
   const isMobile = useIsMobile()
 
   const updateToolbar = useCallback(() => {
@@ -114,44 +112,16 @@ export function EditorToolbar() {
     })
   }
 
-  const undo = () => {
-    editor.dispatchCommand(UNDO_COMMAND, undefined)
-  }
-
-  const redo = () => {
-    editor.dispatchCommand(REDO_COMMAND, undefined)
-  }
-
-  // Toolbar siempre arriba, tanto en móvil como escritorio
+  // Toolbar siempre arriba, más compacta en móvil y sin deshacer/rehacer
   return (
-    <div className={`flex items-center gap-3 p-2 border-b border-border bg-card ${isMobile ? "sticky top-0 z-10" : ""}`}>
-      {/* Deshacer/Rehacer */}
-      <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={undo}
-          disabled={!canUndo}
-          className="h-9 w-9 p-0 hover:bg-muted rounded-lg"
-        >
-          <Undo className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={redo}
-          disabled={!canRedo}
-          className="h-9 w-9 p-0 hover:bg-muted rounded-lg"
-        >
-          <Redo className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <Separator orientation="vertical" className="h-6 bg-border" />
-
+    <div
+      className={`flex items-center gap-2 border-b border-border bg-card ${
+        isMobile ? "p-1 sticky top-0 z-10" : "p-2"
+      }`}
+    >
       {/* Selector de encabezados */}
       <Select value={blockType} onValueChange={formatHeading}>
-        <SelectTrigger className={`${isMobile ? "w-24" : "w-36"} h-9 bg-background border-border rounded-lg`}>
+        <SelectTrigger className={`${isMobile ? "w-16 h-8 text-xs" : "w-36 h-9"} bg-background border-border rounded-lg`}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="bg-card border-border rounded-lg">
@@ -171,33 +141,33 @@ export function EditorToolbar() {
       <div className="flex items-center gap-1">
         <Button
           variant={isBold ? "default" : "ghost"}
-          size="sm"
+          size={isMobile ? "icon" : "sm"}
           onClick={() => formatText("bold")}
-          className="h-9 w-9 p-0 hover:bg-muted rounded-lg"
+          className={`${isMobile ? "h-8 w-8" : "h-9 w-9"} p-0 hover:bg-muted rounded-lg`}
         >
           <Bold className="h-4 w-4" />
         </Button>
         <Button
           variant={isItalic ? "default" : "ghost"}
-          size="sm"
+          size={isMobile ? "icon" : "sm"}
           onClick={() => formatText("italic")}
-          className="h-9 w-9 p-0 hover:bg-muted rounded-lg"
+          className={`${isMobile ? "h-8 w-8" : "h-9 w-9"} p-0 hover:bg-muted rounded-lg`}
         >
           <Italic className="h-4 w-4" />
         </Button>
         <Button
           variant={isUnderline ? "default" : "ghost"}
-          size="sm"
+          size={isMobile ? "icon" : "sm"}
           onClick={() => formatText("underline")}
-          className="h-9 w-9 p-0 hover:bg-muted rounded-lg"
+          className={`${isMobile ? "h-8 w-8" : "h-9 w-9"} p-0 hover:bg-muted rounded-lg`}
         >
           <Underline className="h-4 w-4" />
         </Button>
         <Button
           variant={isStrikethrough ? "default" : "ghost"}
-          size="sm"
+          size={isMobile ? "icon" : "sm"}
           onClick={() => formatText("strikethrough")}
-          className="h-9 w-9 p-0 hover:bg-muted rounded-lg"
+          className={`${isMobile ? "h-8 w-8" : "h-9 w-9"} p-0 hover:bg-muted rounded-lg`}
         >
           <Strikethrough className="h-4 w-4" />
         </Button>
@@ -208,9 +178,9 @@ export function EditorToolbar() {
       {/* Limpiar todo */}
       <Button
         variant="ghost"
-        size="sm"
+        size={isMobile ? "icon" : "sm"}
         onClick={clearEditor}
-        className="h-9 w-9 p-0 text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded-lg"
+        className={`${isMobile ? "h-8 w-8" : "h-9 w-9"} p-0 text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded-lg`}
       >
         <Trash2 className="h-4 w-4" />
       </Button>

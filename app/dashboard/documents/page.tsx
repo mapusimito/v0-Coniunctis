@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, FileText, Share2, Calendar, Users } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
-import { ShareDocumentModal } from "@/components/share-document-modal"
 
 interface Document {
   id: string
