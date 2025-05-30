@@ -1,7 +1,7 @@
 "use client"
 
 import { $getRoot, $getSelection } from "lexical"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { LexicalComposer } from "@lexical/react/LexicalComposer"
 import { ContentEditable } from "@lexical/react/LexicalContentEditable"
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin"
@@ -101,9 +101,23 @@ interface LexicalEditorProps {
   onSelectionChange?: (selectedText: string) => void
 }
 
+// Hook para detectar móvil (puedes moverlo a un archivo común si lo usas en más sitios)
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768)
+    check()
+    window.addEventListener("resize", check)
+    check()
+    return () => window.removeEventListener("resize", check)
+  }, [])
+  return isMobile
+}
+
 function EditorContent({ content, editorState, onChange, onSelectionChange }: LexicalEditorProps) {
   const [editor] = useLexicalComposerContext()
   const isFirstRender = useRef(true)
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     if (isFirstRender.current && (editorState || content)) {
@@ -194,21 +208,35 @@ function EditorContent({ content, editorState, onChange, onSelectionChange }: Le
   return (
     <>
       <EditorToolbar />
-      <div className="relative flex-1">
+      <div
+        className={`relative flex-1 ${
+          isMobile ? "min-h-[calc(100dvh-56px)] p-2" : "min-h-[600px] p-8"
+        } text-lg leading-relaxed resize-none outline-none bg-background text-foreground focus-modern`}
+      >
         <RichTextPlugin
           contentEditable={
             <ContentEditable
-              className="min-h-[600px] p-8 text-lg leading-relaxed resize-none outline-none bg-background text-foreground focus-modern"
-              style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif" }}
+              className={`outline-none bg-background text-foreground w-full ${
+                isMobile
+                  ? "min-h-[calc(100dvh-120px)] p-2 text-base"
+                  : "min-h-[600px] p-8 text-lg"
+              }`}
+              style={{
+                fontFamily: "ui-sans-serif, system-ui, sans-serif",
+                ...(isMobile ? { maxHeight: "calc(100dvh - 120px)", overflowY: "auto" } : {}),
+              }}
             />
           }
           placeholder={
             <div
-              className="absolute top-8 left-8 text-muted-foreground pointer-events-none text-lg"
+              className={`absolute left-2 ${
+                isMobile ? "top-2 text-base" : "top-8 text-lg"
+              } text-muted-foreground pointer-events-none`}
               style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif" }}
             >
-              Comienza a escribir tu documento aquí. Selecciona texto y usa las herramientas de IA para mejorar tu
-              escritura...
+              {isMobile
+                ? "Escribe aquí..."
+                : "Comienza a escribir tu documento aquí. Selecciona texto y usa las herramientas de IA para mejorar tu escritura..."}
             </div>
           }
           ErrorBoundary={LexicalErrorBoundary}

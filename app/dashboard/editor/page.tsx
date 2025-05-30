@@ -33,6 +33,16 @@ import { LexicalEditor } from "@/components/lexical-editor"
 import { ShareDocumentModal } from "@/components/share-document-modal"
 import { SharingService } from "@/lib/sharing-service"
 import { useToast } from "@/hooks/use-toast"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
+import { useIsMobile } from "@/hooks/use-mobile" // Si tienes este hook, úsalo
 
 export default function EditorPage() {
   const { user } = useAuth()
@@ -361,9 +371,11 @@ export default function EditorPage() {
     }, 15000)
 
     return () => {
-      if (autoSaveIntervalRef.current) clearInterval(autoSaveIntervalRef.current)
+      if (autoSaveIntervalRef.current) {
+        clearInterval(autoSaveIntervalRef.current)
+      }
     }
-  }, [document.content, user, permission])
+  }, [user, permission, document.content, lastSavedContent])
 
   const getPermissionBadge = () => {
     switch (permission) {
@@ -402,7 +414,139 @@ export default function EditorPage() {
   }
 
   const isReadOnly = permission === "view"
+  const isMobile = typeof window !== "undefined" ? window.innerWidth <= 768 : false // fallback si no tienes el hook
 
+  // --- VISTA MÓVIL ---
+  if (isMobile) {
+    return (
+      <div className={`min-h-screen flex flex-col bg-white dark:bg-zinc-950 text-foreground`}>
+        {/* Header estilo iNotes */}
+        <div className="flex items-center justify-between px-3 pt-4 pb-2 border-b border-border bg-white/80 dark:bg-zinc-950/80 sticky top-0 z-20">
+          {/* Perfil usuario */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="focus:outline-none">
+                <Avatar className="h-9 w-9 border border-border">
+                  <AvatarImage src={user?.avatar_url || "/placeholder.svg"} alt={user?.full_name || ""} />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {user?.full_name?.charAt(0) || user?.email?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>Cuenta</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>{user?.email}</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push("/dashboard")}>Ir al dashboard</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/dashboard/documents")}>Mis documentos</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push("/logout")}>Cerrar sesión</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {/* Título editable */}
+          <Input
+            value={document.title}
+            onChange={(e) => !isReadOnly && setDocument((prev) => ({ ...prev, title: e.target.value }))}
+            className="flex-1 mx-2 text-lg font-semibold border-none p-0 h-auto focus-visible:ring-0 bg-transparent"
+            placeholder="Título..."
+            readOnly={isReadOnly}
+            style={{ background: "transparent" }}
+          />
+          {/* Guardar */}
+          {!isReadOnly && (
+            <Button size="icon" className="rounded-lg ml-2" onClick={saveDocument} disabled={isSaving}>
+              {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+            </Button>
+          )}
+        </div>
+        {/* Proyecto y stats */}
+        <div className="flex items-center justify-between px-3 py-2 text-xs text-muted-foreground bg-white/90 dark:bg-zinc-950/90 border-b border-border">
+          <div className="flex items-center gap-2">
+            <Label className="font-medium">Proyecto:</Label>
+            <Select
+              value={document.project_tag}
+              onValueChange={(value) => !isReadOnly && setDocument((prev) => ({ ...prev, project_tag: value }))}
+              disabled={isReadOnly}
+            >
+              <SelectTrigger className="w-24 h-7 rounded-md text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="General">General</SelectItem>
+                <SelectItem value="Trabajo">Trabajo</SelectItem>
+                <SelectItem value="Personal">Personal</SelectItem>
+                <SelectItem value="Investigación">Investigación</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-3">
+            <span>{wordCount} palabras</span>
+            <span>{charCount} car.</span>
+          </div>
+        </div>
+        {/* Mensaje solo lectura */}
+        {isReadOnly && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 dark:bg-orange-900/20 border-b border-orange-200 dark:border-orange-800 text-xs text-orange-700 dark:text-orange-300">
+            <Eye className="w-4 h-4" />
+            <span>Este documento está en modo solo lectura.</span>
+          </div>
+        )}
+        {/* Editor */}
+        <div className="flex-1 relative bg-white dark:bg-zinc-950">
+          <LexicalEditor
+            content={document.plain_text}
+            editorState={document.content}
+            onChange={handleContentChange}
+            onSelectionChange={handleSelectionChange}
+            readOnly={isReadOnly}
+          />
+          {/* AI Result Panel */}
+          {showAI && !isReadOnly && (
+            <Card className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[95vw] max-w-md shadow-modern-lg border-primary/20 max-h-72 overflow-y-auto modern-card animate-scale-in z-50">
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Bot className="w-6 h-6 text-blue-500" />
+                  <span className="font-semibold text-foreground text-base">Resultado IA</span>
+                </div>
+                {isAILoading ? (
+                  <div className="flex items-center space-x-2 py-6">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    <span className="text-sm text-muted-foreground">Procesando...</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-xs text-foreground mb-3 max-h-32 overflow-y-auto">
+                      <pre className="whitespace-pre-wrap font-sans">{aiResult}</pre>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button size="sm" onClick={applyAIResult} className="flex-1 modern-button-primary">
+                        Aplicar
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setShowAI(false)} className="rounded-lg">
+                        Cerrar
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+        {/* Compartir modal */}
+        <ShareDocumentModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          documentId={document.id}
+          documentTitle={document.title}
+          isOwner={isOwner}
+        />
+      </div>
+    )
+  }
+
+  // --- VISTA ESCRITORIO (sin cambios lógicos, solo render original) ---
   return (
     <div className="h-full flex flex-col animate-fade-in">
       {/* Header */}
@@ -548,14 +692,14 @@ export default function EditorPage() {
             readOnly={isReadOnly}
           />
 
-            {/* AI Result Panel - Solo si puede editar */}
-            {showAI && !isReadOnly && (
+          {/* AI Result Panel - Solo si puede editar */}
+          {showAI && !isReadOnly && (
             <Card className="absolute top-4 right-4 w-96 shadow-modern-lg border-primary/20 max-h-96 overflow-y-auto modern-card animate-scale-in">
               <CardContent className="p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <Bot className="w-8 h-8 text-blue-500" />
-                <span className="font-semibold text-foreground">Resultado de ConiunctisIA</span>
-              </div>
+                <div className="flex items-center space-x-3 mb-4">
+                  <Bot className="w-8 h-8 text-blue-500" />
+                  <span className="font-semibold text-foreground">Resultado de ConiunctisIA</span>
+                </div>
 
                 {isAILoading ? (
                   <div className="flex items-center space-x-2 py-8">
