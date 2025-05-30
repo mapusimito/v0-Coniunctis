@@ -169,15 +169,6 @@ export default function LoginPage() {
                       />
                     </div>
 
-                    <div className="text-right">
-                      <Link
-                        href="/passwordsauth/changepwd"
-                        className="text-xs text-primary hover:text-primary/80 transition-colors"
-                      >
-                        ¿Olvidaste tu contraseña?
-                      </Link>
-                    </div>
-
                     <Button type="submit" className="w-full modern-button-primary text-xs py-2" disabled={isLoading}>
                       {isLoading ? (
                         <>
@@ -266,7 +257,7 @@ export default function LoginPage() {
     )
   }
 
-  // Vista escritorio (sin cambios)
+  // Vista escritorio (sin cambios salvo eliminación del enlace para resetear contraseña)
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md animate-fade-in">
@@ -352,15 +343,6 @@ export default function LoginPage() {
                       disabled={isLoading}
                       className="modern-input"
                     />
-                  </div>
-
-                  <div className="text-right">
-                    <Link
-                      href="/passwordsauth/changepwd"
-                      className="text-sm text-primary hover:text-primary/80 transition-colors"
-                    >
-                      ¿Olvidaste tu contraseña?
-                    </Link>
                   </div>
 
                   <Button type="submit" className="w-full modern-button-primary" disabled={isLoading}>

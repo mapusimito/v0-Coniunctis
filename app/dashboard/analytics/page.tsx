@@ -53,6 +53,19 @@ interface CategoryStats {
   color: string
 }
 
+// Hook para detectar móvil
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768)
+    check()
+    window.addEventListener("resize", check)
+    check()
+    return () => window.removeEventListener("resize", check)
+  }, [])
+  return isMobile
+}
+
 export default function AnalyticsPage() {
   const { user, profile } = useAuth()
   const [timeRange, setTimeRange] = useState("week")
@@ -79,6 +92,8 @@ export default function AnalyticsPage() {
     lastWeek: { pomodoros: 0, focusTime: 0 },
     change: { pomodoros: 0, focusTime: 0 },
   })
+
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     if (user) {
@@ -478,6 +493,331 @@ export default function AnalyticsPage() {
     )
   }
 
+  // --- VISTA MÓVIL ---
+  if (isMobile) {
+    return (
+      <div className="p-2 space-y-4 bg-background min-h-screen">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold">Estadísticas</h1>
+            <p className="text-xs text-gray-600">Análisis de tu rendimiento Pomodoro</p>
+          </div>
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-28 h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="week">Semana</SelectItem>
+              <SelectItem value="month">Mes</SelectItem>
+              <SelectItem value="year">Año</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Productivity Score */}
+        <div className="grid grid-cols-2 gap-2">
+          <Card className="bg-gradient-to-r from-primary/10 to-secondary/10 p-2">
+            <CardHeader className="p-2 pb-0">
+              <CardTitle className="flex items-center space-x-2 text-base">
+                <Zap className="w-5 h-5 text-primary" />
+                <span>Productividad</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-2">
+              <div className="text-3xl font-bold text-primary mb-1">{overallStats.productivityScore}</div>
+              <div className="flex items-center space-x-1">
+                <span className={`font-semibold text-sm ${productivity.color}`}>{productivity.level}</span>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="p-2">
+            <CardHeader className="p-2 pb-0">
+              <CardTitle className="flex items-center space-x-2 text-base">
+                <Award className="w-5 h-5 text-secondary" />
+                <span>Racha</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-2">
+              <div className="font-semibold text-lg">{overallStats.currentStreak} días</div>
+              <div className="text-xs text-gray-500">Mejor: {overallStats.longestStreak} días</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Weekly Trends y Resumen General */}
+        <div className="grid grid-cols-1 gap-2">
+          <Card>
+            <CardHeader className="p-2 pb-0">
+              <CardTitle className="flex items-center space-x-2 text-base">
+                <TrendingUp className="w-5 h-5 text-green-600" />
+                <span>Tendencia</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-2 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span>Pomodoros</span>
+                <div className="flex items-center space-x-1">
+                  <span className="font-semibold">{weeklyTrends.thisWeek.pomodoros}</span>
+                  <Badge variant={weeklyTrends.change.pomodoros >= 0 ? "default" : "destructive"}>
+                    {weeklyTrends.change.pomodoros >= 0 ? "+" : ""}
+                    {Math.round(weeklyTrends.change.pomodoros)}%
+                  </Badge>
+                </div>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span>Enfoque</span>
+                <div className="flex items-center space-x-1">
+                  <span className="font-semibold">{formatTime(weeklyTrends.thisWeek.focusTime)}</span>
+                  <Badge variant={weeklyTrends.change.focusTime >= 0 ? "default" : "destructive"}>
+                    {weeklyTrends.change.focusTime >= 0 ? "+" : ""}
+                    {Math.round(weeklyTrends.change.focusTime)}%
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="p-2 pb-0">
+              <CardTitle className="flex items-center space-x-2 text-base">
+                <BarChart3 className="w-5 h-5 text-blue-600" />
+                <span>Resumen</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-2 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span>Pomodoros</span>
+                <span className="font-semibold">{overallStats.totalPomodoros}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span>Tiempo</span>
+                <span className="font-semibold">{formatTime(overallStats.totalFocusTime)}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span>Finalización</span>
+                <span className="font-semibold">{Math.round(overallStats.completionRate)}%</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs defaultValue="daily" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="daily">Actividad</TabsTrigger>
+            <TabsTrigger value="sessions">Sesiones</TabsTrigger>
+            <TabsTrigger value="insights">Insights</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="daily" className="space-y-2">
+            <Card>
+              <CardHeader className="p-2 pb-0">
+                <CardTitle className="flex items-center space-x-2 text-base">
+                  <Calendar className="w-5 h-5 text-primary" />
+                  <span>Actividad Diaria</span>
+                </CardTitle>
+                <CardDescription className="text-xs">Tu progreso día a día</CardDescription>
+              </CardHeader>
+              <CardContent className="p-2">
+                <div className="space-y-2">
+                  {dailyStats.slice(-7).map((day) => (
+                    <div key={day.date} className="flex items-center space-x-2">
+                      <div className="w-14 text-xs font-medium">
+                        {new Date(day.date).toLocaleDateString("es-ES", { weekday: "short", day: "numeric" })}
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="flex items-center space-x-1">
+                            <Clock className="w-3 h-3 text-red-500" />
+                            <span>{day.pomodoros} pomodoros</span>
+                          </span>
+                          <span>{formatTime(day.focus_time)}</span>
+                        </div>
+                        <Progress value={Math.min((day.pomodoros / 8) * 100, 100)} className="h-1" />
+                        <div className="flex items-center justify-between text-[10px] text-gray-500">
+                          <span className="flex items-center space-x-1">
+                            <Check className="w-3 h-3 text-green-500" />
+                            <span>{day.tasks_completed} tareas</span>
+                          </span>
+                          <span>Eficiencia: {day.efficiency}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="sessions" className="space-y-2">
+            <Card>
+              <CardHeader className="p-2 pb-0">
+                <CardTitle className="flex items-center space-x-2 text-base">
+                  <Activity className="w-5 h-5 text-primary" />
+                  <span>Sesiones Recientes</span>
+                </CardTitle>
+                <CardDescription className="text-xs">Tus últimas sesiones completadas</CardDescription>
+              </CardHeader>
+              <CardContent className="p-2 space-y-2">
+                {recentSessions.length > 0 ? (
+                  recentSessions.map((session) => (
+                    <div key={session.id} className="flex items-center space-x-2 p-2 border rounded-lg">
+                      <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                        <Timer className="w-4 h-4 text-red-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-xs">{session.task?.title || "Sesión sin tarea"}</p>
+                        <div className="flex items-center space-x-1 text-[10px] text-gray-600">
+                          <span>{formatTime(session.duration)}</span>
+                          {session.task?.category && (
+                            <>
+                              <span>•</span>
+                              <span>{session.task.category}</span>
+                            </>
+                          )}
+                          {session.task?.priority && (
+                            <Badge
+                              variant={
+                                session.task.priority === "high"
+                                  ? "destructive"
+                                  : session.task.priority === "medium"
+                                  ? "default"
+                                  : "secondary"
+                              }
+                              className="text-[10px]"
+                            >
+                              {session.task.priority === "high"
+                                ? "Alta"
+                                : session.task.priority === "medium"
+                                ? "Media"
+                                : "Baja"}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-gray-500">
+                        {new Date(session.completed_at).toLocaleDateString("es-ES", {
+                          day: "numeric",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    <Activity className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                    <p className="text-xs">No hay sesiones recientes</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="insights" className="space-y-2">
+            <div className="grid grid-cols-1 gap-2">
+              <Card>
+                <CardHeader className="p-2 pb-0">
+                  <CardTitle className="flex items-center space-x-2 text-base">
+                    <Clock className="w-5 h-5 text-blue-600" />
+                    <span>Patrones de Tiempo</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-2 space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span>Duración promedio</span>
+                    <span className="font-semibold">{Math.round(overallStats.averageSessionLength)} min</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span>Pomodoros/día</span>
+                    <span className="font-semibold">
+                      {Math.round(overallStats.totalPomodoros / Math.max(dailyStats.length, 1))}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span>Mejor día</span>
+                    <span className="font-semibold">
+                      {dailyStats.length > 0 ? Math.max(...dailyStats.map((d) => d.pomodoros)) + " 🍅" : "0 🍅"}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="p-2 pb-0">
+                  <CardTitle className="flex items-center space-x-2 text-base">
+                    <Target className="w-5 h-5 text-green-600" />
+                    <span>Eficiencia</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-2 space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span>Finalización</span>
+                    <span className="font-semibold">{Math.round(overallStats.completionRate)}%</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span>Tareas completadas</span>
+                    <span className="font-semibold">
+                      {overallStats.completedTasks}/{overallStats.totalTasks}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span>Eficiencia promedio</span>
+                    <span className="font-semibold">
+                      {dailyStats.length > 0
+                        ? Math.round(dailyStats.reduce((sum, d) => sum + d.efficiency, 0) / dailyStats.length)
+                        : 0}
+                      %
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            {/* Recommendations */}
+            <Card>
+              <CardHeader className="p-2 pb-0">
+                <CardTitle className="flex items-center space-x-2 text-base">
+                  <Zap className="w-5 h-5 text-yellow-600" />
+                  <span>Recomendaciones</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-2 space-y-2">
+                {overallStats.currentStreak === 0 && (
+                  <div className="p-2 bg-yellow-50 border border-yellow-200 rounded-lg text-xs">
+                    <p>
+                      <strong>💡 Consejo:</strong> Intenta hacer al menos un pomodoro hoy para comenzar una nueva racha.
+                    </p>
+                  </div>
+                )}
+                {overallStats.completionRate < 50 && (
+                  <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg text-xs">
+                    <p>
+                      <strong>📈 Mejora:</strong> Tu tasa de finalización es baja. Considera dividir las tareas grandes en partes más pequeñas.
+                    </p>
+                  </div>
+                )}
+                {overallStats.averageSessionLength < 20 && overallStats.totalPomodoros > 5 && (
+                  <div className="p-2 bg-green-50 border border-green-200 rounded-lg text-xs">
+                    <p>
+                      <strong>⏰ Observación:</strong> Tus sesiones son más cortas que el promedio. Asegúrate de configurar la duración correcta.
+                    </p>
+                  </div>
+                )}
+                {overallStats.productivityScore >= 80 && (
+                  <div className="p-2 bg-green-50 border border-green-200 rounded-lg text-xs">
+                    <p>
+                      <strong>🎉 ¡Excelente!</strong> Tienes una productividad muy alta. ¡Sigue así!
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    )
+  }
+
+  // --- VISTA ESCRITORIO (sin cambios lógicos, solo eliminada pestaña de categorías) ---
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -511,7 +851,6 @@ export default function AnalyticsPage() {
             <div>
               <div className="text-5xl font-bold text-primary mb-2">{overallStats.productivityScore}</div>
               <div className="flex items-center space-x-2">
-                <span className="text-3xl">{productivity.emoji}</span>
                 <span className={`font-semibold text-lg ${productivity.color}`}>{productivity.level}</span>
               </div>
             </div>
@@ -587,9 +926,8 @@ export default function AnalyticsPage() {
       </div>
 
       <Tabs defaultValue="daily" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="daily">Actividad Diaria</TabsTrigger>
-          <TabsTrigger value="categories">Por Categorías</TabsTrigger>
           <TabsTrigger value="sessions">Sesiones Recientes</TabsTrigger>
           <TabsTrigger value="insights">Insights</TabsTrigger>
         </TabsList>
@@ -598,84 +936,38 @@ export default function AnalyticsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-          <Calendar className="w-5 h-5 text-primary" />
-          <span>Actividad Diaria</span>
+                <Calendar className="w-5 h-5 text-primary" />
+                <span>Actividad Diaria</span>
               </CardTitle>
               <CardDescription>Tu progreso día a día en el período seleccionado</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-          {dailyStats.slice(-7).map((day, index) => (
-            <div key={day.date} className="flex items-center space-x-4">
-              <div className="w-20 text-sm font-medium">
-                {new Date(day.date).toLocaleDateString("es-ES", { weekday: "short", day: "numeric" })}
-              </div>
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center justify-between text-sm">
-            <span className="flex items-center space-x-1">
-              <Clock className="w-4 h-4 text-red-500" />
-              <span>{day.pomodoros} pomodoros</span>
-            </span>
-            <span>{formatTime(day.focus_time)}</span>
-                </div>
-                <Progress value={Math.min((day.pomodoros / 8) * 100, 100)} className="h-2" />
-                <div className="flex items-center justify-between text-xs text-gray-500">
-            <span className="flex items-center space-x-1">
-              <Check className="w-4 h-4 text-green-500" />
-              <span>{day.tasks_completed} tareas</span>
-            </span>
-            <span>Eficiencia: {day.efficiency}%</span>
-                </div>
-              </div>
-            </div>
-          ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="categories" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <PieChart className="w-5 h-5 text-secondary" />
-                <span>Distribución por Categorías</span>
-              </CardTitle>
-              <CardDescription>Cómo distribuyes tu tiempo entre diferentes tipos de trabajo</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {categoryStats.length > 0 ? (
-                categoryStats.map((category, index) => (
-                  <div key={category.category} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: category.color }} />
-                        <span className="font-medium">{category.category}</span>
+                {dailyStats.slice(-7).map((day, index) => (
+                  <div key={day.date} className="flex items-center space-x-4">
+                    <div className="w-20 text-sm font-medium">
+                      {new Date(day.date).toLocaleDateString("es-ES", { weekday: "short", day: "numeric" })}
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="flex items-center space-x-1">
+                          <Clock className="w-4 h-4 text-red-500" />
+                          <span>{day.pomodoros} pomodoros</span>
+                        </span>
+                        <span>{formatTime(day.focus_time)}</span>
                       </div>
-                      <Badge variant="outline">
-                        <Clock className="w-4 h-4 text-red-500 mr-1 inline" />
-                        {category.pomodoros}
-                      </Badge>
+                      <Progress value={Math.min((day.pomodoros / 8) * 100, 100)} className="h-2" />
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span className="flex items-center space-x-1">
+                          <Check className="w-4 h-4 text-green-500" />
+                          <span>{day.tasks_completed} tareas</span>
+                        </span>
+                        <span>Eficiencia: {day.efficiency}%</span>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600 ml-6">
-                      {formatTime(category.focus_time)} • 
-                      <span className="inline-flex items-center ml-1">
-                        <Check className="w-4 h-4 text-green-500 mr-1" />
-                        {category.tasks} tareas
-                      </span>
-                    </div>
-                    <Progress
-                      value={(category.pomodoros / Math.max(...categoryStats.map((c) => c.pomodoros))) * 100}
-                      className="h-2 ml-6"
-                    />
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <PieChart className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>No hay datos de categorías disponibles</p>
-                </div>
-              )}
+                ))}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -712,16 +1004,16 @@ export default function AnalyticsPage() {
                               session.task.priority === "high"
                                 ? "destructive"
                                 : session.task.priority === "medium"
-                                  ? "default"
-                                  : "secondary"
+                                ? "default"
+                                : "secondary"
                             }
                             className="text-xs"
                           >
                             {session.task.priority === "high"
                               ? "Alta"
                               : session.task.priority === "medium"
-                                ? "Media"
-                                : "Baja"}
+                              ? "Media"
+                              : "Baja"}
                           </Badge>
                         )}
                       </div>
@@ -755,7 +1047,7 @@ export default function AnalyticsPage() {
                   <span>Patrones de Tiempo</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-2">
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Duración promedio de sesión</span>
@@ -784,7 +1076,7 @@ export default function AnalyticsPage() {
                   <span>Eficiencia</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-2">
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Tasa de finalización</span>

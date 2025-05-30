@@ -7,6 +7,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Plus, FileText, Calendar } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
+
+// Hook para detectar móvil
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768)
+    check()
+    window.addEventListener("resize", check)
+    check()
+    return () => window.removeEventListener("resize", check)
+  }, [])
+  return isMobile
+}
 
 interface Document {
   id: string
@@ -22,6 +37,7 @@ export default function DocumentsPage() {
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
   const router = useRouter()
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     if (user) {
@@ -29,6 +45,7 @@ export default function DocumentsPage() {
     }
   }, [user])
 
+  // Ordenar por updated_at descendente (más reciente primero)
   const fetchDocuments = async () => {
     if (!user) {
       console.log("❌ No user found")
@@ -36,10 +53,7 @@ export default function DocumentsPage() {
     }
 
     try {
-      console.log("🔍 Starting document fetch for user:", user.email)
-      setLoading(true)
-
-      // Obtener documentos del usuario
+    } catch (error) {
       const { data, error } = await supabase
         .from("documents")
         .select("*")
@@ -51,7 +65,6 @@ export default function DocumentsPage() {
         throw error
       }
 
-      console.log("✅ Documents fetched:", data?.length || 0)
       setDocuments(data || [])
     } catch (error) {
       console.error("❌ Error fetching documents:", error)
@@ -103,8 +116,94 @@ export default function DocumentsPage() {
     )
   }
 
+  // --- VISTA MÓVIL ---
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-3 pt-4 pb-2 border-b border-border bg-white/80 dark:bg-zinc-950/80 sticky top-0 z-20">
+          {/* Perfil usuario */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="focus:outline-none">
+                <Avatar className="h-9 w-9 border border-border">
+                  <AvatarImage src={user?.avatar_url || "/placeholder.svg"} alt={user?.full_name || ""} />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {user?.full_name?.charAt(0) || user?.email?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>Cuenta</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>{user?.email}</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push("/dashboard")}>Ir al dashboard</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/dashboard/documents")}>Mis documentos</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push("/logout")}>Cerrar sesión</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {/* Botón nuevo documento */}
+          <Button onClick={handleNewDocument} size="icon" className="rounded-lg ml-2">
+            <Plus className="w-5 h-5" />
+          </Button>
+        </div>
+        {/* Título y descripción centrados */}
+        <div className="flex flex-col items-center text-center mt-4 mb-2 px-4">
+          <h1 className="text-xl font-bold">Mis Documentos</h1>
+          <p className="text-muted-foreground text-sm">Gestiona tus documentos</p>
+          {user && <p className="text-xs text-muted-foreground mt-1">Usuario: {user.email}</p>}
+        </div>
+        {/* Documentos */}
+        {documents.length === 0 ? (
+          <Card className="mx-2 mt-8">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <FileText className="w-12 h-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No hay documentos</h3>
+              <p className="text-muted-foreground text-center mb-4">Comienza creando tu primer documento.</p>
+              <Button onClick={handleNewDocument} className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Crear Documento
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 px-2 pb-4">
+            {documents.map((doc) => (
+              <Card
+                key={doc.id}
+                className="hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => handleDocumentClick(doc.id)}
+              ></Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base font-semibold line-clamp-2 text-center">{doc.title || "Sin título"}</CardTitle>
+                  <CardDescription className="mt-1 text-xs text-center">{getDocumentPreview(doc.content)}</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="flex flex-col gap-1 text-[11px] text-muted-foreground items-center">
+                    <div className="flex items-center">
+                      <Calendar className="w-3 h-3 mr-1" />
+                      {formatDate(doc.created_at)}
+                    </div>
+                    <div className="flex items-center">
+                      <Calendar className="w-3 h-3 mr-1" />
+                      {formatDate(doc.updated_at)}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // --- VISTA ESCRITORIO (sin cambios, solo orden por updated_at) ---
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6"></div>
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Mis Documentos</h1>
