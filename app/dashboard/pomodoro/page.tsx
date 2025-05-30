@@ -270,7 +270,11 @@ export default function PomodoroPage() {
             auto_start_pomodoros: tempSettings.auto_start_pomodoros,
             updated_at: new Date().toISOString(),
           })
+<<<<<<< Updated upstream
           .eq("user_id", user?.id)
+=======
+          .eq("user_id", user?.id) // Missing closing tag added here
+>>>>>>> Stashed changes
 
         error = updateError
       } else {
@@ -280,6 +284,10 @@ export default function PomodoroPage() {
           pomodoro_duration: tempSettings.pomodoro_duration,
           short_break_duration: tempSettings.short_break_duration,
           long_break_duration: tempSettings.long_break_duration,
+<<<<<<< Updated upstream
+=======
+          pomodoros_until_long_break: tempSettings.pomodoros_until_long_break,
+>>>>>>> Stashed changes
           sound_enabled: tempSettings.sound_enabled,
           auto_start_breaks: tempSettings.auto_start_breaks,
           auto_start_pomodoros: tempSettings.auto_start_pomodoros,
@@ -446,6 +454,27 @@ export default function PomodoroPage() {
     }
   }
 
+<<<<<<< Updated upstream
+=======
+  const getNextSessionInCycle = (currentPos: number): SessionType => {
+    const cycle: SessionType[] = [
+      "pomodoro",
+      "short_break",
+      "pomodoro",
+      "short_break",
+      "pomodoro",
+      "short_break",
+      "pomodoro",
+      "long_break",
+    ]
+    // Protección contra índices fuera de rango
+    if (currentPos < 0 || currentPos >= cycle.length) {
+      return "pomodoro"
+    }
+    return cycle[currentPos]
+  }
+
+>>>>>>> Stashed changes
   const handleSessionComplete = async () => {
     setIsRunning(false)
     await playNotificationSound()
