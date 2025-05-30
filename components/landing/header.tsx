@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { FileText } from "lucide-react"
 import Image from "next/image"
 import { useTheme } from "next-themes"
 export function Header() {
