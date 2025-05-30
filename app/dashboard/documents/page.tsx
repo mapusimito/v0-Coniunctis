@@ -176,7 +176,7 @@ export default function DocumentsPage() {
                 key={doc.id}
                 className="hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={() => handleDocumentClick(doc.id)}
-              ></Card>
+              >
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base font-semibold line-clamp-2 text-center">{doc.title || "Sin título"}</CardTitle>
                   <CardDescription className="mt-1 text-xs text-center">{getDocumentPreview(doc.content)}</CardDescription>
@@ -203,7 +203,7 @@ export default function DocumentsPage() {
 
   // --- VISTA ESCRITORIO (sin cambios, solo orden por updated_at) ---
   return (
-    <div className="container mx-auto p-6 space-y-6"></div>
+    <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Mis Documentos</h1>
