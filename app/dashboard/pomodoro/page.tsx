@@ -456,27 +456,6 @@ export default function PomodoroPage() {
     }
   }
 
-<<<<<<< Updated upstream
-=======
-  const getNextSessionInCycle = (currentPos: number): SessionType => {
-    const cycle: SessionType[] = [
-      "pomodoro",
-      "short_break",
-      "pomodoro",
-      "short_break",
-      "pomodoro",
-      "short_break",
-      "pomodoro",
-      "long_break",
-    ]
-    // Protección contra índices fuera de rango
-    if (currentPos < 0 || currentPos >= cycle.length) {
-      return "pomodoro"
-    }
-    return cycle[currentPos]
-  }
-
->>>>>>> Stashed changes
   const handleSessionComplete = async () => {
     setIsRunning(false)
     await playNotificationSound()
