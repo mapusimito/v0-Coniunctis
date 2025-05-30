@@ -91,6 +91,18 @@ export function Footer() {
           </div>
         </div>
 
+          <div className="space-y-4">
+            <h4 className="font-semibold text-gray-900 dark:text-white">Créditos</h4>
+            <div className="space-y-2 text-gray-600 dark:text-gray-300 text-sm">
+              <p>
+                Desarrollado por Daniel Guanipa.<br />
+                Branding hecho por Juan Mendez.<br />
+                Inspirado en la comunidad estudiantil y las open source.
+              </p>
+            </div>
+          </div>
+
+
         <div className="border-t border-gray-200 dark:border-gray-800 mt-12 pt-8 text-center">
           <p className="text-gray-600 dark:text-gray-300">© 2025 Coniunctis.. </p>
         </div>
