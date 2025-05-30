@@ -205,13 +205,15 @@ export default function PomodoroPage() {
     if (!settings.sound_enabled || !audioRef.current) return
 
     try {
-      // Use a simple beep sound data URL
       const beepSound =
         "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT"
       audioRef.current.src = beepSound
       await audioRef.current.play()
     } catch (error) {
-      console.log("Could not play notification sound:", error)
+      // Manejo silencioso del error de audio
+      if (process.env.NODE_ENV === "development") {
+        console.warn("No se pudo reproducir el sonido de notificación:", error)
+      }
     }
   }
 
@@ -587,13 +589,31 @@ export default function PomodoroPage() {
 
   const toggleFullscreen = async () => {
     try {
+      if (typeof document === "undefined" || typeof document.documentElement === "undefined") return
+
       if (!document.fullscreenElement) {
-        await document.documentElement.requestFullscreen()
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen()
+        } else {
+          // fallback para navegadores que no soportan fullscreen
+          if (process.env.NODE_ENV === "development") {
+            console.warn("Fullscreen API no soportada en este navegador.")
+          }
+        }
       } else {
-        await document.exitFullscreen()
+        if (document.exitFullscreen) {
+          await document.exitFullscreen()
+        } else {
+          if (process.env.NODE_ENV === "development") {
+            console.warn("Fullscreen API no soportada en este navegador.")
+          }
+        }
       }
     } catch (error) {
-      console.error("Error toggling fullscreen:", error)
+      // Manejo silencioso del error de pantalla completa
+      if (process.env.NODE_ENV === "development") {
+        console.warn("Error toggling fullscreen:", error)
+      }
     }
   }
 
