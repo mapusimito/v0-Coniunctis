@@ -5,10 +5,11 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/lib/auth-context"
 
+
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "CONIUNCTIS - Plataforma de Productividad impulsada por IA",
+  title: "Coniunctis - Plataforma de Productividad impulsada por IA",
   description:
     "Transforma tu productividad con asistencia de escritura impulsada por IA, gestión inteligente de tareas y técnicas de enfoque.",
   manifest: "/manifest.json",

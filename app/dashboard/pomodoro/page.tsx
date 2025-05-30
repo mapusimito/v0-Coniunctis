@@ -2,48 +2,45 @@
 import { useState, useEffect, useRef } from "react"
 
 import { useTheme } from "next-themes"
-
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
 import { useIsMobile } from "@/hooks/use-mobile"
 
-import {
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Progress,
-  Badge,
-  Input,
-  Label,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  Switch,
-  Textarea,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { CardContent } from "@/components/ui/card"
+import { CardDescription } from "@/components/ui/card"
+import { CardHeader } from "@/components/ui/card"
+import { CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Tabs } from "@/components/ui/tabs"
+import { TabsList } from "@/components/ui/tabs"
+import { TabsTrigger } from "@/components/ui/tabs"
+import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
+import { Select } from "@/components/ui/select"
+import { SelectContent } from "@/components/ui/select"
+import { SelectItem } from "@/components/ui/select"
+import { SelectTrigger } from "@/components/ui/select"
+import { SelectValue } from "@/components/ui/select"
+import { Dialog } from "@/components/ui/dialog"
+import { DialogContent } from "@/components/ui/dialog"
+import { DialogDescription } from "@/components/ui/dialog"
+import { DialogHeader } from "@/components/ui/dialog"
+import { DialogTitle } from "@/components/ui/dialog"
+import { DialogTrigger } from "@/components/ui/dialog"
+import { Avatar } from "@/components/ui/avatar"
+import { AvatarFallback } from "@/components/ui/avatar"
+import { AvatarImage } from "@/components/ui/avatar"
+import { DropdownMenu } from "@/components/ui/dropdown-menu"
+import { DropdownMenuContent } from "@/components/ui/dropdown-menu"
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { DropdownMenuLabel } from "@/components/ui/dropdown-menu"
+import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
+import { DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 import {
   Play,
@@ -61,6 +58,17 @@ import {
   Undo,
   LogOut,
 } from "lucide-react"
+
+interface PomodoroSettings {
+  pomodoro_duration: number
+  short_break_duration: number
+  long_break_duration: number
+  sound_enabled: boolean
+  auto_start_breaks: boolean
+  auto_start_pomodoros: boolean
+}
+
+type SessionType = "pomodoro" | "short_break" | "long_break"
 
 interface Task {
   id: string
@@ -270,11 +278,7 @@ export default function PomodoroPage() {
             auto_start_pomodoros: tempSettings.auto_start_pomodoros,
             updated_at: new Date().toISOString(),
           })
-<<<<<<< Updated upstream
-          .eq("user_id", user?.id)
-=======
-          .eq("user_id", user?.id) // Missing closing tag added here
->>>>>>> Stashed changes
+          .eq("user_id", user?.id); 
 
         error = updateError
       } else {
@@ -284,10 +288,6 @@ export default function PomodoroPage() {
           pomodoro_duration: tempSettings.pomodoro_duration,
           short_break_duration: tempSettings.short_break_duration,
           long_break_duration: tempSettings.long_break_duration,
-<<<<<<< Updated upstream
-=======
-          pomodoros_until_long_break: tempSettings.pomodoros_until_long_break,
->>>>>>> Stashed changes
           sound_enabled: tempSettings.sound_enabled,
           auto_start_breaks: tempSettings.auto_start_breaks,
           auto_start_pomodoros: tempSettings.auto_start_pomodoros,
