@@ -1,24 +1,50 @@
 "use client"
-
 import { useState, useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Switch } from "@/components/ui/switch"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+import { useTheme } from "next-themes"
+
+import { useAuth } from "@/lib/auth-context"
+import { supabase } from "@/lib/supabaseClient"
+import { useIsMobile } from "@/hooks/use-mobile"
+
 import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Progress,
+  Badge,
+  Input,
+  Label,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  Switch,
+  Textarea,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui"
+
 import {
   Play,
   Pause,
@@ -33,21 +59,8 @@ import {
   Plus,
   Check,
   Undo,
+  LogOut,
 } from "lucide-react"
-import { useAuth } from "@/lib/auth-context"
-import { supabase } from "@/lib/supabaseClient"
-import { useTheme } from "next-themes"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { LogOut } from "lucide-react"
-import { useIsMobile } from "@/hooks/use-mobile"
 
 interface Task {
   id: string
@@ -60,18 +73,6 @@ interface Task {
   description?: string
 }
 
-interface PomodoroSettings {
-  pomodoro_duration: number
-  short_break_duration: number
-  long_break_duration: number
-  pomodoros_until_long_break: number
-  sound_enabled: boolean
-  auto_start_breaks: boolean
-  auto_start_pomodoros: boolean
-}
-
-type SessionType = "pomodoro" | "short_break" | "long_break"
-
 export default function PomodoroPage() {
   const { theme } = useTheme()
   const isMobile = useIsMobile()
@@ -83,6 +84,15 @@ export default function PomodoroPage() {
   const [isRunning, setIsRunning] = useState(false)
   const [currentSession, setCurrentSession] = useState<SessionType>("pomodoro")
   const [completedPomodoros, setCompletedPomodoros] = useState(0)
+  // Define ciclo fijo Pomodoro
+  const cycle: SessionType[] = [
+    "pomodoro",
+    "short_break",
+    "pomodoro",
+    "short_break",
+    "pomodoro",
+    "long_break",
+  ]
   const [cyclePosition, setCyclePosition] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -91,7 +101,6 @@ export default function PomodoroPage() {
     pomodoro_duration: 25,
     short_break_duration: 5,
     long_break_duration: 15,
-    pomodoros_until_long_break: 4,
     sound_enabled: true,
     auto_start_breaks: true,
     auto_start_pomodoros: false,
@@ -212,7 +221,6 @@ export default function PomodoroPage() {
           pomodoro_duration: data.pomodoro_duration,
           short_break_duration: data.short_break_duration,
           long_break_duration: data.long_break_duration,
-          pomodoros_until_long_break: data.pomodoros_until_long_break,
           sound_enabled: data.sound_enabled ?? true,
           auto_start_breaks: data.auto_start_breaks ?? true,
           auto_start_pomodoros: data.auto_start_pomodoros ?? false,
@@ -257,17 +265,12 @@ export default function PomodoroPage() {
             pomodoro_duration: tempSettings.pomodoro_duration,
             short_break_duration: tempSettings.short_break_duration,
             long_break_duration: tempSettings.long_break_duration,
-            pomodoros_until_long_break: tempSettings.pomodoros_until_long_break,
             sound_enabled: tempSettings.sound_enabled,
             auto_start_breaks: tempSettings.auto_start_breaks,
             auto_start_pomodoros: tempSettings.auto_start_pomodoros,
             updated_at: new Date().toISOString(),
           })
-<<<<<<< Updated upstream
           .eq("user_id", user?.id)
-=======
-          .eq("user_id", user?.id) // Missing closing tag added here
->>>>>>> Stashed changes
 
         error = updateError
       } else {
@@ -277,7 +280,6 @@ export default function PomodoroPage() {
           pomodoro_duration: tempSettings.pomodoro_duration,
           short_break_duration: tempSettings.short_break_duration,
           long_break_duration: tempSettings.long_break_duration,
-          pomodoros_until_long_break: tempSettings.pomodoros_until_long_break,
           sound_enabled: tempSettings.sound_enabled,
           auto_start_breaks: tempSettings.auto_start_breaks,
           auto_start_pomodoros: tempSettings.auto_start_pomodoros,
@@ -444,24 +446,6 @@ export default function PomodoroPage() {
     }
   }
 
-  const getNextSessionInCycle = (currentPos: number): SessionType => {
-    const cycle: SessionType[] = [
-      "pomodoro",
-      "short_break",
-      "pomodoro",
-      "short_break",
-      "pomodoro",
-      "short_break",
-      "pomodoro",
-      "long_break",
-    ]
-    // Protección contra índices fuera de rango
-    if (currentPos < 0 || currentPos >= cycle.length) {
-      return "pomodoro"
-    }
-    return cycle[currentPos]
-  }
-
   const handleSessionComplete = async () => {
     setIsRunning(false)
     await playNotificationSound()
@@ -472,8 +456,8 @@ export default function PomodoroPage() {
         currentSession === "pomodoro"
           ? "Pomodoro"
           : currentSession === "short_break"
-            ? "Descanso Corto"
-            : "Descanso Largo"
+          ? "Descanso Corto"
+          : "Descanso Largo"
       new Notification(`¡${sessionName} Completado!`, {
         body: currentSession === "pomodoro" ? "¡Tiempo de descanso!" : "¡Hora de trabajar!",
         icon: "/favicon.ico",
@@ -490,9 +474,9 @@ export default function PomodoroPage() {
       await loadTodayStats()
     }
 
-    // Auto-advance to next session
-    const nextPosition = (cyclePosition + 1) % 8
-    const nextSession = getNextSessionInCycle(nextPosition)
+    // Avanzar en el ciclo fijo
+    const nextPosition = (cyclePosition + 1) % cycle.length
+    const nextSession = cycle[nextPosition]
 
     setCyclePosition(nextPosition)
     setCurrentSession(nextSession)
@@ -557,12 +541,13 @@ export default function PomodoroPage() {
     setCurrentSession(newSession)
     setTimeLeft(getDurationForSession(newSession) * 60)
 
+    // Reinicia el ciclo según la pestaña seleccionada
     if (newSession === "pomodoro") {
       setCyclePosition(0)
     } else if (newSession === "short_break") {
       setCyclePosition(1)
     } else if (newSession === "long_break") {
-      setCyclePosition(7)
+      setCyclePosition(5)
     }
   }
 
@@ -727,96 +712,80 @@ export default function PomodoroPage() {
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-sm mx-2">
-              <DialogHeader>
+                <DialogHeader>
                 <DialogTitle>Configuración</DialogTitle>
                 <DialogDescription>Personaliza tu experiencia de pomodoro</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 max-h-96 overflow-y-auto">
+                </DialogHeader>
+                <div className="space-y-4 max-h-96 overflow-y-auto">
                 <div className="space-y-3">
                   <h4 className="font-medium text-sm">Duraciones (minutos)</h4>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-xs">Pomodoro</Label>
-                      <Input
-                        type="number"
-                        value={tempSettings.pomodoro_duration}
-                        onChange={(e) =>
-                          setTempSettings((prev) => ({
-                            ...prev,
-                            pomodoro_duration: Number.parseInt(e.target.value) || 25,
-                          }))
-                        }
-                        min="1"
-                        max="60"
-                        className="h-8 text-xs"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Descanso Corto</Label>
-                      <Input
-                        type="number"
-                        value={tempSettings.short_break_duration}
-                        onChange={(e) =>
-                          setTempSettings((prev) => ({
-                            ...prev,
-                            short_break_duration: Number.parseInt(e.target.value) || 5,
-                          }))
-                        }
-                        min="1"
-                        max="30"
-                        className="h-8 text-xs"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Descanso Largo</Label>
-                      <Input
-                        type="number"
-                        value={tempSettings.long_break_duration}
-                        onChange={(e) =>
-                          setTempSettings((prev) => ({
-                            ...prev,
-                            long_break_duration: Number.parseInt(e.target.value) || 15,
-                          }))
-                        }
-                        min="1"
-                        max="60"
-                        className="h-8 text-xs"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Pomodoros hasta Largo</Label>
-                      <Input
-                        type="number"
-                        value={tempSettings.pomodoros_until_long_break}
-                        onChange={(e) =>
-                          setTempSettings((prev) => ({
-                            ...prev,
-                            pomodoros_until_long_break: Number.parseInt(e.target.value) || 4,
-                          }))
-                        }
-                        min="2"
-                        max="8"
-                        className="h-8 text-xs"
-                      />
-                    </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Pomodoro</Label>
+                    <Input
+                    type="number"
+                    value={tempSettings.pomodoro_duration}
+                    onChange={(e) =>
+                      setTempSettings((prev) => ({
+                      ...prev,
+                      pomodoro_duration: Number.parseInt(e.target.value) || 25,
+                      }))
+                    }
+                    min="1"
+                    max="60"
+                    className="h-8 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Descanso Corto</Label>
+                    <Input
+                    type="number"
+                    value={tempSettings.short_break_duration}
+                    onChange={(e) =>
+                      setTempSettings((prev) => ({
+                      ...prev,
+                      short_break_duration: Number.parseInt(e.target.value) || 5,
+                      }))
+                    }
+                    min="1"
+                    max="30"
+                    className="h-8 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1 col-span-2">
+                    <Label className="text-xs">Descanso Largo</Label>
+                    <Input
+                    type="number"
+                    value={tempSettings.long_break_duration}
+                    onChange={(e) =>
+                      setTempSettings((prev) => ({
+                      ...prev,
+                      long_break_duration: Number.parseInt(e.target.value) || 15,
+                      }))
+                    }
+                    min="1"
+                    max="60"
+                    className="h-8 text-xs"
+                    />
+                  </div>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <h4 className="font-medium text-sm">Automatización</h4>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs">Sonidos</Label>
-                      <Switch
-                        checked={tempSettings.sound_enabled}
-                        onCheckedChange={(checked) =>
-                          setTempSettings((prev) => ({
-                            ...prev,
-                            sound_enabled: checked,
-                          }))
-                        }
-                      />
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Sonidos</Label>
+                    <Switch
+                    checked={tempSettings.sound_enabled}
+                    onCheckedChange={(checked) =>
+                      setTempSettings((prev) => ({
+                      ...prev,
+                      sound_enabled: checked,
+                      }))
+                    }
+                    />
+                  </div>
                     <div className="flex items-center justify-between">
                       <Label className="text-xs">Auto-iniciar descansos</Label>
                       <Switch
@@ -1211,75 +1180,60 @@ export default function PomodoroPage() {
                 </DialogTrigger>
                 <DialogContent className="max-w-md">
                   <DialogHeader>
-                    <DialogTitle>Configuración del Pomodoro</DialogTitle>
-                    <DialogDescription>Personaliza tu experiencia de pomodoro</DialogDescription>
+                  <DialogTitle>Configuración del Pomodoro</DialogTitle>
+                  <DialogDescription>Personaliza tu experiencia de pomodoro</DialogDescription>
                   </DialogHeader>
                   <div className="space-y-6">
-                    <div className="space-y-4">
-                      <h4 className="font-medium">Duraciones (minutos)</h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Pomodoro</Label>
-                          <Input
-                            type="number"
-                            value={tempSettings.pomodoro_duration}
-                            onChange={(e) =>
-                              setTempSettings((prev) => ({
-                                ...prev,
-                                pomodoro_duration: Number.parseInt(e.target.value) || 25,
-                              }))
-                            }
-                            min="1"
-                            max="60"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Descanso Corto</Label>
-                          <Input
-                            type="number"
-                            value={tempSettings.short_break_duration}
-                            onChange={(e) =>
-                              setTempSettings((prev) => ({
-                                ...prev,
-                                short_break_duration: Number.parseInt(e.target.value) || 5,
-                              }))
-                            }
-                            min="1"
-                            max="30"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Descanso Largo</Label>
-                          <Input
-                            type="number"
-                            value={tempSettings.long_break_duration}
-                            onChange={(e) =>
-                              setTempSettings((prev) => ({
-                                ...prev,
-                                long_break_duration: Number.parseInt(e.target.value) || 15,
-                              }))
-                            }
-                            min="1"
-                            max="60"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Pomodoros hasta Descanso Largo</Label>
-                          <Input
-                            type="number"
-                            value={tempSettings.pomodoros_until_long_break}
-                            onChange={(e) =>
-                              setTempSettings((prev) => ({
-                                ...prev,
-                                pomodoros_until_long_break: Number.parseInt(e.target.value) || 4,
-                              }))
-                            }
-                            min="2"
-                            max="8"
-                          />
-                        </div>
-                      </div>
+                  <div className="space-y-4">
+                    <h4 className="font-medium">Duraciones (minutos)</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Pomodoro</Label>
+                      <Input
+                      type="number"
+                      value={tempSettings.pomodoro_duration}
+                      onChange={(e) =>
+                        setTempSettings((prev) => ({
+                        ...prev,
+                        pomodoro_duration: Number.parseInt(e.target.value) || 25,
+                        }))
+                      }
+                      min="1"
+                      max="60"
+                      />
                     </div>
+                    <div className="space-y-2">
+                      <Label>Descanso Corto</Label>
+                      <Input
+                      type="number"
+                      value={tempSettings.short_break_duration}
+                      onChange={(e) =>
+                        setTempSettings((prev) => ({
+                        ...prev,
+                        short_break_duration: Number.parseInt(e.target.value) || 5,
+                        }))
+                      }
+                      min="1"
+                      max="30"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Descanso Largo</Label>
+                      <Input
+                      type="number"
+                      value={tempSettings.long_break_duration}
+                      onChange={(e) =>
+                        setTempSettings((prev) => ({
+                        ...prev,
+                        long_break_duration: Number.parseInt(e.target.value) || 15,
+                        }))
+                      }
+                      min="1"
+                      max="60"
+                      />
+                    </div>
+                    </div>
+                  </div>
 
                     <div className="space-y-4">
                       <h4 className="font-medium">Automatización</h4>
