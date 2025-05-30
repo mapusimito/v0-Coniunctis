@@ -6,10 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
-  Sparkles,
   Save,
   Loader2,
   Wand2,
@@ -17,11 +15,7 @@ import {
   CheckCircle,
   BookOpen,
   Zap,
-  MessageSquare,
   PlusCircle,
-  Share2,
-  Lock,
-  Eye,
   Bot,
   Glasses,
   MessageCircleQuestion,
@@ -30,8 +24,6 @@ import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabaseClient"
 import { AIService } from "@/lib/ai-service"
 import { LexicalEditor } from "@/components/lexical-editor"
-import { ShareDocumentModal } from "@/components/share-document-modal"
-import { SharingService } from "@/lib/sharing-service"
 import { useToast } from "@/hooks/use-toast"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -42,7 +34,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { useIsMobile } from "@/hooks/use-mobile" // Si tienes este hook, úsalo
 
 export default function EditorPage() {
   const { user } = useAuth()
@@ -50,7 +41,6 @@ export default function EditorPage() {
   const searchParams = useSearchParams()
   const documentId = searchParams.get("id")
   const aiService = AIService.getInstance()
-  const sharingService = SharingService.getInstance()
   const { toast } = useToast()
 
   const [document, setDocument] = useState({
@@ -66,15 +56,12 @@ export default function EditorPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [showAI, setShowAI] = useState(false)
   const [showToolbar, setShowToolbar] = useState(false)
-  const [showShareModal, setShowShareModal] = useState(false)
   const [aiResult, setAiResult] = useState("")
   const [isAILoading, setIsAILoading] = useState(false)
   const [selectedText, setSelectedText] = useState("")
   const [wordCount, setWordCount] = useState(0)
   const [charCount, setCharCount] = useState(0)
   const [lastSavedContent, setLastSavedContent] = useState("")
-  const [permission, setPermission] = useState<"owner" | "edit" | "view" | null>(null)
-  const [isOwner, setIsOwner] = useState(true)
   const autoSaveIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -90,8 +77,6 @@ export default function EditorPage() {
         progress_percentage: 0,
         status: "draft",
       })
-      setPermission("owner")
-      setIsOwner(true)
     }
   }, [documentId, user])
 
@@ -103,12 +88,8 @@ export default function EditorPage() {
 
       if (error) throw error
 
-      // Verificar permisos
-      const userPermission = await sharingService.getDocumentPermission(id)
-      setPermission(userPermission)
-      setIsOwner(userPermission === "owner")
-
-      if (!userPermission) {
+      // Verificar que el documento pertenece al usuario
+      if (data.user_id !== user?.id) {
         toast({
           title: "Acceso denegado",
           description: "No tienes permisos para acceder a este documento",
@@ -179,7 +160,7 @@ export default function EditorPage() {
   }
 
   const saveDocument = async () => {
-    if (!user || permission === "view") return
+    if (!user) return
 
     setIsSaving(true)
     try {
@@ -240,8 +221,6 @@ export default function EditorPage() {
   }
 
   const handleContentChange = (plainText: string, editorState: string) => {
-    if (permission === "view") return // No permitir edición en modo solo lectura
-
     setDocument((prev) => ({
       ...prev,
       content: editorState,
@@ -324,7 +303,7 @@ export default function EditorPage() {
   }
 
   const generateTitle = async () => {
-    if (!document.plain_text.trim() || permission === "view") return
+    if (!document.plain_text.trim()) return
 
     setIsAILoading(true)
     try {
@@ -338,8 +317,6 @@ export default function EditorPage() {
   }
 
   const applyAIResult = () => {
-    if (permission === "view") return // No permitir aplicar en modo solo lectura
-
     if ((window as any).insertAIContent) {
       if (selectedText) {
         ;(window as any).insertAIContent(aiResult)
@@ -360,9 +337,9 @@ export default function EditorPage() {
     setShowAI(false)
   }
 
-  // Autoguardado solo si tiene permisos de edición
+  // Autoguardado
   useEffect(() => {
-    if (!user || permission === "view") return
+    if (!user) return
 
     autoSaveIntervalRef.current = setInterval(() => {
       if (document.content !== lastSavedContent) {
@@ -375,32 +352,7 @@ export default function EditorPage() {
         clearInterval(autoSaveIntervalRef.current)
       }
     }
-  }, [user, permission, document.content, lastSavedContent])
-
-  const getPermissionBadge = () => {
-    switch (permission) {
-      case "owner":
-        return (
-          <Badge variant="default" className="bg-green-100 text-green-800">
-            Propietario
-          </Badge>
-        )
-      case "edit":
-        return (
-          <Badge variant="default" className="bg-blue-100 text-blue-800">
-            Puede editar
-          </Badge>
-        )
-      case "view":
-        return (
-          <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-            Solo lectura
-          </Badge>
-        )
-      default:
-        return null
-    }
-  }
+  }, [user, document.content, lastSavedContent])
 
   if (isLoading) {
     return (
@@ -413,8 +365,7 @@ export default function EditorPage() {
     )
   }
 
-  const isReadOnly = permission === "view"
-  const isMobile = typeof window !== "undefined" ? window.innerWidth <= 768 : false // fallback si no tienes el hook
+  const isMobile = typeof window !== "undefined" ? window.innerWidth <= 768 : false
 
   // --- VISTA MÓVIL ---
   if (isMobile) {
@@ -448,24 +399,25 @@ export default function EditorPage() {
           {/* Título editable */}
           <Input
             value={document.title}
-            onChange={(e) => !isReadOnly && setDocument((prev) => ({ ...prev, title: e.target.value }))}
+            onChange={(e) => setDocument((prev) => ({ ...prev, title: e.target.value }))}
             className="flex-1 mx-2 text-lg font-semibold border-none p-0 h-auto focus-visible:ring-0 bg-transparent"
             placeholder="Título..."
-            readOnly={isReadOnly}
             style={{ background: "transparent" }}
           />
           {/* Botón generar título automático */}
-          {!isReadOnly && (
-            <Button variant="ghost" size="icon" className="rounded-lg ml-1" onClick={generateTitle} disabled={isAILoading}>
-              <Zap className="w-5 h-5" />
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-lg ml-1"
+            onClick={generateTitle}
+            disabled={isAILoading}
+          >
+            <Zap className="w-5 h-5" />
+          </Button>
           {/* Guardar */}
-          {!isReadOnly && (
-            <Button size="icon" className="rounded-lg ml-1" onClick={saveDocument} disabled={isSaving}>
-              {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-            </Button>
-          )}
+          <Button size="icon" className="rounded-lg ml-1" onClick={saveDocument} disabled={isSaving}>
+            {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+          </Button>
         </div>
         {/* Proyecto y stats */}
         <div className="flex items-center justify-between px-3 py-2 text-xs text-muted-foreground bg-white/90 dark:bg-zinc-950/90 border-b border-border">
@@ -473,8 +425,7 @@ export default function EditorPage() {
             <Label className="font-medium">Proyecto:</Label>
             <Select
               value={document.project_tag}
-              onValueChange={(value) => !isReadOnly && setDocument((prev) => ({ ...prev, project_tag: value }))}
-              disabled={isReadOnly}
+              onValueChange={(value) => setDocument((prev) => ({ ...prev, project_tag: value }))}
             >
               <SelectTrigger className="w-24 h-7 rounded-md text-xs">
                 <SelectValue />
@@ -493,46 +444,37 @@ export default function EditorPage() {
           </div>
         </div>
         {/* Herramientas de IA */}
-        {!isReadOnly && (
-          <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-border bg-card/80 dark:bg-zinc-900/80">
-            <span className="text-sm font-medium text-foreground">IA:</span>
-            <Button variant="ghost" size="sm" onClick={() => handleAssistant("grammar")} className="rounded-lg">
-              <CheckCircle className="w-4 h-4 mr-1" />
-              Gramática
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => handleAssistant("explain")} className="rounded-lg">
-              <MessageCircleQuestion className="w-4 h-4 mr-1" />
-              Explicar
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => handleAssistant("simple")} className="rounded-lg">
-              <Wand2 className="w-4 h-4 mr-1" />
-              Simplificar
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => handleAssistant("complex")} className="rounded-lg">
-              <Glasses className="w-4 h-4 mr-1" />
-              Complejizar
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => handleProducer("expand")} className="rounded-lg">
-              <PlusCircle className="w-4 h-4 mr-1" />
-              Expandir
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => handleProducer("generate")} className="rounded-lg">
-              <FileText className="w-4 h-4 mr-1" />
-              Generar
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => handleProducer("scheme")} className="rounded-lg">
-              <BookOpen className="w-4 h-4 mr-1" />
-              Esquema
-            </Button>
-          </div>
-        )}
-        {/* Mensaje solo lectura */}
-        {isReadOnly && (
-          <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 dark:bg-orange-900/20 border-b border-orange-200 dark:border-orange-800 text-xs text-orange-700 dark:text-orange-300">
-            <Eye className="w-4 h-4" />
-            <span>Este documento está en modo solo lectura.</span>
-          </div>
-        )}
+        <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-border bg-card/80 dark:bg-zinc-900/80">
+          <span className="text-sm font-medium text-foreground">IA:</span>
+          <Button variant="ghost" size="sm" onClick={() => handleAssistant("grammar")} className="rounded-lg">
+            <CheckCircle className="w-4 h-4 mr-1" />
+            Gramática
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => handleAssistant("explain")} className="rounded-lg">
+            <MessageCircleQuestion className="w-4 h-4 mr-1" />
+            Explicar
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => handleAssistant("simple")} className="rounded-lg">
+            <Wand2 className="w-4 h-4 mr-1" />
+            Simplificar
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => handleAssistant("complex")} className="rounded-lg">
+            <Glasses className="w-4 h-4 mr-1" />
+            Complejizar
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => handleProducer("expand")} className="rounded-lg">
+            <PlusCircle className="w-4 h-4 mr-1" />
+            Expandir
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => handleProducer("generate")} className="rounded-lg">
+            <FileText className="w-4 h-4 mr-1" />
+            Generar
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => handleProducer("scheme")} className="rounded-lg">
+            <BookOpen className="w-4 h-4 mr-1" />
+            Esquema
+          </Button>
+        </div>
         {/* Editor */}
         <div className="flex-1 relative bg-white dark:bg-zinc-950">
           <LexicalEditor
@@ -540,10 +482,10 @@ export default function EditorPage() {
             editorState={document.content}
             onChange={handleContentChange}
             onSelectionChange={handleSelectionChange}
-            readOnly={isReadOnly}
+            readOnly={false}
           />
           {/* AI Result Panel */}
-          {showAI && !isReadOnly && (
+          {showAI && (
             <Card className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[95vw] max-w-md shadow-modern-lg border-primary/20 max-h-72 overflow-y-auto modern-card animate-scale-in z-50">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2 mb-2">
@@ -574,19 +516,11 @@ export default function EditorPage() {
             </Card>
           )}
         </div>
-        {/* Compartir modal */}
-        <ShareDocumentModal
-          isOpen={showShareModal}
-          onClose={() => setShowShareModal(false)}
-          documentId={document.id}
-          documentTitle={document.title}
-          isOwner={isOwner}
-        />
       </div>
     )
   }
 
-  // --- VISTA ESCRITORIO (sin cambios lógicos, solo render original) ---
+  // --- VISTA ESCRITORIO ---
   return (
     <div className="h-full flex flex-col animate-fade-in">
       {/* Header */}
@@ -594,27 +528,22 @@ export default function EditorPage() {
         <div className="flex items-center justify-between">
           <div className="flex-1 max-w-md">
             <div className="flex items-center space-x-3">
-              {isReadOnly && <Lock className="w-5 h-5 text-muted-foreground" />}
               <Input
                 value={document.title}
-                onChange={(e) => !isReadOnly && setDocument((prev) => ({ ...prev, title: e.target.value }))}
+                onChange={(e) => setDocument((prev) => ({ ...prev, title: e.target.value }))}
                 className="text-2xl font-bold border-none p-0 h-auto focus-visible:ring-0 bg-transparent"
                 placeholder="Título del documento..."
-                readOnly={isReadOnly}
               />
-              {!isReadOnly && (
-                <Button variant="ghost" size="sm" onClick={generateTitle} disabled={isAILoading} className="rounded-lg">
-                  <Zap className="w-4 h-4" />
-                </Button>
-              )}
+              <Button variant="ghost" size="sm" onClick={generateTitle} disabled={isAILoading} className="rounded-lg">
+                <Zap className="w-4 h-4" />
+              </Button>
             </div>
             <div className="flex items-center space-x-6 mt-3">
               <div className="flex items-center space-x-2">
                 <Label className="text-sm font-medium text-muted-foreground">Proyecto:</Label>
                 <Select
                   value={document.project_tag}
-                  onValueChange={(value) => !isReadOnly && setDocument((prev) => ({ ...prev, project_tag: value }))}
-                  disabled={isReadOnly}
+                  onValueChange={(value) => setDocument((prev) => ({ ...prev, project_tag: value }))}
                 >
                   <SelectTrigger className="w-32 h-8 rounded-lg">
                     <SelectValue />
@@ -634,91 +563,70 @@ export default function EditorPage() {
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            {getPermissionBadge()}
-            {document.id && (
-              <Button variant="outline" size="sm" onClick={() => setShowShareModal(true)} className="rounded-lg">
-                <Share2 className="w-4 h-4 mr-2" />
-                Compartir
-              </Button>
-            )}
-            {!isReadOnly && (
-              <Button size="sm" className="modern-button-primary" onClick={saveDocument} disabled={isSaving}>
-                {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Guardar
-              </Button>
-            )}
+            <Button size="sm" className="modern-button-primary" onClick={saveDocument} disabled={isSaving}>
+              {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              Guardar
+            </Button>
           </div>
         </div>
 
-        {/* AI Toolbar Toggle - Solo si puede editar */}
-        {!isReadOnly && (
-          <div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-lg"
-              onClick={() => setShowToolbar((prev) => !prev)}
-              aria-expanded={showToolbar}
-              aria-controls="ai-toolbar-panel"
+        {/* AI Toolbar Toggle */}
+        <div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-lg"
+            onClick={() => setShowToolbar((prev) => !prev)}
+            aria-expanded={showToolbar}
+            aria-controls="ai-toolbar-panel"
+          >
+            <Bot className="w-4 h-4 mr-2" />
+            Herramientas de IA
+          </Button>
+          {showToolbar && (
+            <div
+              id="ai-toolbar-panel"
+              className="flex flex-wrap items-center gap-2 p-4 border border-border rounded-xl bg-card mt-4 animate-fade-in"
+              style={{ maxWidth: 700 }}
             >
-              <Bot className="w-4 h-4 mr-2" />
-              Herramientas de IA
-            </Button>
-            {showToolbar && (
-              <div
-                id="ai-toolbar-panel"
-                className="flex flex-wrap items-center gap-2 p-4 border border-border rounded-xl bg-card mt-4 animate-fade-in"
-                style={{ maxWidth: 700 }}
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-medium text-foreground">Asistente:</span>
-                  <Button variant="ghost" size="sm" onClick={() => handleAssistant("grammar")} className="rounded-lg">
-                    <CheckCircle className="w-4 h-4 mr-1" />
-                    Gramática
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleAssistant("explain")} className="rounded-lg">
-                    <MessageCircleQuestion className="w-4 h-4 mr-1" />
-                    Explicar
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleAssistant("simple")} className="rounded-lg">
-                    <Wand2 className="w-4 h-4 mr-1" />
-                    Simplificar
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleAssistant("complex")} className="rounded-lg">
-                    <Glasses className="w-4 h-4 mr-1" />
-                    Complejizar
-                  </Button>
-                </div>
-                <div className="w-px h-6 bg-border hidden md:block" />
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-medium text-foreground">Productor:</span>
-                  <Button variant="ghost" size="sm" onClick={() => handleProducer("expand")} className="rounded-lg">
-                    <PlusCircle className="w-4 h-4 mr-1" />
-                    Expandir
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleProducer("generate")} className="rounded-lg">
-                    <FileText className="w-4 h-4 mr-1" />
-                    Generar
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleProducer("scheme")} className="rounded-lg">
-                    <BookOpen className="w-4 h-4 mr-1" />
-                    Esquema
-                  </Button>
-                </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium text-foreground">Asistente:</span>
+                <Button variant="ghost" size="sm" onClick={() => handleAssistant("grammar")} className="rounded-lg">
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  Gramática
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleAssistant("explain")} className="rounded-lg">
+                  <MessageCircleQuestion className="w-4 h-4 mr-1" />
+                  Explicar
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleAssistant("simple")} className="rounded-lg">
+                  <Wand2 className="w-4 h-4 mr-1" />
+                  Simplificar
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleAssistant("complex")} className="rounded-lg">
+                  <Glasses className="w-4 h-4 mr-1" />
+                  Complejizar
+                </Button>
               </div>
-            )}
-          </div>
-        )}
-
-        {/* Mensaje de solo lectura */}
-        {isReadOnly && (
-          <div className="flex items-center space-x-2 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
-            <Eye className="w-4 h-4 text-orange-600" />
-            <span className="text-sm text-orange-700 dark:text-orange-300">
-              Este documento está en modo solo lectura. No puedes realizar cambios.
-            </span>
-          </div>
-        )}
+              <div className="w-px h-6 bg-border hidden md:block" />
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium text-foreground">Productor:</span>
+                <Button variant="ghost" size="sm" onClick={() => handleProducer("expand")} className="rounded-lg">
+                  <PlusCircle className="w-4 h-4 mr-1" />
+                  Expandir
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleProducer("generate")} className="rounded-lg">
+                  <FileText className="w-4 h-4 mr-1" />
+                  Generar
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleProducer("scheme")} className="rounded-lg">
+                  <BookOpen className="w-4 h-4 mr-1" />
+                  Esquema
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Editor */}
@@ -729,11 +637,11 @@ export default function EditorPage() {
             editorState={document.content}
             onChange={handleContentChange}
             onSelectionChange={handleSelectionChange}
-            readOnly={isReadOnly}
+            readOnly={false}
           />
 
-          {/* AI Result Panel - Solo si puede editar */}
-          {showAI && !isReadOnly && (
+          {/* AI Result Panel */}
+          {showAI && (
             <Card className="absolute top-4 right-4 w-96 shadow-modern-lg border-primary/20 max-h-96 overflow-y-auto modern-card animate-scale-in">
               <CardContent className="p-6">
                 <div className="flex items-center space-x-3 mb-4">
@@ -767,15 +675,6 @@ export default function EditorPage() {
           )}
         </div>
       </div>
-
-      {/* Modal de compartir */}
-      <ShareDocumentModal
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        documentId={document.id}
-        documentTitle={document.title}
-        isOwner={isOwner}
-      />
     </div>
   )
 }

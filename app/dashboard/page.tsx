@@ -145,10 +145,12 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch accessible documents using RPC function
-      const { data: documentsData, error: documentsError } = await supabase.rpc("get_accessible_documents", {
-        uid: user?.id,
-      })
+      // Fetch only user's own documents
+      const { data: documentsData, error: documentsError } = await supabase
+        .from("documents")
+        .select("id, title, updated_at, project_tag, word_count, status, user_id")
+        .eq("user_id", user?.id)
+        .order("updated_at", { ascending: false })
 
       if (documentsError) {
         console.error("Error fetching documents:", documentsError)
@@ -181,11 +183,9 @@ export default function DashboardPage() {
         .eq("user_id", user?.id)
         .eq("completed", true)
 
-      // Calculate today's words from accessible documents
+      // Calculate today's words from user's documents
       const today = new Date().toISOString().split("T")[0]
-      const todayDocs = (documentsData || []).filter(
-        (doc: any) => doc.updated_at >= today && doc.user_id === user?.id, // Only count words from own documents
-      )
+      const todayDocs = (documentsData || []).filter((doc: any) => doc.updated_at >= today)
       const todayWords = todayDocs.reduce((sum: number, doc: any) => sum + (doc.word_count || 0), 0)
 
       setRecentDocuments(recentDocs || [])
@@ -645,14 +645,6 @@ export default function DashboardPage() {
                           <span>{getTimeAgo(doc.updated_at)}</span>
                           <span>•</span>
                           <span>{doc.word_count} palabras</span>
-                          {doc.user_id !== user?.id && (
-                            <>
-                              <span>•</span>
-                              <Badge variant="secondary" className="text-xs">
-                                Compartido
-                              </Badge>
-                            </>
-                          )}
                         </div>
                       </div>
                     </div>
